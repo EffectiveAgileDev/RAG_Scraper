@@ -9,6 +9,7 @@ import secrets
 from src.config.url_validator import URLValidator
 from src.config.scraping_config import ScrapingConfig
 from src.scraper.restaurant_scraper import RestaurantScraper
+from src.file_generator.file_generator_service import FileGeneratorService, FileGenerationRequest
 
 
 # Global variable to store current progress and scraper instance
@@ -27,6 +28,9 @@ current_progress = {
 # Global scraper instance for progress tracking
 active_scraper = None
 
+# Global file generator service for persistent configuration
+file_generator_service = None
+
 
 def create_app(testing=False):
     """Create and configure Flask application."""
@@ -43,6 +47,11 @@ def create_app(testing=False):
         app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()
     else:
         app.config['UPLOAD_FOLDER'] = os.path.join(os.path.expanduser('~'), 'Downloads')
+    
+    # Initialize file generator service
+    global file_generator_service
+    config_file = os.path.join(app.config['UPLOAD_FOLDER'], 'rag_scraper_config.json')
+    file_generator_service = FileGeneratorService(config_file)
     
     # Security headers
     @app.after_request
@@ -618,6 +627,142 @@ https://restaurant3.com" required></textarea>
             
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+    
+    # File generation endpoints
+    @app.route('/api/generate-file', methods=['POST'])
+    def generate_file():
+        """Generate text file from scraped restaurant data."""
+        global file_generator_service
+        
+        try:
+            data = request.get_json(force=True)
+            if data is None:
+                return jsonify({'success': False, 'error': 'No JSON data provided'}), 400
+            if not data:
+                return jsonify({'success': False, 'error': 'No restaurant data provided'}), 400
+        except Exception as json_error:
+            return jsonify({'success': False, 'error': 'Invalid JSON data provided'}), 400
+        
+        try:
+            # Validate required fields
+            if 'restaurant_data' not in data:
+                return jsonify({'success': False, 'error': 'No restaurant data provided'}), 400
+            
+            # Parse restaurant data from JSON
+            from src.scraper.multi_strategy_scraper import RestaurantData
+            restaurant_objects = []
+            
+            for restaurant_dict in data['restaurant_data']:
+                restaurant = RestaurantData(
+                    name=restaurant_dict.get('name', ''),
+                    address=restaurant_dict.get('address', ''),
+                    phone=restaurant_dict.get('phone', ''),
+                    hours=restaurant_dict.get('hours', ''),
+                    price_range=restaurant_dict.get('price_range', ''),
+                    cuisine=restaurant_dict.get('cuisine', ''),
+                    menu_items=restaurant_dict.get('menu_items', {}),
+                    social_media=restaurant_dict.get('social_media', []),
+                    confidence=restaurant_dict.get('confidence', 'medium'),
+                    sources=restaurant_dict.get('sources', ['web_interface'])
+                )
+                restaurant_objects.append(restaurant)
+            
+            # Create file generation request
+            request_obj = FileGenerationRequest(
+                restaurant_data=restaurant_objects,
+                output_directory=data.get('output_directory'),
+                file_format=data.get('file_format', 'text'),
+                allow_overwrite=data.get('allow_overwrite', True),
+                save_preferences=data.get('save_preferences', False)
+            )
+            
+            # Generate file
+            result = file_generator_service.generate_file(request_obj)
+            
+            return jsonify(result)
+            
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
+    @app.route('/api/file-config', methods=['GET'])
+    def get_file_config():
+        """Get current file generation configuration."""
+        global file_generator_service
+        
+        try:
+            config = file_generator_service.get_current_config()
+            supported_formats = file_generator_service.get_supported_formats()
+            directory_options = file_generator_service.get_output_directory_options()
+            
+            return jsonify({
+                'success': True,
+                'config': config,
+                'supported_formats': supported_formats,
+                'directory_options': directory_options
+            })
+            
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
+    @app.route('/api/file-config', methods=['POST'])
+    def update_file_config():
+        """Update file generation configuration."""
+        global file_generator_service
+        
+        try:
+            data = request.get_json(force=True)
+            if data is None or not data:
+                return jsonify({'success': False, 'error': 'No configuration data provided'}), 400
+        except Exception as json_error:
+            return jsonify({'success': False, 'error': 'Invalid JSON data provided'}), 400
+        
+        try:
+            result = file_generator_service.update_config(data)
+            return jsonify(result)
+            
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
+    @app.route('/api/validate-directory', methods=['POST'])
+    def validate_directory():
+        """Validate directory permissions for file generation."""
+        global file_generator_service
+        
+        try:
+            data = request.get_json(force=True)
+            if data is None or not data or 'directory_path' not in data:
+                return jsonify({'success': False, 'error': 'No directory path provided'}), 400
+        except Exception as json_error:
+            return jsonify({'success': False, 'error': 'Invalid JSON data provided'}), 400
+        
+        try:
+            result = file_generator_service.validate_directory_permissions(data['directory_path'])
+            return jsonify({'success': True, 'validation': result})
+            
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
+    @app.route('/api/create-directory', methods=['POST'])
+    def create_directory():
+        """Create custom directory for file output."""
+        global file_generator_service
+        
+        try:
+            data = request.get_json(force=True)
+            if data is None or not data or 'parent_directory' not in data or 'directory_name' not in data:
+                return jsonify({'success': False, 'error': 'Parent directory and directory name required'}), 400
+        except Exception as json_error:
+            return jsonify({'success': False, 'error': 'Invalid JSON data provided'}), 400
+        
+        try:
+            result = file_generator_service.create_custom_directory(
+                data['parent_directory'], 
+                data['directory_name']
+            )
+            return jsonify(result)
+            
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
     
     # Error handlers
     @app.errorhandler(404)
