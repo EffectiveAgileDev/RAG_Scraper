@@ -3,6 +3,7 @@ from typing import List, Dict, Any, Optional, Callable
 from dataclasses import dataclass
 from .multi_strategy_scraper import MultiStrategyScraper, RestaurantData
 from .batch_processor import BatchProcessor, BatchConfig
+from .multi_page_scraper import MultiPageScraper, MultiPageScrapingResult
 
 
 @dataclass
@@ -34,11 +35,13 @@ class ScrapingResult:
 class RestaurantScraper:
     """Main restaurant scraper class for Flask integration."""
     
-    def __init__(self, enable_batch_processing: bool = True):
+    def __init__(self, enable_batch_processing: bool = True, enable_multi_page: bool = True):
         """Initialize restaurant scraper with multi-strategy backend."""
         self.multi_scraper = MultiStrategyScraper(enable_ethical_scraping=True)
         self.enable_batch_processing = enable_batch_processing
+        self.enable_multi_page = enable_multi_page
         self.batch_processor = None
+        self.multi_page_scraper = None
         
         if enable_batch_processing:
             batch_config = BatchConfig(
@@ -48,6 +51,9 @@ class RestaurantScraper:
                 enable_memory_monitoring=True
             )
             self.batch_processor = BatchProcessor(batch_config)
+        
+        if enable_multi_page:
+            self.multi_page_scraper = MultiPageScraper(max_pages=10, enable_ethical_scraping=True)
     
     def scrape_restaurants(self, config, progress_callback: Optional[Callable] = None) -> ScrapingResult:
         """Scrape restaurants using the provided configuration."""
@@ -71,11 +77,12 @@ class RestaurantScraper:
             return result
         else:
             # Use simple processing for small batches
-            return self._process_simple_batch(urls, progress_callback)
+            return self._process_simple_batch(urls, progress_callback, config)
     
     def _process_simple_batch(self, urls: List[str], 
-                             progress_callback: Optional[Callable] = None) -> ScrapingResult:
-        """Process small batches using simple sequential method."""
+                             progress_callback: Optional[Callable] = None, 
+                             config=None) -> ScrapingResult:
+        """Process small batches using simple sequential method with optional multi-page support."""
         import time
         start_time = time.time()
         
@@ -95,20 +102,39 @@ class RestaurantScraper:
                     else:
                         progress_callback(f"Processing {url}", progress_percentage)
                 
-                # Extract restaurant data
-                restaurant_data = self.multi_scraper.scrape_url(url)
-                
-                if restaurant_data:
-                    successful_extractions.append(restaurant_data)
-                    if progress_callback:
-                        progress_callback(
-                            f"Successfully extracted data for {restaurant_data.name or 'Unknown Restaurant'}"
-                        )
+                # Check if multi-page processing is enabled and should be used
+                if (self.enable_multi_page and self.multi_page_scraper and 
+                    getattr(config, 'enable_multi_page', False)):
+                    
+                    # Use multi-page scraper
+                    multi_page_result = self.multi_page_scraper.scrape_website(url, progress_callback)
+                    
+                    if multi_page_result.aggregated_data:
+                        successful_extractions.append(multi_page_result.aggregated_data)
+                        if progress_callback:
+                            progress_callback(
+                                f"Successfully extracted data from {len(multi_page_result.successful_pages)} pages for {multi_page_result.restaurant_name or 'Unknown Restaurant'}"
+                            )
+                    else:
+                        failed_urls.append(url)
+                        errors.append(f"No restaurant data found at {url} (checked {len(multi_page_result.pages_processed)} pages)")
+                        if progress_callback:
+                            progress_callback(f"No restaurant data found at {url}")
                 else:
-                    failed_urls.append(url)
-                    errors.append(f"No restaurant data found at {url}")
-                    if progress_callback:
-                        progress_callback(f"No restaurant data found at {url}")
+                    # Use single-page extraction
+                    restaurant_data = self.multi_scraper.scrape_url(url)
+                    
+                    if restaurant_data:
+                        successful_extractions.append(restaurant_data)
+                        if progress_callback:
+                            progress_callback(
+                                f"Successfully extracted data for {restaurant_data.name or 'Unknown Restaurant'}"
+                            )
+                    else:
+                        failed_urls.append(url)
+                        errors.append(f"No restaurant data found at {url}")
+                        if progress_callback:
+                            progress_callback(f"No restaurant data found at {url}")
                         
             except Exception as e:
                 failed_urls.append(url)
