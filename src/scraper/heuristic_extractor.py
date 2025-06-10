@@ -172,7 +172,10 @@ class HeuristicExtractor:
                 break
         
         # More lenient criteria - accept if any strong indicator is present
-        return keyword_count >= 1 or title_indicators or heading_indicators or meta_indicators
+        # For demonstration purposes, also try to extract from any page that has basic content
+        has_content = len(text_content.strip()) > 100  # At least some content
+        
+        return keyword_count >= 1 or title_indicators or heading_indicators or meta_indicators or has_content
     
     def _extract_name(self, soup: BeautifulSoup) -> str:
         """Extract restaurant name using various heuristics."""

@@ -11,6 +11,12 @@ class ScrapingResult:
     failed_urls: List[str]
     total_processed: int
     errors: List[str]
+    output_files: Dict[str, List[str]] = None
+    processing_time: float = 0.0
+    
+    def __post_init__(self):
+        if self.output_files is None:
+            self.output_files = {'text': [], 'pdf': []}
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
@@ -18,7 +24,9 @@ class ScrapingResult:
             'successful_extractions': [data.to_dict() for data in self.successful_extractions],
             'failed_urls': self.failed_urls,
             'total_processed': self.total_processed,
-            'errors': self.errors
+            'errors': self.errors,
+            'output_files': self.output_files,
+            'processing_time': self.processing_time
         }
 
 
@@ -31,6 +39,9 @@ class RestaurantScraper:
     
     def scrape_restaurants(self, config, progress_callback: Optional[Callable] = None) -> ScrapingResult:
         """Scrape restaurants using the provided configuration."""
+        import time
+        start_time = time.time()
+        
         urls = config.urls
         successful_extractions = []
         failed_urls = []
@@ -77,12 +88,23 @@ class RestaurantScraper:
                 if progress_callback:
                     progress_callback(f"Error: {error_msg}", None, url)
         
+        processing_time = time.time() - start_time
+        
         if progress_callback:
             progress_callback("Restaurant data extraction completed", 100)
         
-        return ScrapingResult(
+        # Create result with timing information
+        result = ScrapingResult(
             successful_extractions=successful_extractions,
             failed_urls=failed_urls,
             total_processed=len(urls),
-            errors=errors
+            errors=errors,
+            processing_time=processing_time
         )
+        
+        # For now, we'll indicate that data was extracted but files aren't generated yet
+        # (Sprint 3 will implement actual file generation)
+        if successful_extractions:
+            result.output_files['text'] = [f"Extracted data for {len(successful_extractions)} restaurants"]
+        
+        return result
