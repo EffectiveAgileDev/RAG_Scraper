@@ -11,14 +11,21 @@ from src.config.scraping_config import ScrapingConfig
 from src.scraper.restaurant_scraper import RestaurantScraper
 
 
-# Global variable to store current progress
+# Global variable to store current progress and scraper instance
 current_progress = {
     'current_url': None,
     'progress_percentage': 0,
     'urls_completed': 0,
     'urls_total': 0,
-    'status': 'idle'
+    'status': 'idle',
+    'estimated_time_remaining': 0,
+    'current_operation': '',
+    'memory_usage_mb': 0,
+    'processing_time': 0
 }
+
+# Global scraper instance for progress tracking
+active_scraper = None
 
 
 def create_app(testing=False):
@@ -201,6 +208,8 @@ https://restaurant3.com" required></textarea>
                     </div>
                     <p id="progressText">Initializing...</p>
                     <p id="currentUrl"></p>
+                    <p id="timeEstimate"></p>
+                    <p id="memoryUsage"></p>
                 </div>
                 
                 <div id="resultsContainer" class="results-container">
@@ -219,6 +228,8 @@ https://restaurant3.com" required></textarea>
                 const progressFill = document.getElementById('progressFill');
                 const progressText = document.getElementById('progressText');
                 const currentUrl = document.getElementById('currentUrl');
+                const timeEstimate = document.getElementById('timeEstimate');
+                const memoryUsage = document.getElementById('memoryUsage');
                 const resultsContainer = document.getElementById('resultsContainer');
                 const resultsContent = document.getElementById('resultsContent');
                 const urlValidation = document.getElementById('urlValidation');
@@ -339,6 +350,8 @@ https://restaurant3.com" required></textarea>
                     progressFill.style.width = '0%';
                     progressText.textContent = 'Starting scraping...';
                     currentUrl.textContent = '';
+                    timeEstimate.textContent = '';
+                    memoryUsage.textContent = '';
                     
                     // Start progress polling
                     progressInterval = setInterval(updateProgress, 1000);
@@ -363,6 +376,22 @@ https://restaurant3.com" required></textarea>
                             
                             if (data.current_url) {
                                 currentUrl.textContent = `Processing: ${data.current_url}`;
+                            }
+                            
+                            if (data.estimated_time_remaining > 0) {
+                                const minutes = Math.floor(data.estimated_time_remaining / 60);
+                                const seconds = Math.floor(data.estimated_time_remaining % 60);
+                                timeEstimate.textContent = `Estimated time remaining: ${minutes}m ${seconds}s`;
+                            } else if (data.urls_completed > 0) {
+                                timeEstimate.textContent = 'Calculating time estimate...';
+                            }
+                            
+                            if (data.memory_usage_mb > 0) {
+                                memoryUsage.textContent = `Memory usage: ${data.memory_usage_mb.toFixed(1)} MB`;
+                            }
+                            
+                            if (data.current_operation) {
+                                progressText.textContent = data.current_operation;
                             }
                         }
                     } catch (error) {
@@ -500,19 +529,42 @@ https://restaurant3.com" required></textarea>
             )
             
             # Progress callback
-            def progress_callback(message, percentage=None, current_url=None):
-                global current_progress
+            def progress_callback(message, percentage=None, time_estimate=None):
+                global current_progress, active_scraper
                 current_progress.update({
                     'status': message,
-                    'progress_percentage': percentage or current_progress['progress_percentage'],
-                    'current_url': current_url or current_progress['current_url'],
+                    'progress_percentage': percentage if percentage is not None else current_progress['progress_percentage'],
                     'urls_total': len(urls)
                 })
+                
+                if time_estimate is not None:
+                    current_progress['estimated_time_remaining'] = time_estimate
+                
+                # Get detailed progress from batch processor if available
+                if active_scraper and hasattr(active_scraper, 'get_current_progress'):
+                    batch_progress = active_scraper.get_current_progress()
+                    if batch_progress:
+                        current_progress.update({
+                            'current_url': batch_progress.current_url,
+                            'urls_completed': batch_progress.urls_completed,
+                            'progress_percentage': batch_progress.progress_percentage,
+                            'estimated_time_remaining': batch_progress.estimated_time_remaining,
+                            'current_operation': batch_progress.current_operation,
+                            'memory_usage_mb': batch_progress.memory_usage_mb
+                        })
             
-            # Create and run scraper
+            # Create and run scraper with progress tracking
+            global active_scraper
             scraper = RestaurantScraper()
+            active_scraper = scraper
+            
+            # Force batch processing for better progress tracking
+            config.force_batch_processing = True
             
             result = scraper.scrape_restaurants(config, progress_callback=progress_callback)
+            
+            # Clear active scraper
+            active_scraper = None
             
             # Return results
             return jsonify({
@@ -530,7 +582,22 @@ https://restaurant3.com" required></textarea>
     @app.route('/api/progress', methods=['GET'])
     def get_progress():
         """Get current scraping progress."""
-        global current_progress
+        global current_progress, active_scraper
+        
+        # Get real-time progress from active scraper if available
+        if active_scraper and hasattr(active_scraper, 'get_current_progress'):
+            batch_progress = active_scraper.get_current_progress()
+            if batch_progress:
+                # Update current_progress with latest batch processor data
+                current_progress.update({
+                    'current_url': batch_progress.current_url,
+                    'urls_completed': batch_progress.urls_completed,
+                    'progress_percentage': batch_progress.progress_percentage,
+                    'estimated_time_remaining': batch_progress.estimated_time_remaining,
+                    'current_operation': batch_progress.current_operation,
+                    'memory_usage_mb': batch_progress.memory_usage_mb
+                })
+        
         return jsonify(current_progress)
     
     # File download endpoint
