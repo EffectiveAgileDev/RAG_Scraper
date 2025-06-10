@@ -2,6 +2,7 @@
 from typing import List, Dict, Any, Optional, Callable
 from dataclasses import dataclass
 from .multi_strategy_scraper import MultiStrategyScraper, RestaurantData
+from .batch_processor import BatchProcessor, BatchConfig
 
 
 @dataclass
@@ -33,16 +34,51 @@ class ScrapingResult:
 class RestaurantScraper:
     """Main restaurant scraper class for Flask integration."""
     
-    def __init__(self):
+    def __init__(self, enable_batch_processing: bool = True):
         """Initialize restaurant scraper with multi-strategy backend."""
         self.multi_scraper = MultiStrategyScraper(enable_ethical_scraping=True)
+        self.enable_batch_processing = enable_batch_processing
+        self.batch_processor = None
+        
+        if enable_batch_processing:
+            batch_config = BatchConfig(
+                max_concurrent_requests=3,
+                memory_limit_mb=512,
+                chunk_size=10,
+                enable_memory_monitoring=True
+            )
+            self.batch_processor = BatchProcessor(batch_config)
     
     def scrape_restaurants(self, config, progress_callback: Optional[Callable] = None) -> ScrapingResult:
         """Scrape restaurants using the provided configuration."""
+        urls = config.urls
+        
+        # Use batch processor for larger batches (>5 URLs) or if explicitly enabled
+        if (self.enable_batch_processing and self.batch_processor and 
+            (len(urls) > 5 or getattr(config, 'force_batch_processing', False))):
+            batch_result = self.batch_processor.process_batch(urls, progress_callback)
+            # Convert batch processor result to ScrapingResult
+            result = ScrapingResult(
+                successful_extractions=batch_result['successful_extractions'],
+                failed_urls=batch_result['failed_urls'],
+                total_processed=batch_result['total_processed'],
+                errors=batch_result['errors'],
+                processing_time=batch_result['processing_time']
+            )
+            # Add output files indication
+            if batch_result['successful_extractions']:
+                result.output_files['text'] = [f"Extracted data for {len(batch_result['successful_extractions'])} restaurants"]
+            return result
+        else:
+            # Use simple processing for small batches
+            return self._process_simple_batch(urls, progress_callback)
+    
+    def _process_simple_batch(self, urls: List[str], 
+                             progress_callback: Optional[Callable] = None) -> ScrapingResult:
+        """Process small batches using simple sequential method."""
         import time
         start_time = time.time()
         
-        urls = config.urls
         successful_extractions = []
         failed_urls = []
         errors = []
@@ -54,11 +90,10 @@ class RestaurantScraper:
             try:
                 if progress_callback:
                     progress_percentage = int((i / len(urls)) * 100)
-                    progress_callback(
-                        f"Processing restaurant {i + 1} of {len(urls)}",
-                        progress_percentage,
-                        url
-                    )
+                    if len(urls) > 1:
+                        progress_callback(f"Processing {i + 1} of {len(urls)}: {url}", progress_percentage)
+                    else:
+                        progress_callback(f"Processing {url}", progress_percentage)
                 
                 # Extract restaurant data
                 restaurant_data = self.multi_scraper.scrape_url(url)
@@ -67,26 +102,20 @@ class RestaurantScraper:
                     successful_extractions.append(restaurant_data)
                     if progress_callback:
                         progress_callback(
-                            f"Successfully extracted data for {restaurant_data.name or 'Unknown Restaurant'}",
-                            None,
-                            url
+                            f"Successfully extracted data for {restaurant_data.name or 'Unknown Restaurant'}"
                         )
                 else:
                     failed_urls.append(url)
                     errors.append(f"No restaurant data found at {url}")
                     if progress_callback:
-                        progress_callback(
-                            f"No restaurant data found at {url}",
-                            None,
-                            url
-                        )
+                        progress_callback(f"No restaurant data found at {url}")
                         
             except Exception as e:
                 failed_urls.append(url)
                 error_msg = f"Error processing {url}: {str(e)}"
                 errors.append(error_msg)
                 if progress_callback:
-                    progress_callback(f"Error: {error_msg}", None, url)
+                    progress_callback(f"Error: {error_msg}")
         
         processing_time = time.time() - start_time
         
@@ -103,8 +132,24 @@ class RestaurantScraper:
         )
         
         # For now, we'll indicate that data was extracted but files aren't generated yet
-        # (Sprint 3 will implement actual file generation)
         if successful_extractions:
             result.output_files['text'] = [f"Extracted data for {len(successful_extractions)} restaurants"]
         
         return result
+    
+    def get_current_progress(self):
+        """Get current batch processing progress."""
+        if self.batch_processor:
+            return self.batch_processor.get_current_progress()
+        return None
+    
+    def get_memory_stats(self):
+        """Get memory usage statistics."""
+        if self.batch_processor:
+            return self.batch_processor.get_memory_stats()
+        return None
+    
+    def stop_processing(self):
+        """Stop current batch processing."""
+        if self.batch_processor:
+            self.batch_processor.stop_processing()
