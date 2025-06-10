@@ -2,6 +2,10 @@
 import re
 from typing import List, Dict, Any, Optional
 from bs4 import BeautifulSoup
+from .pattern_matchers import (
+    PhonePatternMatcher, AddressPatternMatcher, HoursPatternMatcher, 
+    RestaurantNameExtractor
+)
 
 
 class HeuristicExtractionResult:
@@ -45,6 +49,13 @@ class HeuristicExtractionResult:
 
 class HeuristicExtractor:
     """Extracts restaurant data using heuristic patterns and text analysis."""
+    
+    def __init__(self):
+        """Initialize pattern matchers."""
+        self.phone_matcher = PhonePatternMatcher()
+        self.address_matcher = AddressPatternMatcher()
+        self.hours_matcher = HoursPatternMatcher()
+        self.name_extractor = RestaurantNameExtractor()
     
     # Restaurant-specific keywords
     RESTAURANT_KEYWORDS = {
@@ -106,44 +117,46 @@ class HeuristicExtractor:
         if not self._is_restaurant_page(soup):
             return []
         
-        # Extract data using various heuristic methods
-        name = self._extract_name(soup)
-        if not name:
+        # Extract data using pattern matchers
+        extraction_data = self._extract_all_data(soup)
+        
+        # Validate that we have a name (minimum requirement)
+        if not extraction_data.get('name'):
             return []
         
-        address = self._extract_address(soup)
-        phone = self._extract_phone(soup)
-        hours = self._extract_hours(soup)
-        price_range = self._extract_price_range(soup)
-        cuisine = self._extract_cuisine(soup)
-        menu_items = self._extract_menu_items(soup)
-        social_media = self._extract_social_media(soup)
+        # Calculate confidence and create result
+        confidence = self._calculate_confidence(extraction_data)
+        result = self._create_extraction_result(extraction_data, confidence)
         
-        # Calculate confidence based on extraction success
-        confidence = self._calculate_confidence({
-            'name': name,
-            'address': address,
-            'phone': phone,
-            'hours': hours,
-            'price_range': price_range,
-            'cuisine': cuisine,
-            'menu_items': menu_items
-        })
-        
-        result = HeuristicExtractionResult(
-            name=name,
-            address=address,
-            phone=phone,
-            hours=hours,
-            price_range=price_range,
-            cuisine=cuisine,
-            menu_items=menu_items,
-            social_media=social_media,
+        return [result]
+    
+    def _extract_all_data(self, soup: BeautifulSoup) -> Dict[str, Any]:
+        """Extract all restaurant data using pattern matchers."""
+        return {
+            'name': self.name_extractor.extract(soup),
+            'address': self.address_matcher.extract(soup),
+            'phone': self.phone_matcher.extract(soup),
+            'hours': self.hours_matcher.extract(soup),
+            'price_range': self._extract_price_range(soup),
+            'cuisine': self._extract_cuisine(soup),
+            'menu_items': self._extract_menu_items(soup),
+            'social_media': self._extract_social_media(soup)
+        }
+    
+    def _create_extraction_result(self, data: Dict[str, Any], confidence: str) -> HeuristicExtractionResult:
+        """Create extraction result from data dictionary."""
+        return HeuristicExtractionResult(
+            name=data.get('name', ''),
+            address=data.get('address', ''),
+            phone=data.get('phone', ''),
+            hours=data.get('hours', ''),
+            price_range=data.get('price_range', ''),
+            cuisine=data.get('cuisine', ''),
+            menu_items=data.get('menu_items', {}),
+            social_media=data.get('social_media', []),
             confidence=confidence,
             source="heuristic"
         )
-        
-        return [result]
     
     def _is_restaurant_page(self, soup: BeautifulSoup) -> bool:
         """Check if the page appears to be a restaurant website."""

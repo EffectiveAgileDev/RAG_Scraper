@@ -7,6 +7,51 @@ from pathlib import Path
 from typing import Optional
 
 
+class ValidationMessages:
+    """Centralized error message handling for consistent messaging."""
+    
+    @staticmethod
+    def directory_not_exist(path: str) -> str:
+        """Standard message for non-existent directory."""
+        return f"Directory does not exist: {path}"
+    
+    @staticmethod
+    def path_not_directory(path: str) -> str:
+        """Standard message for path that is not a directory."""
+        return f"Path is not a directory: {path}"
+    
+    @staticmethod
+    def directory_not_writable(path: str, reason: str = "") -> str:
+        """Standard message for non-writable directory."""
+        base_msg = f"Directory is not writable: {path}"
+        return f"{base_msg} - {reason}" if reason else base_msg
+    
+    @staticmethod
+    def invalid_path_input(issue: str) -> str:
+        """Standard message for invalid path input."""
+        return f"Invalid path input: {issue}"
+    
+    @staticmethod
+    def filename_invalid(reason: str) -> str:
+        """Standard message for invalid filename."""
+        return f"Invalid filename: {reason}"
+    
+    @staticmethod
+    def insufficient_space(required: int, available: int) -> str:
+        """Standard message for insufficient disk space."""
+        return (
+            f"Insufficient disk space. "
+            f"Required: {required:,} bytes ({required / (1024*1024):.1f} MB), "
+            f"Available: {available:,} bytes ({available / (1024*1024):.1f} MB)"
+        )
+    
+    @staticmethod
+    def permission_error(operation: str, details: str = "") -> str:
+        """Standard message for permission errors."""
+        base_msg = f"Permission denied: {operation}"
+        return f"{base_msg} - {details}" if details else base_msg
+
+
 class DirectoryValidationResult:
     """Result of directory validation."""
     
@@ -72,45 +117,63 @@ class FilePermissionValidator:
     
     def validate_directory_writable(self, directory_path: str) -> DirectoryValidationResult:
         """Validate that a directory exists and is writable."""
-        if directory_path is None:
-            return DirectoryValidationResult(directory_path, False, "Directory path cannot be None")
-        
-        if not directory_path or not directory_path.strip():
-            return DirectoryValidationResult(directory_path, False, "Directory path cannot be empty")
+        # Input validation
+        validation_error = self._validate_directory_input(directory_path)
+        if validation_error:
+            return DirectoryValidationResult(directory_path, False, validation_error)
         
         # Resolve relative paths
         directory_path = os.path.abspath(directory_path.strip())
         
         try:
-            # Check if path exists
+            # Check existence and type
             if not os.path.exists(directory_path):
-                return DirectoryValidationResult(directory_path, False, "Directory does not exist")
-            
-            # Check if it's actually a directory
-            if not os.path.isdir(directory_path):
-                return DirectoryValidationResult(directory_path, False, "Path is not a directory")
-            
-            # Check write permissions by attempting to create a temporary file
-            try:
-                with tempfile.NamedTemporaryFile(dir=directory_path, delete=True):
-                    pass
-                return DirectoryValidationResult(directory_path, True)
-                
-            except (OSError, PermissionError) as e:
                 return DirectoryValidationResult(
                     directory_path, False, 
-                    f"Directory is not writable: {str(e)}"
+                    ValidationMessages.directory_not_exist(directory_path)
                 )
+            
+            if not os.path.isdir(directory_path):
+                return DirectoryValidationResult(
+                    directory_path, False, 
+                    ValidationMessages.path_not_directory(directory_path)
+                )
+            
+            # Test write permissions
+            return self._test_directory_writability(directory_path)
                 
         except (OSError, PermissionError) as e:
             return DirectoryValidationResult(
                 directory_path, False, 
-                f"Error accessing directory: {str(e)}"
+                ValidationMessages.permission_error("accessing directory", str(e))
             )
         except Exception as e:
             return DirectoryValidationResult(
                 directory_path, False, 
                 f"Unexpected error validating directory: {str(e)}"
+            )
+    
+    def _validate_directory_input(self, directory_path: str) -> Optional[str]:
+        """Validate directory path input."""
+        if directory_path is None:
+            return ValidationMessages.invalid_path_input("path cannot be None")
+        
+        if not directory_path or not directory_path.strip():
+            return ValidationMessages.invalid_path_input("path cannot be empty")
+        
+        return None
+    
+    def _test_directory_writability(self, directory_path: str) -> DirectoryValidationResult:
+        """Test if directory is writable by creating temporary file."""
+        try:
+            with tempfile.NamedTemporaryFile(dir=directory_path, delete=True):
+                pass
+            return DirectoryValidationResult(directory_path, True)
+            
+        except (OSError, PermissionError) as e:
+            return DirectoryValidationResult(
+                directory_path, False, 
+                ValidationMessages.directory_not_writable(directory_path, str(e))
             )
     
     def validate_file_creation(self, directory: str, filename: str, 
@@ -169,35 +232,25 @@ class FilePermissionValidator:
     def validate_disk_space(self, directory: str, required_bytes: int) -> DiskSpaceResult:
         """Validate that sufficient disk space is available."""
         if required_bytes < 0:
-            return DiskSpaceResult(0, required_bytes, False, "Required bytes cannot be negative")
+            return DiskSpaceResult(
+                0, required_bytes, False, 
+                ValidationMessages.invalid_path_input("required bytes cannot be negative")
+            )
         
         try:
             # Check if directory exists
             if not os.path.exists(directory):
                 return DiskSpaceResult(
                     0, required_bytes, False, 
-                    "Directory does not exist for space check"
+                    ValidationMessages.directory_not_exist(directory)
                 )
             
-            # Get disk usage statistics
-            if hasattr(shutil, 'disk_usage'):
-                # Python 3.3+
-                total, used, free = shutil.disk_usage(directory)
-                available_bytes = free
-            else:
-                # Fallback for older Python versions
-                statvfs = os.statvfs(directory)
-                available_bytes = statvfs.f_frsize * statvfs.f_bavail
-            
+            # Get available space
+            available_bytes = self._get_available_disk_space(directory)
             has_space = available_bytes >= required_bytes
             
             if not has_space:
-                error_msg = (
-                    f"Insufficient disk space. Required: {required_bytes:,} bytes "
-                    f"({required_bytes / (1024*1024):.1f} MB), "
-                    f"Available: {available_bytes:,} bytes "
-                    f"({available_bytes / (1024*1024):.1f} MB)"
-                )
+                error_msg = ValidationMessages.insufficient_space(required_bytes, available_bytes)
                 return DiskSpaceResult(available_bytes, required_bytes, False, error_msg)
             
             return DiskSpaceResult(available_bytes, required_bytes, True)
@@ -205,8 +258,19 @@ class FilePermissionValidator:
         except (OSError, AttributeError) as e:
             return DiskSpaceResult(
                 0, required_bytes, False, 
-                f"Error checking disk space: {str(e)}"
+                ValidationMessages.permission_error("checking disk space", str(e))
             )
+    
+    def _get_available_disk_space(self, directory: str) -> int:
+        """Get available disk space for directory."""
+        if hasattr(shutil, 'disk_usage'):
+            # Python 3.3+
+            total, used, free = shutil.disk_usage(directory)
+            return free
+        else:
+            # Fallback for older Python versions
+            statvfs = os.statvfs(directory)
+            return statvfs.f_frsize * statvfs.f_bavail
     
     def create_directory_if_needed(self, directory_path: str) -> DirectoryCreationResult:
         """Create directory if it doesn't exist."""

@@ -89,18 +89,34 @@ class EthicalScraper:
     def __init__(self, delay: float = 2.0, timeout: int = 30, 
                  user_agent: str = "RAG_Scraper/1.0 (Ethical Restaurant Data Scraper)"):
         """Initialize ethical scraper."""
-        if delay < 0:
-            raise ValueError("Delay cannot be negative")
-        if timeout <= 0:
-            raise ValueError("Timeout must be positive")
-        if not user_agent.strip():
-            raise ValueError("User agent cannot be empty")
+        self._validate_configuration(delay, timeout, user_agent)
         
         self.delay = delay
         self.timeout = timeout
         self.user_agent = user_agent
         self.rate_limiter = RateLimiter(delay)
         self.robots_cache = {}
+        self._request_headers = self._build_request_headers()
+    
+    def _validate_configuration(self, delay: float, timeout: int, user_agent: str) -> None:
+        """Validate scraper configuration parameters."""
+        if delay < 0:
+            raise ValueError("Delay cannot be negative")
+        if timeout <= 0:
+            raise ValueError("Timeout must be positive")
+        if not user_agent.strip():
+            raise ValueError("User agent cannot be empty")
+    
+    def _build_request_headers(self) -> Dict[str, str]:
+        """Build standard HTTP headers for requests."""
+        return {
+            'User-Agent': self.user_agent,
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1'
+        }
     
     def is_allowed_by_robots(self, url: str) -> bool:
         """Check if URL is allowed by robots.txt."""
@@ -132,47 +148,19 @@ class EthicalScraper:
     
     def fetch_page(self, url: str) -> Optional[str]:
         """Fetch a single page with rate limiting."""
-        try:
-            self.rate_limiter.wait_if_needed()
-            
-            headers = {
-                'User-Agent': self.user_agent,
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-                'Accept-Encoding': 'gzip, deflate',
-                'Connection': 'keep-alive',
-                'Upgrade-Insecure-Requests': '1'
-            }
-            
-            response = requests.get(url, headers=headers, timeout=self.timeout)
-            response.raise_for_status()
-            return response.text
-            
-        except Exception:
-            return None
+        return self._make_request(url)
     
     def fetch_page_with_retry(self, url: str, max_retries: int = 3) -> Optional[str]:
         """Fetch page with retry logic for rate limiting and errors."""
         for attempt in range(max_retries):
             try:
-                self.rate_limiter.wait_if_needed()
-                
-                headers = {
-                    'User-Agent': self.user_agent,
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                    'Accept-Language': 'en-US,en;q=0.5',
-                    'Accept-Encoding': 'gzip, deflate',
-                    'Connection': 'keep-alive',
-                    'Upgrade-Insecure-Requests': '1'
-                }
-                
-                response = requests.get(url, headers=headers, timeout=self.timeout)
+                response = self._make_request_with_response(url)
+                if response is None:
+                    raise Exception("Request failed")
                 
                 if response.status_code == 429:  # Too Many Requests
-                    retry_after = response.headers.get('Retry-After')
-                    if retry_after:
-                        time.sleep(int(retry_after))
-                        continue
+                    self._handle_rate_limit_response(response)
+                    continue
                 
                 response.raise_for_status()
                 return response.text
@@ -183,3 +171,28 @@ class EthicalScraper:
                 time.sleep(2 ** attempt)  # Exponential backoff
         
         return None
+    
+    def _make_request(self, url: str) -> Optional[str]:
+        """Make a single HTTP request."""
+        try:
+            response = self._make_request_with_response(url)
+            if response is None:
+                return None
+            response.raise_for_status()
+            return response.text
+        except Exception:
+            return None
+    
+    def _make_request_with_response(self, url: str) -> Optional[requests.Response]:
+        """Make HTTP request and return response object."""
+        try:
+            self.rate_limiter.wait_if_needed()
+            return requests.get(url, headers=self._request_headers, timeout=self.timeout)
+        except Exception:
+            return None
+    
+    def _handle_rate_limit_response(self, response: requests.Response) -> None:
+        """Handle 429 Too Many Requests response."""
+        retry_after = response.headers.get('Retry-After')
+        if retry_after:
+            time.sleep(int(retry_after))
