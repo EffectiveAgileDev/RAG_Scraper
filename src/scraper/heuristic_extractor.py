@@ -80,7 +80,9 @@ class HeuristicExtractor:
         r'(?:Hours?|Open|Business Hours?):?\s*[^\n\.!]{5,80}(?:am|pm|AM|PM)',
         r'(?:Monday|Mon)[-–\s]+(?:Friday|Fri)[^\.!\n]{5,40}(?:am|pm|AM|PM)',
         r'(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[-–]\s*(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[^\.!\n]{5,40}(?:am|pm|AM|PM)',
-        r'\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM)\s*[-–]\s*\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM)\s*(?:daily|every day)'
+        r'\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM)\s*[-–]\s*\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM)\s*(?:daily|every day)',
+        r'(?:We\'?re\s*)?open\s+(?:Monday|Mon)\s+through\s+(?:Friday|Fri)\s+from\s+\d{1,2}\s+to\s+\d{1,2}',
+        r'\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM)?\s*[-–]\s*\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM)?\s*(?:daily|every day|daily)'
     ]
     
     # Price range patterns
@@ -275,16 +277,33 @@ class HeuristicExtractor:
     
     def _extract_hours(self, soup: BeautifulSoup) -> str:
         """Extract operating hours using time patterns."""
-        text_content = soup.get_text()
+        # First try to find hours in specific elements
+        hours_selectors = [
+            '[class*="hour"]', '[class*="time"]', '[class*="open"]',
+            '[id*="hour"]', '[id*="time"]', '[id*="open"]'
+        ]
         
-        for pattern in self.HOURS_PATTERNS:
-            matches = re.finditer(pattern, text_content, re.IGNORECASE)
-            for match in matches:
-                hours = match.group().strip()
-                # Clean up common prefixes
-                hours = re.sub(r'^(?:Hours?|Open|Business Hours?):?\s*', '', hours, flags=re.IGNORECASE).strip()
-                if hours and len(hours) < 100:  # Reasonable length
-                    return self.normalize_hours(hours)
+        for selector in hours_selectors:
+            elements = soup.select(selector)
+            for elem in elements:
+                text = elem.get_text().strip()
+                if re.search(r'\d+\s*(?:am|pm)', text, re.IGNORECASE) and len(text) < 200:
+                    return self.normalize_hours(text)
+        
+        # Then try patterns on individual elements instead of full text
+        for elem in soup.find_all(['p', 'div', 'span', 'td', 'li']):
+            elem_text = elem.get_text().strip()
+            if not elem_text:
+                continue
+                
+            for pattern in self.HOURS_PATTERNS:
+                matches = re.finditer(pattern, elem_text, re.IGNORECASE)
+                for match in matches:
+                    hours = match.group().strip()
+                    # Clean up common prefixes
+                    hours = re.sub(r'^(?:Hours?|Open|Business Hours?):?\s*', '', hours, flags=re.IGNORECASE).strip()
+                    if hours and len(hours) < 100:  # Reasonable length
+                        return self.normalize_hours(hours)
         
         # Try semantic elements
         hours_classes = ['hours', 'opening-hours', 'business-hours']

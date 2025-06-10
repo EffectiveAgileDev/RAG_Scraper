@@ -126,9 +126,12 @@ class FilePermissionValidator:
         
         # Validate filename
         if not self.is_filename_safe(filename):
+            error_msg = "Filename contains invalid characters or is unsafe"
+            if len(filename) > 255:
+                error_msg = "Filename is too long (maximum 255 characters)"
             return FileCreationResult(
                 os.path.join(directory, filename), False,
-                "Filename contains invalid characters or is unsafe"
+                error_msg
             )
         
         full_path = os.path.join(directory, filename)

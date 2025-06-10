@@ -223,7 +223,8 @@ Disallow: /
         
         scraper = EthicalScraper()
         
-        with patch('src.scraper.ethical_scraper.requests.get') as mock_get:
+        with patch('src.scraper.ethical_scraper.requests.get') as mock_get, \
+             patch.object(scraper.rate_limiter, 'wait_if_needed') as mock_rate_limiter:
             # First call returns 429 with Retry-After
             mock_response_429 = Mock()
             mock_response_429.status_code = 429

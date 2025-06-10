@@ -58,16 +58,29 @@ class RobotsTxtParser:
         else:
             rules = self.rules.get('*', {'allow': [], 'disallow': []})
         
-        # Check disallow rules first, but allow rules can override them
+        # Find the most specific matching rule (longest path match)
+        best_allow_match = ""
+        best_disallow_match = ""
+        
+        # Check allow rules
+        for allow_path in rules.get('allow', []):
+            if allow_path and path.startswith(allow_path):
+                if len(allow_path) > len(best_allow_match):
+                    best_allow_match = allow_path
+        
+        # Check disallow rules
         for disallow_path in rules.get('disallow', []):
             if disallow_path and path.startswith(disallow_path):
-                # Check if any allow rule overrides this disallow
-                for allow_path in rules.get('allow', []):
-                    if allow_path and path.startswith(allow_path):
-                        return True  # Allow rule overrides disallow
-                return False  # Disallowed and no allow override
+                if len(disallow_path) > len(best_disallow_match):
+                    best_disallow_match = disallow_path
         
-        return True  # No specific disallow, default to allow
+        # If we have both matches, the more specific (longer) one wins
+        if best_allow_match and best_disallow_match:
+            return len(best_allow_match) >= len(best_disallow_match)
+        elif best_disallow_match:
+            return False  # Disallowed
+        else:
+            return True  # No disallow rule or explicit allow
 
 
 class EthicalScraper:

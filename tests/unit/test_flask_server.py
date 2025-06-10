@@ -188,6 +188,7 @@ class TestScrapingEndpoint:
         mock_result.successful_extractions = [Mock()]
         mock_result.failed_urls = []
         mock_result.output_files = {'text': ['/tmp/output.txt']}
+        mock_result.processing_time = 1.0
         mock_scraper.scrape_restaurants.return_value = mock_result
         
         response = client.post('/api/scrape', 
@@ -210,6 +211,7 @@ class TestScrapingEndpoint:
         mock_result.successful_extractions = [Mock(), Mock()]
         mock_result.failed_urls = []
         mock_result.output_files = {'text': ['/tmp/output.txt']}
+        mock_result.processing_time = 2.0
         mock_scraper.scrape_restaurants.return_value = mock_result
         
         urls = ['https://restaurant1.com', 'https://restaurant2.com']
@@ -337,6 +339,9 @@ class TestErrorHandling:
         @app.route('/test-error')
         def test_error():
             raise Exception("Test error")
+        
+        # Enable error handling even in testing mode
+        app.config['TESTING'] = False
         
         response = client.get('/test-error')
         
