@@ -9,20 +9,23 @@ import secrets
 from src.config.url_validator import URLValidator
 from src.config.scraping_config import ScrapingConfig
 from src.scraper.restaurant_scraper import RestaurantScraper
-from src.file_generator.file_generator_service import FileGeneratorService, FileGenerationRequest
+from src.file_generator.file_generator_service import (
+    FileGeneratorService,
+    FileGenerationRequest,
+)
 
 
 # Global variable to store current progress and scraper instance
 current_progress = {
-    'current_url': None,
-    'progress_percentage': 0,
-    'urls_completed': 0,
-    'urls_total': 0,
-    'status': 'idle',
-    'estimated_time_remaining': 0,
-    'current_operation': '',
-    'memory_usage_mb': 0,
-    'processing_time': 0
+    "current_url": None,
+    "progress_percentage": 0,
+    "urls_completed": 0,
+    "urls_total": 0,
+    "status": "idle",
+    "estimated_time_remaining": 0,
+    "current_operation": "",
+    "memory_usage_mb": 0,
+    "processing_time": 0,
 }
 
 # Global scraper instance for progress tracking
@@ -35,34 +38,34 @@ file_generator_service = None
 def create_app(testing=False):
     """Create and configure Flask application."""
     app = Flask(__name__)
-    
+
     # Configuration
-    app.config['SECRET_KEY'] = secrets.token_hex(16)
-    app.config['TESTING'] = testing
-    app.config['DEBUG'] = False  # Always False for security
-    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max request size
-    
+    app.config["SECRET_KEY"] = secrets.token_hex(16)
+    app.config["TESTING"] = testing
+    app.config["DEBUG"] = False  # Always False for security
+    app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16MB max request size
+
     # Upload folder configuration
     if testing:
-        app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()
+        app.config["UPLOAD_FOLDER"] = tempfile.gettempdir()
     else:
-        app.config['UPLOAD_FOLDER'] = os.path.join(os.path.expanduser('~'), 'Downloads')
-    
+        app.config["UPLOAD_FOLDER"] = os.path.join(os.path.expanduser("~"), "Downloads")
+
     # Initialize file generator service
     global file_generator_service
-    config_file = os.path.join(app.config['UPLOAD_FOLDER'], 'rag_scraper_config.json')
+    config_file = os.path.join(app.config["UPLOAD_FOLDER"], "rag_scraper_config.json")
     file_generator_service = FileGeneratorService(config_file)
-    
+
     # Security headers
     @app.after_request
     def add_security_headers(response):
-        response.headers['X-Content-Type-Options'] = 'nosniff'
-        response.headers['X-Frame-Options'] = 'DENY'
-        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
         return response
-    
+
     # Main interface route
-    @app.route('/')
+    @app.route("/")
     def index():
         """Serve main interface."""
         html_template = """
@@ -457,326 +460,397 @@ https://restaurant3.com" required></textarea>
         </html>
         """
         return render_template_string(html_template)
-    
+
     # URL validation endpoint
-    @app.route('/api/validate', methods=['POST'])
+    @app.route("/api/validate", methods=["POST"])
     def validate_urls():
         """Validate URLs endpoint."""
         try:
             data = request.get_json()
             if not data:
-                return jsonify({'error': 'No data provided'}), 400
-            
+                return jsonify({"error": "No data provided"}), 400
+
             validator = URLValidator()
-            
+
             # Handle single URL
-            if 'url' in data:
-                result = validator.validate_url(data['url'])
-                return jsonify({
-                    'is_valid': result.is_valid,
-                    'error': result.error_message
-                })
-            
+            if "url" in data:
+                result = validator.validate_url(data["url"])
+                return jsonify(
+                    {"is_valid": result.is_valid, "error": result.error_message}
+                )
+
             # Handle multiple URLs
-            elif 'urls' in data:
-                results = validator.validate_urls(data['urls'])
-                return jsonify({
-                    'results': [
-                        {
-                            'is_valid': result.is_valid,
-                            'error': result.error_message
-                        }
-                        for result in results
-                    ]
-                })
-            
+            elif "urls" in data:
+                results = validator.validate_urls(data["urls"])
+                return jsonify(
+                    {
+                        "results": [
+                            {"is_valid": result.is_valid, "error": result.error_message}
+                            for result in results
+                        ]
+                    }
+                )
+
             else:
-                return jsonify({'error': 'No URL or URLs provided'}), 400
-                
+                return jsonify({"error": "No URL or URLs provided"}), 400
+
         except BadRequest:
-            return jsonify({'error': 'Invalid JSON'}), 400
+            return jsonify({"error": "Invalid JSON"}), 400
         except Exception as e:
-            return jsonify({'error': str(e)}), 500
-    
+            return jsonify({"error": str(e)}), 500
+
     # Scraping endpoint
-    @app.route('/api/scrape', methods=['POST'])
+    @app.route("/api/scrape", methods=["POST"])
     def scrape_restaurants():
         """Scrape restaurants endpoint."""
         try:
             data = request.get_json()
             if not data:
-                return jsonify({'success': False, 'error': 'No data provided'}), 400
-            
+                return jsonify({"success": False, "error": "No data provided"}), 400
+
             # Extract URLs
             urls = []
-            if 'url' in data:
-                urls = [data['url']]
-            elif 'urls' in data:
-                urls = data['urls']
+            if "url" in data:
+                urls = [data["url"]]
+            elif "urls" in data:
+                urls = data["urls"]
             else:
-                return jsonify({'success': False, 'error': 'No URLs provided'}), 400
-            
+                return jsonify({"success": False, "error": "No URLs provided"}), 400
+
             # Validate URLs first
             validator = URLValidator()
             validation_results = validator.validate_urls(urls)
-            
-            invalid_urls = [result for result in validation_results if not result.is_valid]
+
+            invalid_urls = [
+                result for result in validation_results if not result.is_valid
+            ]
             if invalid_urls:
-                return jsonify({
-                    'success': False,
-                    'error': f'Invalid URLs provided: {len(invalid_urls)} of {len(urls)} URLs are invalid'
-                }), 400
-            
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "error": f"Invalid URLs provided: {len(invalid_urls)} of {len(urls)} URLs are invalid",
+                        }
+                    ),
+                    400,
+                )
+
             # Configure scraping
-            output_dir = data.get('output_dir') or app.config['UPLOAD_FOLDER']
-            file_mode = data.get('file_mode', 'single')
-            
+            output_dir = data.get("output_dir") or app.config["UPLOAD_FOLDER"]
+            file_mode = data.get("file_mode", "single")
+
             config = ScrapingConfig(
-                urls=urls,
-                output_directory=output_dir,
-                file_mode=file_mode
+                urls=urls, output_directory=output_dir, file_mode=file_mode
             )
-            
+
             # Progress callback
             def progress_callback(message, percentage=None, time_estimate=None):
                 global current_progress, active_scraper
-                current_progress.update({
-                    'status': message,
-                    'progress_percentage': percentage if percentage is not None else current_progress['progress_percentage'],
-                    'urls_total': len(urls)
-                })
-                
+                current_progress.update(
+                    {
+                        "status": message,
+                        "progress_percentage": percentage
+                        if percentage is not None
+                        else current_progress["progress_percentage"],
+                        "urls_total": len(urls),
+                    }
+                )
+
                 if time_estimate is not None:
-                    current_progress['estimated_time_remaining'] = time_estimate
-                
+                    current_progress["estimated_time_remaining"] = time_estimate
+
                 # Get detailed progress from batch processor if available
-                if active_scraper and hasattr(active_scraper, 'get_current_progress'):
+                if active_scraper and hasattr(active_scraper, "get_current_progress"):
                     batch_progress = active_scraper.get_current_progress()
                     if batch_progress:
-                        current_progress.update({
-                            'current_url': batch_progress.current_url,
-                            'urls_completed': batch_progress.urls_completed,
-                            'progress_percentage': batch_progress.progress_percentage,
-                            'estimated_time_remaining': batch_progress.estimated_time_remaining,
-                            'current_operation': batch_progress.current_operation,
-                            'memory_usage_mb': batch_progress.memory_usage_mb
-                        })
-            
+                        current_progress.update(
+                            {
+                                "current_url": batch_progress.current_url,
+                                "urls_completed": batch_progress.urls_completed,
+                                "progress_percentage": batch_progress.progress_percentage,
+                                "estimated_time_remaining": batch_progress.estimated_time_remaining,
+                                "current_operation": batch_progress.current_operation,
+                                "memory_usage_mb": batch_progress.memory_usage_mb,
+                            }
+                        )
+
             # Create and run scraper with progress tracking
             global active_scraper
             scraper = RestaurantScraper()
             active_scraper = scraper
-            
+
             # Force batch processing for better progress tracking
             config.force_batch_processing = True
-            
-            result = scraper.scrape_restaurants(config, progress_callback=progress_callback)
-            
+
+            result = scraper.scrape_restaurants(
+                config, progress_callback=progress_callback
+            )
+
             # Clear active scraper
             active_scraper = None
-            
+
             # Return results
-            return jsonify({
-                'success': True,
-                'processed_count': len(result.successful_extractions),
-                'failed_count': len(result.failed_urls),
-                'output_files': result.output_files.get('text', []),
-                'processing_time': getattr(result, 'processing_time', 0)
-            })
-            
+            return jsonify(
+                {
+                    "success": True,
+                    "processed_count": len(result.successful_extractions),
+                    "failed_count": len(result.failed_urls),
+                    "output_files": result.output_files.get("text", []),
+                    "processing_time": getattr(result, "processing_time", 0),
+                }
+            )
+
         except Exception as e:
-            return jsonify({'success': False, 'error': str(e)}), 500
-    
+            return jsonify({"success": False, "error": str(e)}), 500
+
     # Progress endpoint
-    @app.route('/api/progress', methods=['GET'])
+    @app.route("/api/progress", methods=["GET"])
     def get_progress():
         """Get current scraping progress."""
         global current_progress, active_scraper
-        
+
         # Get real-time progress from active scraper if available
-        if active_scraper and hasattr(active_scraper, 'get_current_progress'):
+        if active_scraper and hasattr(active_scraper, "get_current_progress"):
             batch_progress = active_scraper.get_current_progress()
             if batch_progress:
                 # Update current_progress with latest batch processor data
-                current_progress.update({
-                    'current_url': batch_progress.current_url,
-                    'urls_completed': batch_progress.urls_completed,
-                    'progress_percentage': batch_progress.progress_percentage,
-                    'estimated_time_remaining': batch_progress.estimated_time_remaining,
-                    'current_operation': batch_progress.current_operation,
-                    'memory_usage_mb': batch_progress.memory_usage_mb
-                })
-        
+                current_progress.update(
+                    {
+                        "current_url": batch_progress.current_url,
+                        "urls_completed": batch_progress.urls_completed,
+                        "progress_percentage": batch_progress.progress_percentage,
+                        "estimated_time_remaining": batch_progress.estimated_time_remaining,
+                        "current_operation": batch_progress.current_operation,
+                        "memory_usage_mb": batch_progress.memory_usage_mb,
+                    }
+                )
+
         return jsonify(current_progress)
-    
+
     # File download endpoint
-    @app.route('/api/download/<filename>')
+    @app.route("/api/download/<filename>")
     def download_file(filename):
         """Download generated file."""
         try:
             # Security: ensure filename is safe
-            if '..' in filename or '/' in filename or '\\' in filename:
-                return jsonify({'error': 'Invalid filename'}), 403
-            
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            
+            if ".." in filename or "/" in filename or "\\" in filename:
+                return jsonify({"error": "Invalid filename"}), 403
+
+            file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+
             if not os.path.exists(file_path):
-                return jsonify({'error': 'File not found'}), 404
-            
+                return jsonify({"error": "File not found"}), 404
+
             return send_file(file_path, as_attachment=True)
-            
+
         except Exception as e:
-            return jsonify({'error': str(e)}), 500
-    
+            return jsonify({"error": str(e)}), 500
+
     # File generation endpoints
-    @app.route('/api/generate-file', methods=['POST'])
+    @app.route("/api/generate-file", methods=["POST"])
     def generate_file():
         """Generate text file from scraped restaurant data."""
         global file_generator_service
-        
+
         try:
             data = request.get_json(force=True)
             if data is None:
-                return jsonify({'success': False, 'error': 'No JSON data provided'}), 400
+                return (
+                    jsonify({"success": False, "error": "No JSON data provided"}),
+                    400,
+                )
             if not data:
-                return jsonify({'success': False, 'error': 'No restaurant data provided'}), 400
+                return (
+                    jsonify({"success": False, "error": "No restaurant data provided"}),
+                    400,
+                )
         except Exception as json_error:
-            return jsonify({'success': False, 'error': 'Invalid JSON data provided'}), 400
-        
+            return (
+                jsonify({"success": False, "error": "Invalid JSON data provided"}),
+                400,
+            )
+
         try:
             # Validate required fields
-            if 'restaurant_data' not in data:
-                return jsonify({'success': False, 'error': 'No restaurant data provided'}), 400
-            
+            if "restaurant_data" not in data:
+                return (
+                    jsonify({"success": False, "error": "No restaurant data provided"}),
+                    400,
+                )
+
             # Parse restaurant data from JSON
             from src.scraper.multi_strategy_scraper import RestaurantData
+
             restaurant_objects = []
-            
-            for restaurant_dict in data['restaurant_data']:
+
+            for restaurant_dict in data["restaurant_data"]:
                 restaurant = RestaurantData(
-                    name=restaurant_dict.get('name', ''),
-                    address=restaurant_dict.get('address', ''),
-                    phone=restaurant_dict.get('phone', ''),
-                    hours=restaurant_dict.get('hours', ''),
-                    price_range=restaurant_dict.get('price_range', ''),
-                    cuisine=restaurant_dict.get('cuisine', ''),
-                    menu_items=restaurant_dict.get('menu_items', {}),
-                    social_media=restaurant_dict.get('social_media', []),
-                    confidence=restaurant_dict.get('confidence', 'medium'),
-                    sources=restaurant_dict.get('sources', ['web_interface'])
+                    name=restaurant_dict.get("name", ""),
+                    address=restaurant_dict.get("address", ""),
+                    phone=restaurant_dict.get("phone", ""),
+                    hours=restaurant_dict.get("hours", ""),
+                    price_range=restaurant_dict.get("price_range", ""),
+                    cuisine=restaurant_dict.get("cuisine", ""),
+                    menu_items=restaurant_dict.get("menu_items", {}),
+                    social_media=restaurant_dict.get("social_media", []),
+                    confidence=restaurant_dict.get("confidence", "medium"),
+                    sources=restaurant_dict.get("sources", ["web_interface"]),
                 )
                 restaurant_objects.append(restaurant)
-            
+
             # Create file generation request
             request_obj = FileGenerationRequest(
                 restaurant_data=restaurant_objects,
-                output_directory=data.get('output_directory'),
-                file_format=data.get('file_format', 'text'),
-                allow_overwrite=data.get('allow_overwrite', True),
-                save_preferences=data.get('save_preferences', False)
+                output_directory=data.get("output_directory"),
+                file_format=data.get("file_format", "text"),
+                allow_overwrite=data.get("allow_overwrite", True),
+                save_preferences=data.get("save_preferences", False),
             )
-            
+
             # Generate file
             result = file_generator_service.generate_file(request_obj)
-            
+
             return jsonify(result)
-            
+
         except Exception as e:
-            return jsonify({'success': False, 'error': str(e)}), 500
-    
-    @app.route('/api/file-config', methods=['GET'])
+            return jsonify({"success": False, "error": str(e)}), 500
+
+    @app.route("/api/file-config", methods=["GET"])
     def get_file_config():
         """Get current file generation configuration."""
         global file_generator_service
-        
+
         try:
             config = file_generator_service.get_current_config()
             supported_formats = file_generator_service.get_supported_formats()
             directory_options = file_generator_service.get_output_directory_options()
-            
-            return jsonify({
-                'success': True,
-                'config': config,
-                'supported_formats': supported_formats,
-                'directory_options': directory_options
-            })
-            
+
+            return jsonify(
+                {
+                    "success": True,
+                    "config": config,
+                    "supported_formats": supported_formats,
+                    "directory_options": directory_options,
+                }
+            )
+
         except Exception as e:
-            return jsonify({'success': False, 'error': str(e)}), 500
-    
-    @app.route('/api/file-config', methods=['POST'])
+            return jsonify({"success": False, "error": str(e)}), 500
+
+    @app.route("/api/file-config", methods=["POST"])
     def update_file_config():
         """Update file generation configuration."""
         global file_generator_service
-        
+
         try:
             data = request.get_json(force=True)
             if data is None or not data:
-                return jsonify({'success': False, 'error': 'No configuration data provided'}), 400
+                return (
+                    jsonify(
+                        {"success": False, "error": "No configuration data provided"}
+                    ),
+                    400,
+                )
         except Exception as json_error:
-            return jsonify({'success': False, 'error': 'Invalid JSON data provided'}), 400
-        
+            return (
+                jsonify({"success": False, "error": "Invalid JSON data provided"}),
+                400,
+            )
+
         try:
             result = file_generator_service.update_config(data)
             return jsonify(result)
-            
+
         except Exception as e:
-            return jsonify({'success': False, 'error': str(e)}), 500
-    
-    @app.route('/api/validate-directory', methods=['POST'])
+            return jsonify({"success": False, "error": str(e)}), 500
+
+    @app.route("/api/validate-directory", methods=["POST"])
     def validate_directory():
         """Validate directory permissions for file generation."""
         global file_generator_service
-        
+
         try:
             data = request.get_json(force=True)
-            if data is None or not data or 'directory_path' not in data:
-                return jsonify({'success': False, 'error': 'No directory path provided'}), 400
+            if data is None or not data or "directory_path" not in data:
+                return (
+                    jsonify({"success": False, "error": "No directory path provided"}),
+                    400,
+                )
         except Exception as json_error:
-            return jsonify({'success': False, 'error': 'Invalid JSON data provided'}), 400
-        
+            return (
+                jsonify({"success": False, "error": "Invalid JSON data provided"}),
+                400,
+            )
+
         try:
-            result = file_generator_service.validate_directory_permissions(data['directory_path'])
-            return jsonify({'success': True, 'validation': result})
-            
+            result = file_generator_service.validate_directory_permissions(
+                data["directory_path"]
+            )
+            return jsonify({"success": True, "validation": result})
+
         except Exception as e:
-            return jsonify({'success': False, 'error': str(e)}), 500
-    
-    @app.route('/api/create-directory', methods=['POST'])
+            return jsonify({"success": False, "error": str(e)}), 500
+
+    @app.route("/api/create-directory", methods=["POST"])
     def create_directory():
         """Create custom directory for file output."""
         global file_generator_service
-        
+
         try:
             data = request.get_json(force=True)
-            if data is None or not data or 'parent_directory' not in data or 'directory_name' not in data:
-                return jsonify({'success': False, 'error': 'Parent directory and directory name required'}), 400
+            if (
+                data is None
+                or not data
+                or "parent_directory" not in data
+                or "directory_name" not in data
+            ):
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "error": "Parent directory and directory name required",
+                        }
+                    ),
+                    400,
+                )
         except Exception as json_error:
-            return jsonify({'success': False, 'error': 'Invalid JSON data provided'}), 400
-        
+            return (
+                jsonify({"success": False, "error": "Invalid JSON data provided"}),
+                400,
+            )
+
         try:
             result = file_generator_service.create_custom_directory(
-                data['parent_directory'], 
-                data['directory_name']
+                data["parent_directory"], data["directory_name"]
             )
             return jsonify(result)
-            
+
         except Exception as e:
-            return jsonify({'success': False, 'error': str(e)}), 500
-    
+            return jsonify({"success": False, "error": str(e)}), 500
+
     # Error handlers
     @app.errorhandler(404)
     def not_found(error):
-        if request.path.startswith('/api/'):
-            return jsonify({'error': 'Endpoint not found'}), 404
-        return render_template_string('<h1>Page Not Found</h1><p>The requested page does not exist.</p>'), 404
-    
+        if request.path.startswith("/api/"):
+            return jsonify({"error": "Endpoint not found"}), 404
+        return (
+            render_template_string(
+                "<h1>Page Not Found</h1><p>The requested page does not exist.</p>"
+            ),
+            404,
+        )
+
     @app.errorhandler(500)
     def internal_error(error):
-        if request.path.startswith('/api/'):
-            return jsonify({'error': 'Internal server error'}), 500
-        return render_template_string('<h1>Server Error</h1><p>An internal error occurred.</p>'), 500
-    
+        if request.path.startswith("/api/"):
+            return jsonify({"error": "Internal server error"}), 500
+        return (
+            render_template_string(
+                "<h1>Server Error</h1><p>An internal error occurred.</p>"
+            ),
+            500,
+        )
+
     return app
 
 
@@ -786,6 +860,6 @@ def get_current_progress():
     return current_progress
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = create_app()
-    app.run(host='localhost', port=8080, debug=False)
+    app.run(host="localhost", port=8080, debug=False)

@@ -17,12 +17,12 @@ def setup_test_environment():
     src_path = project_root / "src"
     if str(src_path) not in sys.path:
         sys.path.insert(0, str(src_path))
-    
+
     # Set environment variable for testing
     os.environ["TESTING"] = "1"
-    
+
     yield
-    
+
     # Cleanup
     if "TESTING" in os.environ:
         del os.environ["TESTING"]

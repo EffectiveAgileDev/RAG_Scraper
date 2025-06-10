@@ -23,5 +23,8 @@ black==23.7.0
 flake8==6.0.0
 coverage==7.3.0
 
+# PDF Generation
+reportlab==4.0.4
+
 # System Monitoring
 psutil==5.9.5
