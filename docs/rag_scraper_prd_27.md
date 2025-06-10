@@ -105,7 +105,8 @@ RAG_Scraper is a web-based application that scrapes restaurant websites and conv
 **Description**: Control over file generation, format, and storage options
 **Implementation Requirements**:
 - Output folder selection with folder browser dialog
-- Remember last selected folder as default for next session
+- Persistent storage of last selected folder as default for next session
+- Automatic restoration of saved output directory preference on application restart
 - **Output format selection**:
   - **Text Files**: Standard .txt format for direct RAG system integration
   - **PDF Files**: Formatted PDF documents for human readability and documentation
@@ -118,7 +119,7 @@ RAG_Scraper is a web-based application that scrapes restaurant websites and conv
 - **Multi-page handling**: Aggregate data from all pages of a website into single restaurant entry
 - **PDF formatting options**: Font selection, page layout, and styling preferences
 
-**Acceptance Criteria**: Users can select output folder, file format (text or PDF), and file generation mode, with settings persisting as defaults for the next session, and data from multi-page websites is properly aggregated regardless of output format, and we will know we have done that when the application remembers preferences across restarts and generates properly formatted files in the selected format.
+**Acceptance Criteria**: Users can select output folder, file format (text or PDF), and file generation mode, with all settings including the output directory path persisting as defaults for the next session, and data from multi-page websites is properly aggregated regardless of output format, and we will know we have done that when the application remembers all preferences including the exact folder path across restarts and generates properly formatted files in the selected format and location.
 
 ### 3.2 Web Scraping Engine
 
@@ -235,7 +236,8 @@ RAG_Scraper is a web-based application that scrapes restaurant websites and conv
 #### 3.3.3 File Management
 **Description**: Organized file creation and storage management for both text and PDF formats
 **Implementation Requirements**:
-- User-selectable output directory with persistent preference storage
+- User-selectable output directory with persistent preference storage across application sessions
+- JSON-based configuration file to store user preferences including output directory path
 - Automatic creation of output directory if it doesn't exist
 - File overwrite protection with user confirmation for both formats
 - File size monitoring and warnings for large outputs
@@ -244,7 +246,7 @@ RAG_Scraper is a web-based application that scrapes restaurant websites and conv
 - **Dual format generation**: Optional simultaneous creation of both text and PDF files
 - **Format validation**: Verify file integrity after generation
 
-**Acceptance Criteria**: Files are created in the user-specified format and directory with proper naming and no data loss, and we will know we have done that when users can reliably find their generated files in the expected location with correct naming conventions and proper format validation.
+**Acceptance Criteria**: Files are created in the user-specified format and directory with proper naming and no data loss, with the output directory preference being automatically saved and restored on subsequent application launches, and we will know we have done that when users can reliably find their generated files in the expected location with correct naming conventions, proper format validation, and the same output directory being pre-selected when they restart the application.
 
 ## 4. Technical Stack Recommendations
 
@@ -352,6 +354,23 @@ class ScrapingConfig:
     
     # PDF-specific configuration
     pdf_config: Optional[PDFConfiguration] = None
+
+class UserPreferences:
+    """Persistent user preferences stored in JSON configuration file"""
+    last_output_directory: str
+    default_file_mode: str = "single"  
+    default_output_format: str = "text"
+    default_optional_fields: List[str] = []
+    pdf_preferences: Optional[PDFConfiguration] = None
+    
+    def save_to_file(self, config_path: str):
+        """Save preferences to JSON file"""
+        pass
+    
+    @classmethod
+    def load_from_file(cls, config_path: str) -> 'UserPreferences':
+        """Load preferences from JSON file or create defaults"""
+        pass
 
 class PDFConfiguration:
     font_family: str = "Helvetica"  # Font selection

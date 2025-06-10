@@ -5,7 +5,7 @@
 - **Version**: 1.0
 - **Created**: June 9, 2025
 - **Document Type**: Project Startup Plan (PSP)
-- **Target Release**: 1-2 days from project start
+- **Target Release**: 2-3 weeks from project start (7 comprehensive sprints)
 - **Development Platform**: Linux
 
 ## Project Overview and Objectives
@@ -25,7 +25,7 @@ RAG_Scraper is a localhost web-based application that scrapes restaurant website
 - Handle 100 URL batch sessions with progress feedback
 - 100% ATDD coverage of user features
 - Nearly 100% TDD coverage of implementation code
-- Completion within 1-2 day development timeline
+- Completion within 2-3 week development timeline across 7 comprehensive sprints
 
 ## Team Size and Project Framework
 
@@ -37,7 +37,7 @@ RAG_Scraper is a localhost web-based application that scrapes restaurant website
 ### Project Framework
 **Framework**: Adapted Scrum with Goal-Based Sprints
 - **Sprint Definition**: Sprints defined by functional goals rather than time-boxes
-- **Sprint Duration**: Variable based on goal complexity (targeting 1-2 day total completion)
+- **Sprint Duration**: Variable based on goal complexity (targeting 2-3 weeks total completion across 7 sprints)
 - **Daily Progress**: Self-assessment with Claude Code collaboration
 - **Reviews**: Goal completion validation before moving to next sprint
 
@@ -267,34 +267,162 @@ rag_scraper/
 - Functional 100 URL batch processing with progress feedback
 - Memory usage within acceptable limits
 
-#### Sprint 4 Goal: File Generation and RAG Integration
+#### Sprint 4 Goal: Multi-Page Website Navigation and Data Aggregation
+**Objective**: Implement intelligent multi-page website discovery and data consolidation
+
+**ATDD Goals**:
+- Acceptance tests for multi-page website discovery and navigation
+- Progress notification scenarios for multi-page processing
+- Data aggregation validation from multiple pages
+- User feedback for multi-page processing status
+
+**TDD Goals**:
+- Page discovery algorithms for restaurant navigation menus
+- Page type classification (home, menu, contact, about, hours)
+- Data deduplication and conflict resolution across pages
+- Progress tracking and user notifications for multi-page workflows
+- Graceful handling of individual page failures
+
+**Technical Requirements**:
+- Maximum 10 pages per website to prevent infinite loops
+- Real-time user notifications when processing new pages
+- Data prioritization when conflicting information exists
+- Page-by-page progress indicators within each website
+
+**Claude Code Prompting Strategy**:
+1. "Write failing tests for discovering navigation links in restaurant websites"
+2. "Implement minimal page discovery and classification logic"
+3. "Add tests for aggregating data from multiple pages with conflict resolution"
+4. "Implement progress notifications for multi-page processing workflow"
+
+**Completion Criteria**:
+- 100% ATDD coverage for multi-page navigation workflows
+- 95%+ TDD coverage for page discovery and aggregation logic
+- Functional multi-page website processing with user feedback
+- Robust error handling for individual page failures
+
+#### Sprint 5 Goal: Text File Generation and RAG Integration
 **Objective**: Generate properly formatted text files for RAG systems
 
 **ATDD Goals**:
 - Acceptance tests for file format compliance
-- Output validation matching PDF format guide
+- Output validation matching PDF format guide standards
 - User file location selection scenarios
+- Multi-page data integration in output files
 
 **TDD Goals**:
 - Text file generation with proper formatting
 - RAG system compatibility validation
-- User-configurable output options
+- User-configurable output options with persistent storage
+- Multi-page source data consolidation in text format
+- JSON-based configuration system for user preferences
 
 **Integration Requirements**:
 - Files match existing RAG system format requirements
 - Single file and multiple file output modes
-- User folder selection with permission validation
+- User folder selection with permission validation and persistent storage
+- Proper formatting with double carriage return separators
+- Automatic restoration of last used output directory on application restart
 
 **Claude Code Prompting Strategy**:
 1. "Write failing tests for RAG-compatible file format generation"
 2. "Implement minimal file output system matching format requirements"
-3. "Add user folder selection with permission validation"
+3. "Add user folder selection with permission validation and persistent storage"
+4. "Add tests for JSON-based configuration system that saves and restores output directory"
+5. "Add tests for multi-page data consolidation in text files"
 
 **Completion Criteria**:
 - 100% ATDD coverage for file generation workflows
-- 95%+ TDD coverage for output system
+- 95%+ TDD coverage for output system including configuration persistence
 - RAG-compatible file format validation
-- Flexible output configuration options
+- Flexible output configuration options with persistent user preferences
+- Automatic directory restoration working across application restarts
+
+#### Sprint 6 Goal: PDF Generation System with Professional Formatting
+**Objective**: Implement comprehensive PDF generation with ReportLab integration
+
+**ATDD Goals**:
+- Acceptance tests for PDF generation workflow
+- PDF formatting and layout validation scenarios
+- Dual format output capability (text and PDF simultaneously)
+- PDF configuration options and user interface integration
+- Persistent storage of PDF preferences and output directory settings
+
+**TDD Goals**:
+- ReportLab PDF generation implementation
+- PDF formatting engine with configurable options
+- Font management and layout optimization
+- PDF content validation and integrity checks
+- Performance optimization for large datasets
+- Enhanced configuration system to include PDF preferences in persistent storage
+
+**Technical Requirements**:
+- Professional PDF formatting with visual hierarchy
+- Configurable fonts, layouts, and styling options
+- PDF content must match text content exactly
+- Support for 100+ restaurant entries without performance degradation
+- PDF file size optimization (max 5x equivalent text file size)
+
+**PDF-Specific Features**:
+- Header information with document title and generation timestamp
+- Multi-page website source indicators
+- Table formatting for structured restaurant information
+- Automatic page breaks and headers/footers
+- PDF/A compliance for archival purposes
+
+**Claude Code Prompting Strategy**:
+1. "Write failing tests for PDF generation with ReportLab integration"
+2. "Implement minimal PDF creation with basic restaurant formatting"
+3. "Add comprehensive tests for PDF formatting options and configuration"
+4. "Implement dual format generation (text and PDF) with content validation"
+5. "Add performance tests for PDF generation with large datasets"
+
+**Completion Criteria**:
+- 100% ATDD coverage for PDF generation workflows
+- 95%+ TDD coverage for PDF implementation
+- Professional PDF output with configurable formatting
+- Content accuracy validation between text and PDF formats
+- Performance requirements met for large-scale generation
+
+#### Sprint 7 Goal: Extensibility Foundation and Plugin Architecture
+**Objective**: Establish plugin architecture for future data formats and output types
+
+**ATDD Goals**:
+- Acceptance tests for plugin interface functionality
+- Extension point validation scenarios
+- Backward compatibility preservation tests
+- Plugin configuration and management workflows
+
+**TDD Goals**:
+- Abstract base classes for data extractors and formatters
+- Plugin discovery and loading mechanisms
+- Configuration system for new data types and output formats
+- Interface contracts for extension points
+
+**Architecture Requirements**:
+- Plugin system for new data formats beyond restaurants
+- Extensible output format architecture beyond text and PDF
+- Modular extractor architecture for different website types
+- Configuration management for plugin-specific settings
+
+**Future-Proofing Features**:
+- Clean separation between core engine and restaurant-specific logic
+- Standardized interfaces for data extraction strategies
+- Pluggable output format system
+- Extension documentation and guidelines
+
+**Claude Code Prompting Strategy**:
+1. "Write failing tests for plugin interface contracts and abstract base classes"
+2. "Implement minimal plugin architecture with restaurant format as first plugin"
+3. "Add tests for extension points without breaking existing functionality"
+4. "Create comprehensive plugin development documentation and guidelines"
+
+**Completion Criteria**:
+- 100% ATDD coverage for extensibility interfaces
+- 95%+ TDD coverage for plugin architecture
+- Functional plugin system with restaurant implementation as reference
+- Comprehensive documentation for future plugin development
+- No regression in existing restaurant functionality
 
 ## Technical Challenges and Testing Strategy
 
@@ -323,19 +451,68 @@ rag_scraper/
 **Error Scenarios**: Incomplete data, formatting inconsistencies
 **Claude Code Prompts**: "Add comprehensive data validation tests for restaurant information"
 
+### Challenge 6: Multi-Page Website Navigation and Data Consolidation
+**Testing Approach**: Mock multi-page website structures with various navigation patterns
+**Error Scenarios**: Infinite loops, missing navigation links, conflicting data across pages
+**Claude Code Prompts**: "Create tests for page discovery algorithms and data aggregation from multiple pages"
+
+### Challenge 7: PDF Generation Performance and Quality
+**Testing Approach**: Performance benchmarks for PDF creation and content validation
+**Error Scenarios**: Memory overflow during large PDF generation, font loading failures, content formatting errors
+**Claude Code Prompts**: "Add comprehensive tests for PDF generation performance and content accuracy"
+
+### Challenge 8: Dual Format Content Consistency
+**Testing Approach**: Content comparison tests between text and PDF outputs
+**Error Scenarios**: Content mismatches, formatting inconsistencies, encoding issues
+**Claude Code Prompts**: "Create tests to validate identical content between text and PDF formats"
+
+### Challenge 9: Configuration Persistence and User Preferences
+**Testing Approach**: Configuration file management tests with various file system scenarios
+**Error Scenarios**: Configuration file corruption, permission denied errors, default value fallbacks
+**Claude Code Prompts**: "Add comprehensive tests for JSON configuration persistence including output directory storage and restoration"
+
+### Challenge 10: Plugin Architecture Extensibility
+**Testing Approach**: Mock plugin implementations to validate interface contracts
+**Error Scenarios**: Plugin loading failures, interface compatibility issues, configuration conflicts
+**Claude Code Prompts**: "Add tests for plugin system extensibility without breaking existing functionality"
+
 ## Performance Requirements and Testing
 
 ### Processing Performance
-- **Target Speed**: 3-5 seconds per restaurant website
+- **Target Speed**: 3-5 seconds per single-page restaurant website, 10-30 seconds for multi-page sites
+- **Page Processing**: Maximum 5 seconds per individual page within multi-page sites
 - **Batch Capacity**: 100 URLs per session without memory issues
+- **Multi-page Limits**: Maximum 10 pages per website to prevent infinite crawling
 - **Progress Updates**: Real-time feedback every 2 seconds during processing
-- **Memory Usage**: Monitor and maintain efficient memory utilization
+- **Memory Usage**: Maximum 500MB RAM during active scraping
+- **Network Efficiency**: Minimize bandwidth usage with selective content downloading
+- **Progress Responsiveness**: User notifications updated within 1 second of page processing events
 
 ### User Interface Performance
 - **Page Load**: Interface loads within 3 seconds on localhost
 - **Responsiveness**: Form interactions respond within 500ms
-- **Progress Indication**: Real-time updates during batch processing
+- **Progress Indication**: Real-time updates every 2 seconds during batch processing
 - **Error Feedback**: Immediate validation and error reporting
+- **Progress Updates**: Real-time progress updates every 2 seconds during scraping
+- **File Generation**: Text file creation within 1 second of data processing completion
+- **PDF Generation**: PDF file creation within 5 seconds of data processing completion
+- **Format Selection**: PDF options dialog loads within 1 second
+
+### File Generation Performance
+- **Text File Speed**: 1000+ restaurant entries per second for text file generation
+- **PDF File Speed**: 100+ restaurant entries per second for PDF file generation
+- **Memory Usage**: PDF generation adds maximum 200MB to base memory requirements
+- **Concurrent Generation**: Support simultaneous text and PDF generation without performance degradation
+- **File Size Efficiency**: PDF files should not exceed 5x the size of equivalent text files
+- **Font Loading**: PDF font initialization within 2 seconds on first use
+
+### Reliability Targets
+- **Uptime**: 99.9% availability during active scraping sessions
+- **Error Recovery**: Graceful handling of network failures and timeouts
+- **Data Integrity**: 100% accuracy in data formatting and file generation for both text and PDF formats
+- **Session Management**: No data loss during application crashes or interruptions
+- **Format Consistency**: Generated PDF content must exactly match text content for data accuracy
+- **Multi-page Error Isolation**: Page failures don't stop processing other pages in same website
 
 ## Quality Assurance and Definition of Done
 
@@ -347,11 +524,13 @@ rag_scraper/
 - **Code Quality**: Clean, maintainable code following Python best practices
 
 ### Project Completion Criteria
-- **All Sprint Goals**: Successfully completed with full test coverage
-- **Integration Testing**: End-to-end workflow validation
-- **Performance Validation**: 100 URL batch processing capability
-- **Documentation**: Clear README with installation and usage instructions
-- **GitHub Repository**: Complete codebase with goal-oriented commit history
+- **All 7 Sprint Goals**: Successfully completed with full test coverage
+- **Integration Testing**: End-to-end workflow validation including multi-page processing
+- **Performance Validation**: 100 URL batch processing capability with multi-page support
+- **Dual Format Output**: Both text and PDF generation fully functional
+- **Plugin Architecture**: Extensibility framework for future data formats
+- **Documentation**: Comprehensive README with installation, usage, and extension instructions
+- **GitHub Repository**: Complete codebase with goal-oriented commit history across all sprints
 
 ## Development Workflow with Claude Code
 
@@ -426,6 +605,16 @@ requests==2.31.0
 beautifulsoup4==4.12.2
 lxml==4.9.3
 html5lib==1.1
+requests-html==0.10.0
+
+# PDF Generation (Sprint 6)
+reportlab==4.0.4
+PyPDF2==3.0.1
+reportlab-fonts==1.0.0
+
+# Image Processing (OCR capability)
+Pillow==10.0.0
+pytesseract==0.3.10
 
 # Testing Framework
 pytest==7.4.2
@@ -434,6 +623,11 @@ pytest-cov==4.1.0
 pytest-html==3.2.0
 pytest-mock==3.11.1
 responses==0.23.3
+pytest-benchmark==4.0.0
+pytest-xdist==3.3.1
+factory-boy==3.3.0
+mutmut==2.4.3
+pdf2image==1.16.3
 
 # Development Tools
 black==23.7.0
@@ -644,9 +838,17 @@ def test_dependencies_importable():
         import requests
         import bs4
         import pytest_bdd
+        import json  # For configuration persistence
         assert True
     except ImportError as e:
         assert False, f"Failed to import required dependency: {e}"
+
+def test_config_directory_setup():
+    """Verify configuration directory exists for user preferences"""
+    config_dir = os.path.expanduser('~/.rag_scraper')
+    # Note: Directory will be created by application when needed
+    # This test validates the configuration system is ready
+    assert True  # Placeholder for configuration system validation
 EOF
 
 # Run setup validation
@@ -763,6 +965,12 @@ echo "Test command: pytest"
 echo "Coverage command: pytest --cov=src"
 echo "Claude Code: claude (then /init to initialize project)"
 echo ""
+echo "Development Timeline: 7 comprehensive sprints over 2-3 weeks"
+echo "Sprint 1-2: Foundation and Core Scraping (3-4 days)"
+echo "Sprint 3-4: Batch Processing and Multi-page Navigation (4-5 days)"
+echo "Sprint 5-6: File Generation (text) and PDF Generation (5-6 days)"
+echo "Sprint 7: Extensibility and Plugin Architecture (2-3 days)"
+echo ""
 echo "Next step: Begin Sprint 1 with Claude Code assistance"
 echo "Remember to run '/init' in Claude Code session to create CLAUDE.md"
 ```
@@ -777,4 +985,4 @@ echo "Remember to run '/init' in Claude Code session to create CLAUDE.md"
 5. Commit to GitHub when each sprint goal is achieved
 
 **Document Status**: Ready for Development Start  
-**Estimated Completion**: 1-2 days with goal-based sprint execution
+**Estimated Completion**: 2-3 weeks with 7 comprehensive goal-based sprint execution
