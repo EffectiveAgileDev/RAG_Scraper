@@ -8,6 +8,7 @@ import secrets
 
 from src.config.url_validator import URLValidator
 from src.config.scraping_config import ScrapingConfig
+from src.scraper.restaurant_scraper import RestaurantScraper
 
 
 # Global variable to store current progress
@@ -508,8 +509,7 @@ https://restaurant3.com" required></textarea>
                     'urls_total': len(urls)
                 })
             
-            # Import and run scraper
-            from src.scraper.restaurant_scraper import RestaurantScraper
+            # Create and run scraper
             scraper = RestaurantScraper()
             
             result = scraper.scrape_restaurants(config, progress_callback=progress_callback)

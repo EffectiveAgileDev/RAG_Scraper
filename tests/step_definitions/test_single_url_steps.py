@@ -99,7 +99,7 @@ def submit_url_for_scraping(scraper_context, temp_output_dir):
         config = ScrapingConfig(
             urls=[scraper_context['url']],
             output_directory=scraper_context.get('output_dir', temp_output_dir),
-            selected_fields=scraper_context.get('selected_fields', [])
+            selected_optional_fields=scraper_context.get('selected_fields', [])
         )
         
         # Create scraper and process
