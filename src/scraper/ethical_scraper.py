@@ -42,7 +42,9 @@ class RobotsTxtParser:
             elif key == 'disallow':
                 if current_user_agent not in rules:
                     rules[current_user_agent] = {'allow': [], 'disallow': []}
-                rules[current_user_agent]['disallow'].append(value)
+                # Only add non-empty disallow rules (empty disallow means allow all)
+                if value.strip():
+                    rules[current_user_agent]['disallow'].append(value)
         
         return rules
     
@@ -56,18 +58,14 @@ class RobotsTxtParser:
         else:
             rules = self.rules.get('*', {'allow': [], 'disallow': []})
         
-        # Check disallow rules first
+        # Check disallow rules first, but allow rules can override them
         for disallow_path in rules.get('disallow', []):
             if disallow_path and path.startswith(disallow_path):
-                return False
-        
-        # If there are allow rules, check them
-        allow_rules = rules.get('allow', [])
-        if allow_rules:
-            for allow_path in allow_rules:
-                if path.startswith(allow_path):
-                    return True
-            return False  # Has allow rules but path not in them
+                # Check if any allow rule overrides this disallow
+                for allow_path in rules.get('allow', []):
+                    if allow_path and path.startswith(allow_path):
+                        return True  # Allow rule overrides disallow
+                return False  # Disallowed and no allow override
         
         return True  # No specific disallow, default to allow
 
