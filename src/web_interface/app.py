@@ -538,6 +538,7 @@ https://restaurant3.com" required></textarea>
             # Configure scraping
             output_dir = data.get("output_dir") or app.config["UPLOAD_FOLDER"]
             file_mode = data.get("file_mode", "single")
+            file_format = data.get("file_format", "text")  # text, pdf, or both
 
             config = ScrapingConfig(
                 urls=urls, output_directory=output_dir, file_mode=file_mode
@@ -589,16 +590,55 @@ https://restaurant3.com" required></textarea>
             # Clear active scraper
             active_scraper = None
 
-            # Return results
-            return jsonify(
-                {
-                    "success": True,
-                    "processed_count": len(result.successful_extractions),
-                    "failed_count": len(result.failed_urls),
-                    "output_files": result.output_files.get("text", []),
-                    "processing_time": getattr(result, "processing_time", 0),
-                }
-            )
+            # Automatically generate files after successful scraping
+            generated_files = []
+            file_generation_errors = []
+            
+            if result.successful_extractions:
+                # Determine which formats to generate
+                formats_to_generate = []
+                if file_format == "both":
+                    formats_to_generate = ["text", "pdf"]
+                else:
+                    formats_to_generate = [file_format]
+                
+                # Generate files for each requested format
+                for fmt in formats_to_generate:
+                    try:
+                        from src.file_generator.file_generator_service import FileGenerationRequest
+                        
+                        file_request = FileGenerationRequest(
+                            restaurant_data=result.successful_extractions,
+                            file_format=fmt,
+                            output_directory=output_dir,
+                            allow_overwrite=True,
+                            save_preferences=False
+                        )
+                        
+                        file_result = file_generator_service.generate_file(file_request)
+                        
+                        if file_result["success"]:
+                            generated_files.append(file_result["file_path"])
+                        else:
+                            file_generation_errors.append(f"{fmt.upper()} generation failed: {file_result['error']}")
+                    
+                    except Exception as e:
+                        file_generation_errors.append(f"{fmt.upper()} generation error: {str(e)}")
+
+            # Return results with actual file paths
+            response_data = {
+                "success": True,
+                "processed_count": len(result.successful_extractions),
+                "failed_count": len(result.failed_urls),
+                "output_files": generated_files,
+                "processing_time": getattr(result, "processing_time", 0),
+            }
+            
+            # Include file generation errors if any occurred
+            if file_generation_errors:
+                response_data["file_generation_warnings"] = file_generation_errors
+            
+            return jsonify(response_data)
 
         except Exception as e:
             return jsonify({"success": False, "error": str(e)}), 500
