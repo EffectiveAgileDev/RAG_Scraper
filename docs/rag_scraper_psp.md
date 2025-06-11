@@ -384,6 +384,50 @@ rag_scraper/
 - Content accuracy validation between text and PDF formats
 - Performance requirements met for large-scale generation
 
+#### Sprint 6-A Goal: Enhanced User Interface and File Format Selection
+**Objective**: Improve user experience with file format selection and direct file access
+
+**ATDD Goals**:
+- Acceptance tests for file format selection interface (Text, PDF, Both)
+- User interface validation for format selection options
+- Output section file link accessibility scenarios
+- File format preference persistence across sessions
+
+**TDD Goals**:
+- File format selection component implementation
+- Dynamic UI updates based on format selection
+- File link generation and display in output section
+- Format preference storage in configuration system
+- Client-side validation for format selection
+
+**User Experience Requirements**:
+- Radio button or dropdown interface for format selection (Text, PDF, Both)
+- Clear visual indication of selected format before scraping
+- Direct clickable links to generated files in output section
+- Format selection persists across browser sessions
+- Intuitive format selection placement in main interface
+
+**Technical Implementation**:
+- HTML interface enhancement with format selection controls
+- JavaScript handling for format selection and validation
+- Flask endpoint modification to accept file_format parameter
+- Output section enhancement to display clickable file links
+- CSS styling for professional format selection interface
+
+**Claude Code Prompting Strategy**:
+1. "Write failing tests for file format selection UI component"
+2. "Implement minimal HTML interface for Text/PDF/Both selection"
+3. "Add tests for output section file link generation and display"
+4. "Implement clickable file links in scraping results output"
+5. "Add format preference persistence to configuration system"
+
+**Completion Criteria**:
+- 100% ATDD coverage for format selection and file link workflows
+- 95%+ TDD coverage for UI enhancement implementation
+- Functional file format selection interface with visual feedback
+- Working clickable links to generated files in output section
+- Format preference persistence working across sessions
+
 #### Sprint 7 Goal: Extensibility Foundation and Plugin Architecture
 **Objective**: Establish plugin architecture for future data formats and output types
 
