@@ -83,11 +83,6 @@ class RestaurantScraper:
                 errors=batch_result["errors"],
                 processing_time=batch_result["processing_time"],
             )
-            # Add output files indication
-            if batch_result["successful_extractions"]:
-                result.output_files["text"] = [
-                    f"Extracted data for {len(batch_result['successful_extractions'])} restaurants"
-                ]
             return result
         else:
             # Use simple processing for small batches
@@ -180,12 +175,6 @@ class RestaurantScraper:
             errors=errors,
             processing_time=processing_time,
         )
-
-        # For now, we'll indicate that data was extracted but files aren't generated yet
-        if successful_extractions:
-            result.output_files["text"] = [
-                f"Extracted data for {len(successful_extractions)} restaurants"
-            ]
 
         return result
 
