@@ -28,6 +28,7 @@ def sample_restaurant_url():
 def flask_test_client():
     """Create Flask test client."""
     from src.web_interface.app import create_app
+
     app = create_app(testing=True)
     return app.test_client()
 
@@ -75,8 +76,7 @@ def enter_restaurant_url(test_context, sample_restaurant_url):
 def url_validation_valid(flask_test_client, test_context):
     """Verify URL validation passes."""
     response = flask_test_client.post(
-        "/api/validate",
-        json={"urls": [test_context["url"]]}
+        "/api/validate", json={"urls": [test_context["url"]]}
     )
     assert response.status_code == 200
     data = response.get_json()
@@ -93,24 +93,32 @@ def configure_output_settings(test_context, test_output_directory):
 
 # When steps
 @when("I execute the scraping process via the web interface")
-def execute_scraping_via_web_interface(flask_test_client, test_context, sample_restaurant_url, test_output_directory):
+def execute_scraping_via_web_interface(
+    flask_test_client, test_context, sample_restaurant_url, test_output_directory
+):
     """Execute scraping through the web interface."""
     scrape_data = {
         "urls": [sample_restaurant_url],
         "output_dir": test_output_directory,
         "file_mode": "single",
-        "file_format": test_context.get("file_format", "text")
+        "file_format": test_context.get("file_format", "text"),
     }
-    
+
     response = flask_test_client.post("/api/scrape", json=scrape_data)
     test_context["scrape_response"] = response
-    test_context["scrape_data"] = response.get_json() if response.status_code == 200 else None
+    test_context["scrape_data"] = (
+        response.get_json() if response.status_code == 200 else None
+    )
 
 
 @when("I execute the scraping process")
-def execute_scraping_process(flask_test_client, test_context, sample_restaurant_url, test_output_directory):
+def execute_scraping_process(
+    flask_test_client, test_context, sample_restaurant_url, test_output_directory
+):
     """Execute scraping process."""
-    execute_scraping_via_web_interface(flask_test_client, test_context, sample_restaurant_url, test_output_directory)
+    execute_scraping_via_web_interface(
+        flask_test_client, test_context, sample_restaurant_url, test_output_directory
+    )
 
 
 @when("I start the scraping process")
@@ -120,12 +128,14 @@ def start_scraping_process(flask_test_client, test_context):
         "urls": [test_context["url"]],
         "output_dir": test_context["output_directory"],
         "file_mode": "single",
-        "file_format": test_context.get("file_format", "text")
+        "file_format": test_context.get("file_format", "text"),
     }
-    
+
     response = flask_test_client.post("/api/scrape", json=scrape_data)
     test_context["scrape_response"] = response
-    test_context["scrape_data"] = response.get_json() if response.status_code == 200 else None
+    test_context["scrape_data"] = (
+        response.get_json() if response.status_code == 200 else None
+    )
 
 
 @when("the scraping process completes successfully")
@@ -146,9 +156,17 @@ def scraping_reports_success(test_context):
 def no_output_files_generated(test_context):
     """Verify no actual output files exist."""
     output_dir = test_context.get("output_directory", "/tmp")
-    text_files = [f for f in os.listdir(output_dir) if f.endswith('.txt') and f.startswith('WebScrape_')]
-    pdf_files = [f for f in os.listdir(output_dir) if f.endswith('.pdf') and f.startswith('WebScrape_')]
-    
+    text_files = [
+        f
+        for f in os.listdir(output_dir)
+        if f.endswith(".txt") and f.startswith("WebScrape_")
+    ]
+    pdf_files = [
+        f
+        for f in os.listdir(output_dir)
+        if f.endswith(".pdf") and f.startswith("WebScrape_")
+    ]
+
     test_context["actual_text_files"] = text_files
     test_context["actual_pdf_files"] = pdf_files
 
@@ -165,12 +183,19 @@ def should_receive_success_response(test_context):
 def text_file_should_be_created(test_context, test_output_directory):
     """Verify text file was created."""
     # Check for WebScrape_*.txt files in output directory
-    text_files = [f for f in os.listdir(test_output_directory) 
-                 if f.endswith('.txt') and f.startswith('WebScrape_')]
-    
+    text_files = [
+        f
+        for f in os.listdir(test_output_directory)
+        if f.endswith(".txt") and f.startswith("WebScrape_")
+    ]
+
     # THIS IS WHERE THE TEST SHOULD FAIL - no files are actually generated
-    assert len(text_files) > 0, f"Expected text file to be created in {test_output_directory}, but found none"
-    test_context["generated_text_file"] = os.path.join(test_output_directory, text_files[0])
+    assert (
+        len(text_files) > 0
+    ), f"Expected text file to be created in {test_output_directory}, but found none"
+    test_context["generated_text_file"] = os.path.join(
+        test_output_directory, text_files[0]
+    )
 
 
 @then("the text file should contain the scraped restaurant data")
@@ -178,10 +203,10 @@ def text_file_should_contain_data(test_context):
     """Verify text file contains scraped data."""
     file_path = test_context["generated_text_file"]
     assert os.path.exists(file_path), f"Text file {file_path} does not exist"
-    
-    with open(file_path, 'r') as f:
+
+    with open(file_path, "r") as f:
         content = f.read()
-    
+
     # Should contain basic restaurant information
     assert len(content.strip()) > 0, "Text file is empty"
 
@@ -189,12 +214,19 @@ def text_file_should_contain_data(test_context):
 @then("a PDF file should be created in the output directory")
 def pdf_file_should_be_created(test_context, test_output_directory):
     """Verify PDF file was created."""
-    pdf_files = [f for f in os.listdir(test_output_directory) 
-                if f.endswith('.pdf') and f.startswith('WebScrape_')]
-    
+    pdf_files = [
+        f
+        for f in os.listdir(test_output_directory)
+        if f.endswith(".pdf") and f.startswith("WebScrape_")
+    ]
+
     # THIS IS WHERE THE TEST SHOULD FAIL - no files are actually generated
-    assert len(pdf_files) > 0, f"Expected PDF file to be created in {test_output_directory}, but found none"
-    test_context["generated_pdf_file"] = os.path.join(test_output_directory, pdf_files[0])
+    assert (
+        len(pdf_files) > 0
+    ), f"Expected PDF file to be created in {test_output_directory}, but found none"
+    test_context["generated_pdf_file"] = os.path.join(
+        test_output_directory, pdf_files[0]
+    )
 
 
 @then("the PDF file should contain the scraped restaurant data")
@@ -202,7 +234,7 @@ def pdf_file_should_contain_data(test_context):
     """Verify PDF file contains scraped data."""
     file_path = test_context["generated_pdf_file"]
     assert os.path.exists(file_path), f"PDF file {file_path} does not exist"
-    
+
     # Verify PDF has content (size > header size)
     file_size = os.path.getsize(file_path)
     assert file_size > 1000, f"PDF file {file_path} is too small ({file_size} bytes)"
@@ -211,14 +243,24 @@ def pdf_file_should_contain_data(test_context):
 @then("both text and PDF files should be created in the output directory")
 def both_files_should_be_created(test_context, test_output_directory):
     """Verify both text and PDF files were created."""
-    text_files = [f for f in os.listdir(test_output_directory) 
-                 if f.endswith('.txt') and f.startswith('WebScrape_')]
-    pdf_files = [f for f in os.listdir(test_output_directory) 
-                if f.endswith('.pdf') and f.startswith('WebScrape_')]
-    
+    text_files = [
+        f
+        for f in os.listdir(test_output_directory)
+        if f.endswith(".txt") and f.startswith("WebScrape_")
+    ]
+    pdf_files = [
+        f
+        for f in os.listdir(test_output_directory)
+        if f.endswith(".pdf") and f.startswith("WebScrape_")
+    ]
+
     # BOTH OF THESE SHOULD FAIL - no files are actually generated
-    assert len(text_files) > 0, f"Expected text file to be created in {test_output_directory}, but found none"
-    assert len(pdf_files) > 0, f"Expected PDF file to be created in {test_output_directory}, but found none"
+    assert (
+        len(text_files) > 0
+    ), f"Expected text file to be created in {test_output_directory}, but found none"
+    assert (
+        len(pdf_files) > 0
+    ), f"Expected PDF file to be created in {test_output_directory}, but found none"
 
 
 @then("both files should contain the same restaurant data")
@@ -232,13 +274,18 @@ def both_files_should_contain_same_data(test_context):
 def output_files_should_be_generated(test_context):
     """Verify output files are automatically generated after scraping."""
     output_dir = test_context["output_directory"]
-    
+
     # Check for any WebScrape_* files
-    output_files = [f for f in os.listdir(output_dir) 
-                   if f.startswith('WebScrape_') and (f.endswith('.txt') or f.endswith('.pdf'))]
-    
+    output_files = [
+        f
+        for f in os.listdir(output_dir)
+        if f.startswith("WebScrape_") and (f.endswith(".txt") or f.endswith(".pdf"))
+    ]
+
     # THIS SHOULD FAIL - demonstrating the integration issue
-    assert len(output_files) > 0, f"Expected output files to be automatically generated in {output_dir}, but found none"
+    assert (
+        len(output_files) > 0
+    ), f"Expected output files to be automatically generated in {output_dir}, but found none"
 
 
 @then("the files should be accessible at the specified output directory")
@@ -253,11 +300,15 @@ def response_should_include_file_paths(test_context):
     """Verify response includes actual file paths, not just descriptions."""
     scrape_data = test_context["scrape_data"]
     output_files = scrape_data.get("output_files", [])
-    
+
     # THIS SHOULD FAIL - current implementation returns descriptions, not file paths
     for file_info in output_files:
-        assert file_info.startswith("/"), f"Expected file path starting with '/', got: {file_info}"
-        assert os.path.exists(file_info), f"File path in response does not exist: {file_info}"
+        assert file_info.startswith(
+            "/"
+        ), f"Expected file path starting with '/', got: {file_info}"
+        assert os.path.exists(
+            file_info
+        ), f"File path in response does not exist: {file_info}"
 
 
 @then("the system should detect this inconsistency")
@@ -265,21 +316,23 @@ def system_should_detect_inconsistency(test_context):
     """Verify system detects scraping success but missing files."""
     # Current implementation doesn't detect this - this test should fail
     scrape_data = test_context["scrape_data"]
-    
+
     # Check if system detected the inconsistency
     # This should fail because current implementation doesn't check for actual files
-    assert "file_generation_error" in scrape_data or scrape_data["success"] is False, \
-        "System should detect when scraping succeeds but no files are generated"
+    assert (
+        "file_generation_error" in scrape_data or scrape_data["success"] is False
+    ), "System should detect when scraping succeeds but no files are generated"
 
 
 @then("return an error indicating file generation failure")
 def return_file_generation_error(test_context):
     """Verify error is returned for file generation failure."""
     scrape_data = test_context["scrape_data"]
-    
+
     # This should fail because current implementation doesn't return file generation errors
-    assert "error" in scrape_data or "file_generation_error" in scrape_data, \
-        "Expected error message about file generation failure"
+    assert (
+        "error" in scrape_data or "file_generation_error" in scrape_data
+    ), "Expected error message about file generation failure"
 
 
 @pytest.fixture
