@@ -74,163 +74,668 @@ def create_app(testing=False):
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>RAG_Scraper - Restaurant Website Scraper</title>
+            <title>RAG_Scraper // Data Extraction Terminal</title>
+            <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
             <style>
+                :root {
+                    --bg-primary: #0a0a0a;
+                    --bg-secondary: #111111;
+                    --bg-tertiary: #1a1a1a;
+                    --accent-green: #00ff88;
+                    --accent-amber: #ffaa00;
+                    --accent-cyan: #00aaff;
+                    --text-primary: #ffffff;
+                    --text-secondary: #cccccc;
+                    --text-muted: #888888;
+                    --border-glow: rgba(0, 255, 136, 0.3);
+                    --shadow-neon: 0 0 20px rgba(0, 255, 136, 0.1);
+                }
+
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+
                 body {
-                    font-family: Arial, sans-serif;
-                    max-width: 800px;
-                    margin: 0 auto;
-                    padding: 20px;
-                    background-color: #f5f5f5;
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                    background: var(--bg-primary);
+                    color: var(--text-primary);
+                    min-height: 100vh;
+                    background-image: 
+                        radial-gradient(circle at 25% 25%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 75% 75%, rgba(255, 170, 0, 0.1) 0%, transparent 50%);
+                    overflow-x: hidden;
                 }
-                .container {
-                    background-color: white;
-                    padding: 30px;
-                    border-radius: 8px;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                }
-                h1 {
-                    color: #333;
-                    text-align: center;
-                    margin-bottom: 30px;
-                }
-                .form-group {
-                    margin-bottom: 20px;
-                }
-                label {
-                    display: block;
-                    margin-bottom: 5px;
-                    font-weight: bold;
-                    color: #555;
-                }
-                textarea, input, select {
+
+                .matrix-bg {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
                     width: 100%;
-                    padding: 10px;
-                    border: 1px solid #ddd;
-                    border-radius: 4px;
-                    font-size: 14px;
+                    height: 100%;
+                    pointer-events: none;
+                    z-index: 0;
+                    opacity: 0.1;
                 }
-                textarea {
-                    height: 120px;
+
+                .main-container {
+                    position: relative;
+                    z-index: 10;
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    padding: 2rem;
+                }
+
+                .header {
+                    text-align: center;
+                    margin-bottom: 3rem;
+                    position: relative;
+                }
+
+                .header::before {
+                    content: '';
+                    position: absolute;
+                    top: -10px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 100px;
+                    height: 2px;
+                    background: linear-gradient(90deg, transparent, var(--accent-green), transparent);
+                    animation: scan 2s ease-in-out infinite;
+                }
+
+                @keyframes scan {
+                    0%, 100% { opacity: 0.3; width: 100px; }
+                    50% { opacity: 1; width: 200px; }
+                }
+
+                .title {
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: clamp(2rem, 5vw, 3.5rem);
+                    font-weight: 700;
+                    background: linear-gradient(45deg, var(--accent-green), var(--accent-cyan));
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                    margin-bottom: 0.5rem;
+                    letter-spacing: -0.02em;
+                }
+
+                .subtitle {
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 1rem;
+                    color: var(--text-primary);
+                    margin-bottom: 1rem;
+                }
+
+                .status-bar {
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.875rem;
+                    color: var(--accent-green);
+                    border: 1px solid var(--border-glow);
+                    padding: 0.5rem 1rem;
+                    border-radius: 0;
+                    background: rgba(0, 255, 136, 0.05);
+                    display: inline-block;
+                    box-shadow: var(--shadow-neon);
+                }
+
+                .extraction-panel {
+                    background: var(--bg-secondary);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 0;
+                    padding: 2rem;
+                    margin-bottom: 2rem;
+                    position: relative;
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+                }
+
+                .extraction-panel::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 1px;
+                    background: linear-gradient(90deg, transparent, var(--accent-green), transparent);
+                }
+
+                .panel-header {
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.875rem;
+                    color: var(--accent-green);
+                    margin-bottom: 1.5rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.1em;
+                }
+
+                .data-flow {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 2rem;
+                    flex-wrap: wrap;
+                    gap: 1rem;
+                    opacity: 0.4;
+                    transition: all 0.3s ease;
+                }
+
+                .data-flow.active {
+                    opacity: 1;
+                }
+
+                .data-flow.active .flow-step {
+                    animation: pipeline-pulse 2s ease-in-out infinite;
+                }
+
+                .data-flow.active .flow-step:nth-child(1) {
+                    animation-delay: 0s;
+                }
+
+                .data-flow.active .flow-step:nth-child(2) {
+                    animation-delay: 0.5s;
+                }
+
+                .data-flow.active .flow-step:nth-child(3) {
+                    animation-delay: 1s;
+                }
+
+                .flow-step {
+                    flex: 1;
+                    min-width: 120px;
+                    text-align: center;
+                    position: relative;
+                }
+
+                .flow-icon {
+                    width: 60px;
+                    height: 60px;
+                    margin: 0 auto 0.5rem;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.5rem;
+                    border: 2px solid;
+                    transition: all 0.3s ease;
+                }
+
+                .flow-step:nth-child(1) .flow-icon {
+                    border-color: var(--accent-cyan);
+                    background: rgba(0, 170, 255, 0.1);
+                    color: var(--accent-cyan);
+                }
+
+                .flow-step:nth-child(2) .flow-icon {
+                    border-color: var(--accent-amber);
+                    background: rgba(255, 170, 0, 0.1);
+                    color: var(--accent-amber);
+                }
+
+                .flow-step:nth-child(3) .flow-icon {
+                    border-color: var(--accent-green);
+                    background: rgba(0, 255, 136, 0.1);
+                    color: var(--accent-green);
+                }
+
+                .flow-step::after {
+                    content: '→';
+                    position: absolute;
+                    right: -20px;
+                    top: 30px;
+                    color: var(--text-muted);
+                    font-size: 1.5rem;
+                    animation: pulse 2s ease-in-out infinite;
+                }
+
+                .flow-step:last-child::after {
+                    display: none;
+                }
+
+                @keyframes pulse {
+                    0%, 100% { opacity: 0.5; }
+                    50% { opacity: 1; }
+                }
+
+                @keyframes pipeline-pulse {
+                    0%, 100% { 
+                        transform: scale(1);
+                        box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+                    }
+                    50% { 
+                        transform: scale(1.05);
+                        box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+                    }
+                }
+
+                .flow-label {
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.75rem;
+                    color: var(--text-secondary);
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+
+                .input-group {
+                    margin-bottom: 2rem;
+                    position: relative;
+                }
+
+                .input-label {
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.875rem;
+                    color: var(--text-secondary);
+                    margin-bottom: 0.5rem;
+                    display: block;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+
+                .terminal-input {
+                    width: 100%;
+                    background: var(--bg-tertiary);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 0;
+                    color: var(--text-primary);
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.875rem;
+                    padding: 1rem;
+                    transition: all 0.3s ease;
                     resize: vertical;
                 }
-                button {
-                    background-color: #007bff;
-                    color: white;
-                    padding: 12px 24px;
-                    border: none;
-                    border-radius: 4px;
+
+                .terminal-input:focus {
+                    outline: none;
+                    border-color: var(--accent-green);
+                    box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.2);
+                    background: rgba(0, 255, 136, 0.05);
+                }
+
+                .terminal-input::placeholder {
+                    color: var(--text-muted);
+                    font-style: italic;
+                }
+
+                .url-textarea {
+                    min-height: 120px;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+
+                .format-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                    gap: 1rem;
+                    margin-top: 1rem;
+                }
+
+                .format-option {
+                    background: var(--bg-tertiary);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 0;
+                    padding: 1rem;
                     cursor: pointer;
-                    font-size: 16px;
-                    margin-right: 10px;
-                }
-                button:hover {
-                    background-color: #0056b3;
-                }
-                button:disabled {
-                    background-color: #6c757d;
-                    cursor: not-allowed;
-                }
-                .progress-container {
-                    display: none;
-                    margin-top: 20px;
-                    padding: 20px;
-                    background-color: #f8f9fa;
-                    border-radius: 4px;
-                }
-                .progress-bar {
-                    width: 100%;
-                    height: 20px;
-                    background-color: #e9ecef;
-                    border-radius: 10px;
+                    transition: all 0.3s ease;
+                    position: relative;
                     overflow: hidden;
                 }
+
+                .format-option::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: -100%;
+                    width: 100%;
+                    height: 2px;
+                    background: var(--accent-green);
+                    transition: all 0.3s ease;
+                }
+
+                .format-option:hover::before,
+                .format-option.selected::before {
+                    left: 0;
+                }
+
+                .format-option:hover {
+                    border-color: var(--accent-green);
+                    background: rgba(0, 255, 136, 0.05);
+                    transform: translateY(-2px);
+                }
+
+                .format-option.selected {
+                    border-color: var(--accent-green);
+                    background: rgba(0, 255, 136, 0.1);
+                    box-shadow: var(--shadow-neon);
+                }
+
+                .format-option input {
+                    display: none;
+                }
+
+                .format-title {
+                    font-family: 'JetBrains Mono', monospace;
+                    font-weight: 600;
+                    margin-bottom: 0.5rem;
+                    color: var(--text-primary);
+                }
+
+                .format-desc {
+                    font-size: 0.75rem;
+                    color: var(--text-muted);
+                    line-height: 1.4;
+                }
+
+                .action-bar {
+                    display: flex;
+                    gap: 1rem;
+                    flex-wrap: wrap;
+                    margin-top: 2rem;
+                }
+
+                .cmd-button {
+                    background: var(--bg-tertiary);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    color: var(--text-primary);
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.875rem;
+                    padding: 0.75rem 1.5rem;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    position: relative;
+                    overflow: hidden;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    font-weight: 500;
+                }
+
+                .cmd-button::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: -100%;
+                    width: 100%;
+                    height: 100%;
+                    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+                    transition: all 0.5s ease;
+                }
+
+                .cmd-button:hover::before {
+                    left: 100%;
+                }
+
+                .cmd-button.primary {
+                    border-color: var(--accent-green);
+                    color: var(--accent-green);
+                }
+
+                .cmd-button.primary:hover {
+                    background: var(--accent-green);
+                    color: var(--bg-primary);
+                    box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+                }
+
+                .cmd-button:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+
+                .terminal-output {
+                    background: var(--bg-tertiary);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 0;
+                    padding: 1.5rem;
+                    margin-top: 2rem;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.875rem;
+                    line-height: 1.6;
+                    display: none;
+                    position: relative;
+                }
+
+                .terminal-output::before {
+                    content: '// EXTRACTION OUTPUT';
+                    position: absolute;
+                    top: -10px;
+                    left: 1rem;
+                    background: var(--bg-secondary);
+                    color: var(--accent-green);
+                    padding: 0 0.5rem;
+                    font-size: 0.75rem;
+                }
+
+                .progress-bar {
+                    height: 4px;
+                    background: rgba(255, 255, 255, 0.1);
+                    margin: 1rem 0;
+                    overflow: hidden;
+                    position: relative;
+                }
+
                 .progress-fill {
                     height: 100%;
-                    background-color: #28a745;
+                    background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
                     width: 0%;
                     transition: width 0.3s ease;
+                    position: relative;
                 }
-                .results-container {
-                    display: none;
-                    margin-top: 20px;
-                    padding: 20px;
+
+                .progress-fill::after {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    width: 20px;
+                    height: 100%;
+                    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6));
+                    animation: scan-progress 2s ease-in-out infinite;
+                }
+
+                @keyframes scan-progress {
+                    0%, 100% { transform: translateX(0); opacity: 0; }
+                    50% { transform: translateX(-10px); opacity: 1; }
+                }
+
+                .validation-output {
+                    margin-top: 0.5rem;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.75rem;
+                }
+
+                .valid-url {
+                    color: var(--accent-green);
+                }
+
+                .invalid-url {
+                    color: #ff5555;
+                }
+
+                .file-links {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.5rem;
+                    margin-top: 1rem;
+                }
+
+                .file-link {
+                    display: inline-flex;
+                    align-items: center;
+                    color: var(--accent-cyan);
+                    text-decoration: none;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.875rem;
+                    padding: 0.5rem 1rem;
+                    border: 1px solid rgba(0, 170, 255, 0.3);
+                    background: rgba(0, 170, 255, 0.1);
+                    transition: all 0.3s ease;
+                }
+
+                .file-link:hover {
+                    border-color: var(--accent-cyan);
+                    background: rgba(0, 170, 255, 0.2);
+                    transform: translateX(5px);
+                }
+
+                .file-link::before {
+                    content: '📁';
+                    margin-right: 0.5rem;
+                }
+
+                .success {
+                    border-color: var(--accent-green);
+                    background: rgba(0, 255, 136, 0.1);
+                    color: var(--text-primary);
+                }
+
+                .error {
+                    border-color: #ff5555;
+                    background: rgba(255, 85, 85, 0.1);
+                    color: var(--text-primary);
+                }
+
+                @media (max-width: 768px) {
+                    .main-container {
+                        padding: 1rem;
+                    }
+                    
+                    .data-flow {
+                        flex-direction: column;
+                    }
+                    
+                    .flow-step::after {
+                        display: none;
+                    }
+                    
+                    .action-bar {
+                        flex-direction: column;
+                    }
+                }
+
+                /* Custom scrollbar */
+                ::-webkit-scrollbar {
+                    width: 8px;
+                }
+
+                ::-webkit-scrollbar-track {
+                    background: var(--bg-secondary);
+                }
+
+                ::-webkit-scrollbar-thumb {
+                    background: var(--accent-green);
                     border-radius: 4px;
                 }
-                .success {
-                    background-color: #d4edda;
-                    border: 1px solid #c3e6cb;
-                    color: #155724;
-                }
-                .error {
-                    background-color: #f8d7da;
-                    border: 1px solid #f5c6cb;
-                    color: #721c24;
-                }
-                .url-validation {
-                    margin-top: 10px;
-                    font-size: 12px;
-                }
-                .valid-url {
-                    color: #28a745;
-                }
-                .invalid-url {
-                    color: #dc3545;
+
+                ::-webkit-scrollbar-thumb:hover {
+                    background: var(--accent-cyan);
                 }
             </style>
         </head>
         <body>
-            <div class="container">
-                <h1>RAG_Scraper</h1>
-                <p style="text-align: center; color: #666; margin-bottom: 30px;">
-                    Extract restaurant data from websites for RAG systems
-                </p>
-                
-                <form id="scrapeForm">
-                    <div class="form-group">
-                        <label for="urls">Restaurant Website URLs (one per line):</label>
-                        <textarea id="urls" name="urls" placeholder="https://restaurant1.com
+            <div class="matrix-bg"></div>
+            
+            <div class="main-container">
+                <header class="header">
+                    <h1 class="title">RAG Scraper</h1>
+                    <p class="subtitle">DATA EXTRACTION TERMINAL</p>
+                    <div class="status-bar">SYSTEM_READY // AWAITING_TARGET_URLs</div>
+                </header>
+
+                <div class="extraction-panel">
+                    <div class="panel-header">DATA FLOW PIPELINE</div>
+                    
+                    <div class="data-flow">
+                        <div class="flow-step">
+                            <div class="flow-icon">🌐</div>
+                            <div class="flow-label">WEB_SCAN</div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-icon">⚡</div>
+                            <div class="flow-label">EXTRACT</div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-icon">📊</div>
+                            <div class="flow-label">RAG_DATA</div>
+                        </div>
+                    </div>
+
+                    <form id="scrapeForm">
+                        <div class="input-group">
+                            <label class="input-label" for="urls">TARGET_URLS:</label>
+                            <textarea 
+                                id="urls" 
+                                name="urls" 
+                                class="terminal-input url-textarea"
+                                placeholder="https://restaurant1.com
 https://restaurant2.com
-https://restaurant3.com" required></textarea>
-                        <div id="urlValidation" class="url-validation"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="outputDir">Output Directory:</label>
-                        <input type="text" id="outputDir" name="outputDir" placeholder="Leave empty for default Downloads folder">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="fileMode">File Mode:</label>
-                        <select id="fileMode" name="fileMode">
-                            <option value="single">Single file for all restaurants</option>
-                            <option value="multiple">Separate file per restaurant</option>
-                        </select>
-                    </div>
-                    
-                    <button type="submit" id="submitBtn">Start Scraping</button>
-                    <button type="button" id="validateBtn">Validate URLs</button>
-                    <button type="button" id="clearBtn">Clear All</button>
-                </form>
+https://restaurant3.com
+// Enter restaurant URLs to extract..."
+                                required></textarea>
+                            <div id="urlValidation" class="validation-output"></div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label class="input-label" for="outputDir">OUTPUT_DIRECTORY:</label>
+                            <input 
+                                type="text" 
+                                id="outputDir" 
+                                name="outputDir" 
+                                class="terminal-input"
+                                placeholder="~/Downloads // Leave empty for default">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label class="input-label" for="fileMode">AGGREGATION_MODE:</label>
+                            <select id="fileMode" name="fileMode" class="terminal-input">
+                                <option value="single">UNIFIED // Single file for all targets</option>
+                                <option value="multiple">SEGMENTED // Individual files per target</option>
+                            </select>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label class="input-label">OUTPUT_FORMAT:</label>
+                            <div class="format-grid">
+                                <label class="format-option selected" data-format="text">
+                                    <input type="radio" id="fileFormatText" name="fileFormat" value="text" checked>
+                                    <div class="format-title">TEXT</div>
+                                    <div class="format-desc">Raw structured data for RAG ingestion</div>
+                                </label>
+                                <label class="format-option" data-format="pdf">
+                                    <input type="radio" id="fileFormatPdf" name="fileFormat" value="pdf">
+                                    <div class="format-title">PDF</div>
+                                    <div class="format-desc">Formatted document for human review</div>
+                                </label>
+                                <label class="format-option" data-format="both">
+                                    <input type="radio" id="fileFormatBoth" name="fileFormat" value="both">
+                                    <div class="format-title">DUAL</div>
+                                    <div class="format-desc">Both formats for maximum compatibility</div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="action-bar">
+                            <button type="submit" id="submitBtn" class="cmd-button primary">EXECUTE_EXTRACTION</button>
+                            <button type="button" id="validateBtn" class="cmd-button">VALIDATE_TARGETS</button>
+                            <button type="button" id="clearBtn" class="cmd-button">RESET_TERMINAL</button>
+                        </div>
+                    </form>
+                </div>
                 
-                <div id="progressContainer" class="progress-container">
-                    <h3>Scraping Progress</h3>
+                <div id="progressContainer" class="terminal-output">
                     <div class="progress-bar">
                         <div id="progressFill" class="progress-fill"></div>
                     </div>
-                    <p id="progressText">Initializing...</p>
-                    <p id="currentUrl"></p>
-                    <p id="timeEstimate"></p>
-                    <p id="memoryUsage"></p>
+                    <div id="progressText">INITIALIZING_EXTRACTION_SEQUENCE...</div>
+                    <div id="currentUrl"></div>
+                    <div id="timeEstimate"></div>
+                    <div id="memoryUsage"></div>
                 </div>
                 
-                <div id="resultsContainer" class="results-container">
-                    <h3>Results</h3>
+                <div id="resultsContainer" class="terminal-output">
                     <div id="resultsContent"></div>
                 </div>
             </div>
             
             <script>
+                // Terminal UI Elements
                 const form = document.getElementById('scrapeForm');
                 const urlsInput = document.getElementById('urls');
                 const submitBtn = document.getElementById('submitBtn');
@@ -245,46 +750,168 @@ https://restaurant3.com" required></textarea>
                 const resultsContainer = document.getElementById('resultsContainer');
                 const resultsContent = document.getElementById('resultsContent');
                 const urlValidation = document.getElementById('urlValidation');
+                const statusBar = document.querySelector('.status-bar');
+                const formatOptions = document.querySelectorAll('.format-option');
+                const dataFlow = document.querySelector('.data-flow');
                 
                 let progressInterval;
+                let terminalEffects = true;
+
+                // Initialize terminal effects
+                document.addEventListener('DOMContentLoaded', function() {
+                    initializeTerminalEffects();
+                    setupFormatSelection();
+                });
+
+                function initializeTerminalEffects() {
+                    // Create matrix background effect
+                    createMatrixEffect();
+                    
+                    // Add terminal cursor effect to inputs
+                    addTerminalCursorEffect();
+                    
+                    // Initialize status updates
+                    updateSystemStatus('SYSTEM_READY // AWAITING_TARGET_URLs');
+                }
+
+                function createMatrixEffect() {
+                    const matrixBg = document.querySelector('.matrix-bg');
+                    const chars = '01';
+                    const columns = Math.floor(window.innerWidth / 20);
+                    
+                    for (let i = 0; i < 50; i++) {
+                        const char = document.createElement('div');
+                        char.textContent = chars[Math.floor(Math.random() * chars.length)];
+                        char.style.position = 'absolute';
+                        char.style.left = Math.random() * 100 + '%';
+                        char.style.top = Math.random() * 100 + '%';
+                        char.style.color = 'rgba(0, 255, 136, 0.1)';
+                        char.style.fontSize = '12px';
+                        char.style.fontFamily = 'JetBrains Mono, monospace';
+                        char.style.animation = `float ${3 + Math.random() * 4}s ease-in-out infinite`;
+                        matrixBg.appendChild(char);
+                    }
+                }
+
+                function addTerminalCursorEffect() {
+                    const inputs = document.querySelectorAll('.terminal-input');
+                    inputs.forEach(input => {
+                        input.addEventListener('focus', function() {
+                            this.style.animation = 'terminal-cursor 1s ease-in-out infinite';
+                        });
+                        input.addEventListener('blur', function() {
+                            this.style.animation = 'none';
+                        });
+                    });
+                }
+
+                function setupFormatSelection() {
+                    formatOptions.forEach(option => {
+                        option.addEventListener('click', function() {
+                            formatOptions.forEach(opt => opt.classList.remove('selected'));
+                            this.classList.add('selected');
+                            const radio = this.querySelector('input[type="radio"]');
+                            radio.checked = true;
+                            
+                            updateSystemStatus(`FORMAT_SELECTED // ${radio.value.toUpperCase()}_MODE_ACTIVE`);
+                        });
+                    });
+                }
+
+                function updateSystemStatus(message) {
+                    if (statusBar) {
+                        statusBar.textContent = message;
+                        statusBar.style.animation = 'pulse 0.5s ease-in-out';
+                        setTimeout(() => {
+                            if (statusBar) statusBar.style.animation = '';
+                        }, 500);
+                    }
+                }
+
+                function terminalLog(message, type = 'info') {
+                    const timestamp = new Date().toISOString().substr(11, 8);
+                    const prefix = type === 'error' ? '[ERROR]' : 
+                                 type === 'success' ? '[SUCCESS]' : '[INFO]';
+                    return `[${timestamp}] ${prefix} ${message}`;
+                }
                 
-                // Validate URLs on input
+                // Validate URLs on input with terminal feedback
                 urlsInput.addEventListener('input', debounce(validateURLsInput, 500));
                 
-                // Form submission
+                // Form submission with terminal aesthetics
                 form.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     
                     const urls = urlsInput.value.trim().split('\\n').filter(url => url.trim());
                     const outputDir = document.getElementById('outputDir').value.trim();
                     const fileMode = document.getElementById('fileMode').value;
+                    const fileFormat = document.querySelector('input[name="fileFormat"]:checked').value;
                     
                     if (urls.length === 0) {
-                        alert('Please enter at least one URL');
+                        updateSystemStatus('ERROR // NO_TARGET_URLs_DETECTED');
+                        showTerminalAlert('CRITICAL ERROR: No target URLs detected. Please input valid restaurant URLs.');
                         return;
                     }
                     
-                    await startScraping(urls, outputDir, fileMode);
+                    updateSystemStatus(`INITIATING_EXTRACTION // ${urls.length}_TARGETS_QUEUED`);
+                    await startScraping(urls, outputDir, fileMode, fileFormat);
                 });
                 
-                // Validate button
-                validateBtn.addEventListener('click', validateURLsInput);
+                // Validate button with terminal feedback
+                validateBtn.addEventListener('click', () => {
+                    updateSystemStatus('VALIDATING_TARGETS // SCANNING_URLs...');
+                    validateURLsInput();
+                });
                 
-                // Clear button
+                // Clear button with terminal reset
                 clearBtn.addEventListener('click', () => {
                     form.reset();
                     urlValidation.innerHTML = '';
                     hideResults();
                     hideProgress();
+                    // Reset format selection
+                    formatOptions.forEach(opt => opt.classList.remove('selected'));
+                    formatOptions[0].classList.add('selected');
+                    updateSystemStatus('TERMINAL_RESET // AWAITING_NEW_TARGETS');
                 });
+
+                function showTerminalAlert(message) {
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'terminal-alert';
+                    alertDiv.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: rgba(255, 85, 85, 0.9);
+                        border: 1px solid #ff5555;
+                        color: white;
+                        padding: 1rem;
+                        font-family: 'JetBrains Mono', monospace;
+                        font-size: 0.875rem;
+                        z-index: 1000;
+                        max-width: 400px;
+                        animation: slideInRight 0.3s ease-out;
+                    `;
+                    alertDiv.textContent = message;
+                    document.body.appendChild(alertDiv);
+                    
+                    setTimeout(() => {
+                        if (alertDiv.parentNode) {
+                            alertDiv.remove();
+                        }
+                    }, 4000);
+                }
                 
                 async function validateURLsInput() {
                     const urls = urlsInput.value.trim().split('\\n').filter(url => url.trim());
                     
                     if (urls.length === 0) {
                         urlValidation.innerHTML = '';
+                        updateSystemStatus('SYSTEM_READY // AWAITING_TARGET_URLs');
                         return;
                     }
+                    
+                    updateSystemStatus(`VALIDATING // ${urls.length}_TARGETS_SCANNING...`);
                     
                     try {
                         const response = await fetch('/api/validate', {
@@ -302,31 +929,38 @@ https://restaurant3.com" required></textarea>
                         }
                     } catch (error) {
                         console.error('Validation error:', error);
-                        urlValidation.innerHTML = '<span class="invalid-url">Validation failed</span>';
+                        urlValidation.innerHTML = terminalLog('VALIDATION_FAILED // Network error', 'error');
+                        updateSystemStatus('ERROR // VALIDATION_SYSTEM_OFFLINE');
                     }
                 }
                 
                 function displayValidationResults(results) {
                     const validCount = results.filter(r => r.is_valid).length;
                     const totalCount = results.length;
+                    const status = validCount === totalCount ? 'ALL_VALID' : `${validCount}/${totalCount}_VALID`;
                     
-                    let html = `<strong>${validCount}/${totalCount} URLs valid</strong><br>`;
+                    updateSystemStatus(`VALIDATION_COMPLETE // ${status}`);
+                    
+                    let html = `<div style="margin-bottom: 0.5rem;">${terminalLog(`Target analysis: ${validCount}/${totalCount} URLs validated`, 'info')}</div>`;
                     
                     results.forEach((result, index) => {
                         const cssClass = result.is_valid ? 'valid-url' : 'invalid-url';
-                        const status = result.is_valid ? '✓' : '✗';
-                        const error = result.error ? ` (${result.error})` : '';
+                        const status = result.is_valid ? '[VALID]' : '[INVALID]';
+                        const error = result.error ? ` // ${result.error}` : '';
                         
-                        html += `<span class="${cssClass}">${status} URL ${index + 1}${error}</span><br>`;
+                        html += `<div class="${cssClass}">${status} TARGET_${index + 1}${error}</div>`;
                     });
                     
                     urlValidation.innerHTML = html;
                 }
                 
-                async function startScraping(urls, outputDir, fileMode) {
+                async function startScraping(urls, outputDir, fileMode, fileFormat) {
                     submitBtn.disabled = true;
+                    submitBtn.textContent = 'EXTRACTION_IN_PROGRESS...';
                     showProgress();
                     hideResults();
+                    
+                    updateSystemStatus(`EXTRACTION_INITIATED // ${urls.length}_TARGETS_PROCESSING`);
                     
                     try {
                         const response = await fetch('/api/scrape', {
@@ -337,22 +971,27 @@ https://restaurant3.com" required></textarea>
                             body: JSON.stringify({
                                 urls: urls,
                                 output_dir: outputDir,
-                                file_mode: fileMode
+                                file_mode: fileMode,
+                                file_format: fileFormat
                             })
                         });
                         
                         const data = await response.json();
                         
                         if (data.success) {
+                            updateSystemStatus(`EXTRACTION_COMPLETE // ${data.processed_count || 0}_TARGETS_PROCESSED`);
                             showResults(data, true);
                         } else {
+                            updateSystemStatus('EXTRACTION_FAILED // SYSTEM_ERROR');
                             showResults(data, false);
                         }
                     } catch (error) {
                         console.error('Scraping error:', error);
-                        showResults({ error: 'Network error occurred' }, false);
+                        updateSystemStatus('CRITICAL_ERROR // NETWORK_FAILURE');
+                        showResults({ error: 'Network connection failure during extraction' }, false);
                     } finally {
                         submitBtn.disabled = false;
+                        submitBtn.textContent = 'EXECUTE_EXTRACTION';
                         hideProgress();
                     }
                 }
@@ -360,10 +999,15 @@ https://restaurant3.com" required></textarea>
                 function showProgress() {
                     progressContainer.style.display = 'block';
                     progressFill.style.width = '0%';
-                    progressText.textContent = 'Starting scraping...';
+                    progressText.textContent = terminalLog('Initializing extraction sequence...', 'info');
                     currentUrl.textContent = '';
                     timeEstimate.textContent = '';
                     memoryUsage.textContent = '';
+                    
+                    // Activate the data flow pipeline
+                    if (dataFlow) {
+                        dataFlow.classList.add('active');
+                    }
                     
                     // Start progress polling
                     progressInterval = setInterval(updateProgress, 1000);
@@ -371,6 +1015,12 @@ https://restaurant3.com" required></textarea>
                 
                 function hideProgress() {
                     progressContainer.style.display = 'none';
+                    
+                    // Deactivate the data flow pipeline
+                    if (dataFlow) {
+                        dataFlow.classList.remove('active');
+                    }
+                    
                     if (progressInterval) {
                         clearInterval(progressInterval);
                         progressInterval = null;
@@ -384,26 +1034,26 @@ https://restaurant3.com" required></textarea>
                         
                         if (data.progress_percentage !== undefined) {
                             progressFill.style.width = data.progress_percentage + '%';
-                            progressText.textContent = `${data.progress_percentage}% complete (${data.urls_completed}/${data.urls_total})`;
+                            progressText.textContent = terminalLog(`Extraction progress: ${data.progress_percentage}% (${data.urls_completed}/${data.urls_total})`, 'info');
                             
                             if (data.current_url) {
-                                currentUrl.textContent = `Processing: ${data.current_url}`;
+                                currentUrl.textContent = terminalLog(`Processing target: ${data.current_url}`, 'info');
                             }
                             
                             if (data.estimated_time_remaining > 0) {
                                 const minutes = Math.floor(data.estimated_time_remaining / 60);
                                 const seconds = Math.floor(data.estimated_time_remaining % 60);
-                                timeEstimate.textContent = `Estimated time remaining: ${minutes}m ${seconds}s`;
+                                timeEstimate.textContent = terminalLog(`ETA: ${minutes}m ${seconds}s`, 'info');
                             } else if (data.urls_completed > 0) {
-                                timeEstimate.textContent = 'Calculating time estimate...';
+                                timeEstimate.textContent = terminalLog('Calculating time estimate...', 'info');
                             }
                             
                             if (data.memory_usage_mb > 0) {
-                                memoryUsage.textContent = `Memory usage: ${data.memory_usage_mb.toFixed(1)} MB`;
+                                memoryUsage.textContent = terminalLog(`Memory usage: ${data.memory_usage_mb.toFixed(1)} MB`, 'info');
                             }
                             
                             if (data.current_operation) {
-                                progressText.textContent = data.current_operation;
+                                progressText.textContent = terminalLog(data.current_operation, 'info');
                             }
                         }
                     } catch (error) {
@@ -413,28 +1063,38 @@ https://restaurant3.com" required></textarea>
                 
                 function showResults(data, success) {
                     resultsContainer.style.display = 'block';
-                    resultsContainer.className = 'results-container ' + (success ? 'success' : 'error');
+                    resultsContainer.className = 'terminal-output ' + (success ? 'success' : 'error');
                     
                     let html = '';
                     
                     if (success) {
-                        html += '<h4>Scraping Completed Successfully!</h4>';
+                        html += `<div style="margin-bottom: 1rem;">${terminalLog('EXTRACTION_COMPLETE // All targets processed successfully', 'success')}</div>`;
+                        
                         if (data.processed_count) {
-                            html += `<p>Successfully processed ${data.processed_count} restaurant(s)</p>`;
+                            html += `<div>${terminalLog(`Targets processed: ${data.processed_count}`, 'info')}</div>`;
                         }
+                        
                         if (data.output_files && data.output_files.length > 0) {
-                            html += '<p>Generated files:</p><ul>';
+                            html += `<div style="margin: 1rem 0;">${terminalLog('Generated output files:', 'info')}</div>`;
+                            html += '<div class="file-links">';
                             data.output_files.forEach(file => {
-                                html += `<li>${file}</li>`;
+                                const fileName = file.split('/').pop();
+                                const downloadUrl = `/api/download/${encodeURIComponent(fileName)}`;
+                                html += `<a href="${downloadUrl}" target="_blank" class="file-link">${fileName}</a>`;
                             });
-                            html += '</ul>';
+                            html += '</div>';
                         }
+                        
                         if (data.failed_count && data.failed_count > 0) {
-                            html += `<p>Failed URLs: ${data.failed_count}</p>`;
+                            html += `<div style="margin-top: 1rem;">${terminalLog(`Failed targets: ${data.failed_count}`, 'error')}</div>`;
+                        }
+                        
+                        if (data.processing_time) {
+                            html += `<div>${terminalLog(`Processing time: ${data.processing_time.toFixed(2)}s`, 'info')}</div>`;
                         }
                     } else {
-                        html += '<h4>Scraping Failed</h4>';
-                        html += `<p>Error: ${data.error || 'Unknown error occurred'}</p>`;
+                        html += `<div>${terminalLog('EXTRACTION_FAILED // System error detected', 'error')}</div>`;
+                        html += `<div style="margin-top: 0.5rem;">${terminalLog(`Error details: ${data.error || 'Unknown system failure'}`, 'error')}</div>`;
                     }
                     
                     resultsContent.innerHTML = html;
@@ -455,6 +1115,26 @@ https://restaurant3.com" required></textarea>
                         timeout = setTimeout(later, wait);
                     };
                 }
+
+                // Add CSS animations for terminal effects
+                const styleSheet = document.createElement('style');
+                styleSheet.textContent = `
+                    @keyframes float {
+                        0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.1; }
+                        50% { transform: translateY(-10px) rotate(180deg); opacity: 0.3; }
+                    }
+                    
+                    @keyframes slideInRight {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                    
+                    @keyframes terminal-cursor {
+                        0%, 50% { box-shadow: inset 0 0 0 2px var(--accent-green); }
+                        51%, 100% { box-shadow: inset 0 0 0 2px transparent; }
+                    }
+                `;
+                document.head.appendChild(styleSheet);
             </script>
         </body>
         </html>
@@ -593,7 +1273,7 @@ https://restaurant3.com" required></textarea>
             # Automatically generate files after successful scraping
             generated_files = []
             file_generation_errors = []
-            
+
             if result.successful_extractions:
                 # Determine which formats to generate
                 formats_to_generate = []
@@ -601,29 +1281,35 @@ https://restaurant3.com" required></textarea>
                     formats_to_generate = ["text", "pdf"]
                 else:
                     formats_to_generate = [file_format]
-                
+
                 # Generate files for each requested format
                 for fmt in formats_to_generate:
                     try:
-                        from src.file_generator.file_generator_service import FileGenerationRequest
-                        
+                        from src.file_generator.file_generator_service import (
+                            FileGenerationRequest,
+                        )
+
                         file_request = FileGenerationRequest(
                             restaurant_data=result.successful_extractions,
                             file_format=fmt,
                             output_directory=output_dir,
                             allow_overwrite=True,
-                            save_preferences=False
+                            save_preferences=False,
                         )
-                        
+
                         file_result = file_generator_service.generate_file(file_request)
-                        
+
                         if file_result["success"]:
                             generated_files.append(file_result["file_path"])
                         else:
-                            file_generation_errors.append(f"{fmt.upper()} generation failed: {file_result['error']}")
-                    
+                            file_generation_errors.append(
+                                f"{fmt.upper()} generation failed: {file_result['error']}"
+                            )
+
                     except Exception as e:
-                        file_generation_errors.append(f"{fmt.upper()} generation error: {str(e)}")
+                        file_generation_errors.append(
+                            f"{fmt.upper()} generation error: {str(e)}"
+                        )
 
             # Return results with actual file paths
             response_data = {
@@ -633,11 +1319,11 @@ https://restaurant3.com" required></textarea>
                 "output_files": generated_files,
                 "processing_time": getattr(result, "processing_time", 0),
             }
-            
+
             # Include file generation errors if any occurred
             if file_generation_errors:
                 response_data["file_generation_warnings"] = file_generation_errors
-            
+
             return jsonify(response_data)
 
         except Exception as e:
@@ -902,4 +1588,4 @@ def get_current_progress():
 
 if __name__ == "__main__":
     app = create_app()
-    app.run(host="localhost", port=8080, debug=False)
+    app.run(host="0.0.0.0", port=8080, debug=False)
