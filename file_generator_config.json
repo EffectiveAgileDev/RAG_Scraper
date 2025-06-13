@@ -1,0 +1,6 @@
+{
+  "output_directory": "/tmp",
+  "allow_overwrite": true,
+  "encoding": "utf-8",
+  "filename_pattern": "WebScrape_{timestamp}.txt"
+}

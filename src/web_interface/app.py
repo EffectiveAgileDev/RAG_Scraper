@@ -425,6 +425,50 @@ def create_app(testing=False):
                     line-height: 1.4;
                 }
 
+                .field-selection-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 0.75rem;
+                    margin-top: 1rem;
+                }
+
+                .field-option {
+                    background: var(--bg-tertiary);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 0;
+                    padding: 0.75rem;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    position: relative;
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 0.5rem;
+                }
+
+                .field-option:hover {
+                    border-color: var(--accent-amber);
+                    background: rgba(255, 170, 0, 0.05);
+                }
+
+                .field-option input[type="checkbox"] {
+                    margin: 0;
+                    accent-color: var(--accent-amber);
+                }
+
+                .field-option .field-title {
+                    font-family: 'JetBrains Mono', monospace;
+                    font-weight: 600;
+                    font-size: 0.75rem;
+                    color: var(--text-primary);
+                    margin-bottom: 0.25rem;
+                }
+
+                .field-option .field-desc {
+                    font-size: 0.6875rem;
+                    color: var(--text-muted);
+                    line-height: 1.3;
+                }
+
                 .action-bar {
                     display: flex;
                     gap: 1rem;
@@ -703,10 +747,36 @@ https://restaurant3.com
                                     <div class="format-title">PDF</div>
                                     <div class="format-desc">Formatted document for human review</div>
                                 </label>
-                                <label class="format-option" data-format="both">
-                                    <input type="radio" id="fileFormatBoth" name="fileFormat" value="both">
-                                    <div class="format-title">DUAL</div>
-                                    <div class="format-desc">Both formats for maximum compatibility</div>
+                                <label class="format-option" data-format="json">
+                                    <input type="radio" id="fileFormatJson" name="fileFormat" value="json">
+                                    <div class="format-title">JSON</div>
+                                    <div class="format-desc">Structured data for system integration</div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="jsonFieldSelection" class="input-group" style="display: none;">
+                            <label class="input-label">JSON_FIELD_SELECTION:</label>
+                            <div class="field-selection-grid">
+                                <label class="field-option">
+                                    <input type="checkbox" name="jsonFields" value="core_fields" checked>
+                                    <div class="field-title">CORE FIELDS</div>
+                                    <div class="field-desc">Name, address, phone, hours</div>
+                                </label>
+                                <label class="field-option">
+                                    <input type="checkbox" name="jsonFields" value="extended_fields" checked>
+                                    <div class="field-title">EXTENDED FIELDS</div>
+                                    <div class="field-desc">Cuisine, features, parking</div>
+                                </label>
+                                <label class="field-option">
+                                    <input type="checkbox" name="jsonFields" value="contact_fields" checked>
+                                    <div class="field-title">CONTACT FIELDS</div>
+                                    <div class="field-desc">Email, social media, delivery</div>
+                                </label>
+                                <label class="field-option">
+                                    <input type="checkbox" name="jsonFields" value="descriptive_fields">
+                                    <div class="field-title">DESCRIPTIVE FIELDS</div>
+                                    <div class="field-desc">Ambiance, dietary options</div>
                                 </label>
                             </div>
                         </div>
@@ -806,6 +876,8 @@ https://restaurant3.com
                 }
 
                 function setupFormatSelection() {
+                    const jsonFieldSelection = document.getElementById('jsonFieldSelection');
+                    
                     formatOptions.forEach(option => {
                         option.addEventListener('click', function() {
                             formatOptions.forEach(opt => opt.classList.remove('selected'));
@@ -813,7 +885,14 @@ https://restaurant3.com
                             const radio = this.querySelector('input[type="radio"]');
                             radio.checked = true;
                             
-                            updateSystemStatus(`FORMAT_SELECTED // ${radio.value.toUpperCase()}_MODE_ACTIVE`);
+                            // Show/hide JSON field selection based on format choice
+                            if (radio.value === 'json') {
+                                jsonFieldSelection.style.display = 'block';
+                                updateSystemStatus(`JSON_FORMAT_SELECTED // FIELD_CUSTOMIZATION_AVAILABLE`);
+                            } else {
+                                jsonFieldSelection.style.display = 'none';
+                                updateSystemStatus(`FORMAT_SELECTED // ${radio.value.toUpperCase()}_MODE_ACTIVE`);
+                            }
                         });
                     });
                 }
@@ -847,6 +926,16 @@ https://restaurant3.com
                     const fileMode = document.getElementById('fileMode').value;
                     const fileFormat = document.querySelector('input[name="fileFormat"]:checked').value;
                     
+                    // Collect JSON field selections if JSON format is selected
+                    let jsonFieldSelections = null;
+                    if (fileFormat === 'json') {
+                        const selectedFields = Array.from(document.querySelectorAll('input[name="jsonFields"]:checked'))
+                            .map(input => input.value);
+                        if (selectedFields.length > 0) {
+                            jsonFieldSelections = selectedFields;
+                        }
+                    }
+                    
                     if (urls.length === 0) {
                         updateSystemStatus('ERROR // NO_TARGET_URLs_DETECTED');
                         showTerminalAlert('CRITICAL ERROR: No target URLs detected. Please input valid restaurant URLs.');
@@ -854,7 +943,7 @@ https://restaurant3.com
                     }
                     
                     updateSystemStatus(`INITIATING_EXTRACTION // ${urls.length}_TARGETS_QUEUED`);
-                    await startScraping(urls, outputDir, fileMode, fileFormat);
+                    await startScraping(urls, outputDir, fileMode, fileFormat, jsonFieldSelections);
                 });
                 
                 // Validate button with terminal feedback
@@ -954,7 +1043,7 @@ https://restaurant3.com
                     urlValidation.innerHTML = html;
                 }
                 
-                async function startScraping(urls, outputDir, fileMode, fileFormat) {
+                async function startScraping(urls, outputDir, fileMode, fileFormat, jsonFieldSelections) {
                     submitBtn.disabled = true;
                     submitBtn.textContent = 'EXTRACTION_IN_PROGRESS...';
                     showProgress();
@@ -972,7 +1061,8 @@ https://restaurant3.com
                                 urls: urls,
                                 output_dir: outputDir,
                                 file_mode: fileMode,
-                                file_format: fileFormat
+                                file_format: fileFormat,
+                                json_field_selections: jsonFieldSelections
                             })
                         });
                         
@@ -1276,11 +1366,7 @@ https://restaurant3.com
 
             if result.successful_extractions:
                 # Determine which formats to generate
-                formats_to_generate = []
-                if file_format == "both":
-                    formats_to_generate = ["text", "pdf"]
-                else:
-                    formats_to_generate = [file_format]
+                formats_to_generate = [file_format]
 
                 # Generate files for each requested format
                 for fmt in formats_to_generate:

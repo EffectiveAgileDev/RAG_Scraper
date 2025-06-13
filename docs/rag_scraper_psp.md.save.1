@@ -1098,45 +1098,5 @@ echo "Remember to run '/init' in Claude Code session to create CLAUDE.md"
 4. Use Claude Code prompt templates for Red-Green-Refactor cycles
 5. Commit to GitHub when each sprint goal is achieved
 
-## Future Features and Enhancements
-
-### Enhanced Field Selection for All Output Formats
-
-**Current Status**: Field selection feature is currently implemented only for JSON format in Sprint 7A.
-
-**Future Enhancement**: Extend comprehensive field selection capability to TEXT and PDF output formats.
-
-**Feature Description**:
-- **Universal Field Selection Interface**: Make the current JSON field selection interface available for all output formats (TEXT, PDF, JSON)
-- **Format-Specific Field Rendering**: Each output format would respect the selected fields but render them according to format conventions:
-  - **TEXT Format**: Include only selected fields in structured text output with appropriate formatting
-  - **PDF Format**: Generate PDF documents containing only the selected field categories with proper visual hierarchy
-  - **JSON Format**: Current implementation (already supports field selection)
-
-**Technical Implementation**:
-- Extend the existing `FormatSelectionManager` to support field selection for all formats
-- Modify text file generator to filter fields based on user selection
-- Enhance PDF generator to create sections only for selected field categories
-- Update web interface to show field selection for all format choices (not just JSON)
-- Maintain backward compatibility with current full-field output as default
-
-**User Experience**:
-- Field selection interface appears regardless of chosen output format
-- Clear indication of how selected fields will appear in each format type
-- Consistent field categories across all output formats
-- Default to all fields selected to maintain current behavior
-
-**Priority**: Medium (Enhancement for improved user control and output customization)
-
-**Estimated Development**: 1-2 days using existing field selection infrastructure
-
-**Benefits**:
-- Consistent user experience across all output formats
-- Reduced file sizes for users who only need specific field categories
-- Enhanced customization for different RAG system requirements
-- Better integration with downstream processing systems that only need specific data categories
-
----
-
 **Document Status**: Ready for Development Start  
 **Estimated Completion**: 2-3 weeks with 8 comprehensive goal-based sprint execution

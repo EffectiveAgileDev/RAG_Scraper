@@ -9,6 +9,8 @@ from .text_file_generator import (
     TextFileConfigManager,
 )
 from .pdf_generator import PDFGenerator, PDFConfig
+from .json_export_generator import JSONExportGenerator
+from .format_selection_manager import FormatSelectionManager
 from src.scraper.multi_strategy_scraper import RestaurantData
 from src.config.file_permission_validator import FilePermissionValidator
 
@@ -22,6 +24,8 @@ class FileGenerationRequest:
     output_directory: Optional[str] = None
     allow_overwrite: bool = True
     save_preferences: bool = False
+    field_selection: Optional[Dict[str, bool]] = None
+    format_manager: Optional[FormatSelectionManager] = None
 
     def validate(self) -> List[str]:
         """Validate the request parameters.
@@ -36,7 +40,7 @@ class FileGenerationRequest:
             errors.append("No restaurant data provided")
 
         # Validate file format
-        supported_formats = ["text", "pdf"]  # PDF support added in Sprint 6
+        supported_formats = ["text", "pdf", "json"]  # JSON support added in Sprint 7A
         if self.file_format not in supported_formats:
             errors.append(
                 f"Unsupported file format: {self.file_format}. Supported: {supported_formats}"
@@ -104,10 +108,16 @@ class FileGeneratorService:
                 self.config_manager.save_config(self.current_config)
 
             # Generate file based on format
+            # Check if format manager is provided for enhanced functionality
+            if request.format_manager:
+                return self._generate_with_format_manager(request, output_directory)
+            
             if request.file_format == "text":
                 return self._generate_text_file(request, output_directory)
             elif request.file_format == "pdf":
                 return self._generate_pdf_file(request, output_directory)
+            elif request.file_format == "json":
+                return self._generate_json_file(request, output_directory)
             else:
                 return {
                     "success": False,
@@ -208,6 +218,190 @@ class FileGeneratorService:
         except Exception as e:
             return {"success": False, "error": f"PDF file generation failed: {str(e)}"}
 
+    def _generate_json_file(
+        self, request: FileGenerationRequest, output_directory: str
+    ) -> Dict[str, Any]:
+        """Generate JSON file from restaurant data.
+
+        Args:
+            request: File generation request
+            output_directory: Directory to save file
+
+        Returns:
+            Dictionary with generation result
+        """
+        try:
+            # Convert RestaurantData objects to dictionaries for JSON export
+            restaurant_dicts = self._convert_restaurant_data_for_json(request.restaurant_data)
+
+            # Generate output file path
+            output_path = self._generate_json_output_path(output_directory)
+
+            # Generate JSON file using the JSON export generator
+            generator = JSONExportGenerator()
+            result = generator.generate_json_file(
+                restaurant_dicts, 
+                output_path, 
+                field_selection=request.field_selection
+            )
+
+            return self._format_json_generation_result(result)
+
+        except ValueError as e:
+            return self._create_json_error_result(f"No data available for JSON generation: {str(e)}")
+        except PermissionError as e:
+            return self._create_json_error_result(f"Permission denied: {str(e)}")
+        except FileExistsError as e:
+            return self._create_json_error_result(f"File already exists: {str(e)}")
+        except Exception as e:
+            return self._create_json_error_result(f"JSON file generation failed: {str(e)}")
+    
+    def _convert_restaurant_data_for_json(self, restaurant_data: List[RestaurantData]) -> List[Dict[str, Any]]:
+        """Convert RestaurantData objects to dictionaries for JSON export.
+        
+        Args:
+            restaurant_data: List of RestaurantData objects
+            
+        Returns:
+            List of dictionaries suitable for JSON export
+        """
+        restaurant_dicts = []
+        for restaurant in restaurant_data:
+            restaurant_dict = self._convert_single_restaurant_to_dict(restaurant)
+            restaurant_dicts.append(restaurant_dict)
+        return restaurant_dicts
+    
+    def _convert_single_restaurant_to_dict(self, restaurant: RestaurantData) -> Dict[str, Any]:
+        """Convert a single RestaurantData object to dictionary.
+        
+        Args:
+            restaurant: RestaurantData object
+            
+        Returns:
+            Dictionary representation suitable for JSON export
+        """
+        return {
+            'name': restaurant.name,
+            'address': restaurant.address,
+            'phone': restaurant.phone,
+            'hours': restaurant.hours,
+            'website': getattr(restaurant, 'website', None),
+            'cuisine_types': [restaurant.cuisine] if restaurant.cuisine else [],
+            'special_features': getattr(restaurant, 'special_features', []),
+            'parking': getattr(restaurant, 'parking', None),
+            'reservations': getattr(restaurant, 'reservations', None),
+            'menu_items': list(restaurant.menu_items.keys()) if restaurant.menu_items else [],
+            'pricing': restaurant.price_range,
+            'email': getattr(restaurant, 'email', None),
+            'social_media': restaurant.social_media,
+            'delivery_options': getattr(restaurant, 'delivery_options', []),
+            'dietary_accommodations': getattr(restaurant, 'dietary_accommodations', []),
+            'ambiance': getattr(restaurant, 'ambiance', None)
+        }
+    
+    def _generate_json_output_path(self, output_directory: str) -> str:
+        """Generate output file path for JSON file.
+        
+        Args:
+            output_directory: Directory to save file
+            
+        Returns:
+            Complete file path for JSON output
+        """
+        from datetime import datetime
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        filename = f"WebScrape_{timestamp}.json"
+        return os.path.join(output_directory, filename)
+    
+    def _format_json_generation_result(self, generator_result: Dict[str, Any]) -> Dict[str, Any]:
+        """Format JSON generator result for service response.
+        
+        Args:
+            generator_result: Result from JSON export generator
+            
+        Returns:
+            Formatted result for file generation service
+        """
+        if generator_result['success']:
+            return {
+                "success": True,
+                "file_path": generator_result['file_path'],
+                "file_format": "json",
+                "restaurant_count": generator_result['restaurant_count'],
+            }
+        else:
+            return {
+                "success": False,
+                "error": f"JSON generation failed: {generator_result['error']}"
+            }
+    
+    def _create_json_error_result(self, error_message: str) -> Dict[str, Any]:
+        """Create standardized error result for JSON generation.
+        
+        Args:
+            error_message: Error message
+            
+        Returns:
+            Standardized error result dictionary
+        """
+        return {
+            "success": False,
+            "error": error_message
+        }
+
+    def _generate_with_format_manager(
+        self, request: FileGenerationRequest, output_directory: str
+    ) -> Dict[str, Any]:
+        """Generate files using format manager for enhanced format selection.
+
+        Args:
+            request: File generation request with format manager
+            output_directory: Directory to save files
+
+        Returns:
+            Dictionary with generation result
+        """
+        try:
+            format_manager = request.format_manager
+            
+            # Get format configuration from manager
+            format_config = format_manager.get_format_configuration(request.file_format)
+            
+            # Override field_selection with format manager's configuration
+            if "field_selection" in format_config:
+                effective_field_selection = format_config["field_selection"]
+            else:
+                effective_field_selection = request.field_selection
+            
+            # Create new request with effective field selection
+            enhanced_request = FileGenerationRequest(
+                restaurant_data=request.restaurant_data,
+                file_format=request.file_format,
+                output_directory=request.output_directory,
+                allow_overwrite=request.allow_overwrite,
+                save_preferences=request.save_preferences,
+                field_selection=effective_field_selection
+            )
+            
+            # Generate file using existing methods
+            if request.file_format == "text":
+                return self._generate_text_file(enhanced_request, output_directory)
+            elif request.file_format == "pdf":
+                return self._generate_pdf_file(enhanced_request, output_directory)
+            elif request.file_format == "json":
+                return self._generate_json_file(enhanced_request, output_directory)
+            else:
+                return {
+                    "success": False,
+                    "error": f"Format not supported by format manager: {request.file_format}",
+                }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Format manager generation failed: {str(e)}",
+            }
+
     def validate_directory_permissions(self, directory_path: str) -> Dict[str, Any]:
         """Validate directory permissions for file generation.
 
@@ -239,7 +433,7 @@ class FileGeneratorService:
         Returns:
             List of supported format strings
         """
-        return ["text", "pdf"]  # PDF support added in Sprint 6
+        return ["text", "pdf", "json"]  # JSON support added in Sprint 7A
 
     def get_current_config(self) -> Dict[str, Any]:
         """Get current configuration.
