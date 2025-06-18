@@ -1,0 +1,1412 @@
+{
+  "metadata": {
+    "generation_timestamp": "2025-06-17T11:58:13.319092",
+    "restaurant_count": 45,
+    "format_version": "1.0"
+  },
+  "restaurants": [
+    {
+      "basic_info": {
+        "name": "Marrakesh Restaurant",
+        "address": "1201 NW 21st ave",
+        "phone": "(503) 248-9442",
+        "hours": "HoursSun, Mon, Tue, Wed, Thur, Fri, Sat5:00 PM - 10:00 PM",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.twitter.com/Marrakeshport",
+          "https://www.facebook.com/113667448662857",
+          "https://www.yelp.com/biz/marrakesh-restaurant-portland",
+          "https://www.instagram.com/marrakesh.pdx"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Irving Street Tapas",
+        "address": "",
+        "phone": "(503) 564-8977",
+        "hours": "Happy Hour : 4 PM to 5:30 PM\n\n\n\n \nBusiness Hours : Monday to Sunday 4 PM to 9 PM",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Spanish, Greek, Tapas"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [
+          "House Made Desserts"
+        ],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://facebook.com",
+          "https://twitter.com/istpdx",
+          "https://twitter.com/ISTpdx",
+          "https://instagram.com",
+          "https://www.instagram.com/istpdx/"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Piattino Italian Restaurant",
+        "address": "",
+        "phone": "(971) 983-8000",
+        "hours": "Monday to Sunday 12pm to 9pm",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Pizza, Italian"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.instagram.com/piattinopdx/",
+          "https://www.facebook.com/piattinopdx/",
+          "https://www.facebook.com/piattinopdx",
+          "https://www.yelp.com/biz/piattino-portland-2?osq=Restaurants"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Canard",
+        "address": "",
+        "phone": "(971) 279-2356",
+        "hours": "for Dinner Every Day4pm – 10pm",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.instagram.com/canard_restaurant/",
+          "https://www.facebook.com/CanardPDX/"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Canard",
+        "address": "",
+        "phone": "(971) 279-2356",
+        "hours": "for Dinner Every Day4pm – 10pm",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.instagram.com/canard_restaurant/",
+          "https://www.facebook.com/CanardPDX/"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Taylor Street Tavern",
+        "address": "808 SW Taylor StPortland, OR97205",
+        "phone": "(503) 943-5844",
+        "hours": "",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Italian"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.facebook.com/103480035725088",
+          "https://www.instagram.com/taylorstreettavern"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Fuller's Coffee Shop",
+        "address": "136 Northwest 9th Avenue",
+        "phone": "(503) 222-5608",
+        "hours": "",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "American"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.instagram.com/fullerscoffee",
+          "https://www.facebook.com/116028521752632"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Metropolitan Tavern",
+        "address": "1021 Northeast Grand AvenuePortland, OR97232",
+        "phone": "(503) 963-3600",
+        "hours": "HoursMonday-Friday  11:00am-11:00pmSaturday & Sunday 9:30am-11:00pm",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Pizza"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.facebook.com/102618045487960",
+          "https://www.instagram.com/mettavernpdx"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Fuller's Coffee Shop",
+        "address": "136 Northwest 9th Avenue",
+        "phone": "(503) 222-5608",
+        "hours": "",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "American"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.instagram.com/fullerscoffee",
+          "https://www.facebook.com/116028521752632"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Fullers Burger Shack",
+        "address": "10131 NE Cascades PkwyPortland, OR97220",
+        "phone": "(503) 206-8048",
+        "hours": "",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.instagram.com/fullersburgershack",
+          "https://www.facebook.com/107346784026771"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Hi",
+        "address": "320 SW Harvey Milk StreetPortland, OR 97204",
+        "phone": "(971) 222-2100",
+        "hours": "",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.facebook.com/HiLoHotel",
+          "https://www.instagram.com/hi_lo_hotel/",
+          "https://www.instagram.com/hi_lo_hotel/?hl=en"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "King Tide Fish & Shell",
+        "address": "1510 SW HARBOR WAY\nPORTLAND, OR 97201",
+        "phone": "(503) 295-6166",
+        "hours": "dAILY 2PM - 5PM",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Seafood"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.instagram.com/kingtidepdx/",
+          "https://www.facebook.com/KingTidePDX/"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Stone Soup PDX",
+        "address": "Portland, OR 97202-2069",
+        "phone": "5036763509",
+        "hours": "",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.instagram.com/pdxstonesoup/",
+          "https://www.facebook.com/StoneSoupPDX/"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Tartberry Self-Serve Frozen Yogurt",
+        "address": "915 Southwest 9th Avenue, Portland, OR 97205",
+        "phone": "5032952700",
+        "hours": "Monday-Sunday 1PM-10:30PME Gift Cards Now Available: Use phone cam",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://https://www.facebook.com/tartberryfroyo",
+          "https://www.instagram.com/tartberryinc/?hl=en"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Piazza Italia",
+        "address": "1241 NW Johnson St\nPortland, OR, 97209\nUnited States",
+        "phone": "(503) 478-0619",
+        "hours": "our own place?\"Gino & Kevin, a Portland native who grew up visiting his fam",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Italian"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://twitter.com/PiazzaItaliaPDX",
+          "https://www.instagram.com/p/CB61ohVB4o-/",
+          "https://www.facebook.com/pages/Piazza-Italia/",
+          "http://instagram.com/piazza_italia_pdx",
+          "http://www.yelp.com/biz/piazza-italia-portland"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Carlita's",
+        "address": "1101 Northwest Northrup StreetPortland, OR97209",
+        "phone": "",
+        "hours": "04:00 PM - 11:00 PM",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.facebook.com/1078097388961536",
+          "https://www.instagram.com/carlitasttw"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Next Level Burger",
+        "address": "",
+        "phone": "",
+        "hours": "",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.facebook.com/nextlevelburger/",
+          "https://www.instagram.com/p/DK7chw6N7qy/",
+          "https://www.instagram.com/p/DK0iUQFsYBS/",
+          "https://www.instagram.com/reel/DKkUUZxMPoR/",
+          "https://www.instagram.com/nextlevelburger/",
+          "https://www.instagram.com/p/DKsCYjExWUC/",
+          "https://www.instagram.com/p/DKcmbTet9cR/",
+          "https://www.instagram.com/p/DKn2l8NuzJs/",
+          "https://www.instagram.com/reel/DKfI5pgs036/",
+          "https://www.instagram.com/p/DKZxUttt6mF/",
+          "https://www.instagram.com/reel/DKwuwxTC988/",
+          "https://www.instagram.com/p/DK2GGx-OeHp/"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Big's Chicken",
+        "address": "4570 Southwest Watson Avenue\nBeaverton, OR, 97005\nUnited States",
+        "phone": "(971) 255-0358",
+        "hours": "Mo 11:30-21:00, Tu 11:30-21:00, We 11:30-21:00, Th 11:30-21:00, Fr 11:30-21:00, Sa 11:30-21:00, Su 11:30-21:00",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Bbq, Barbecue, American"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": "$5 \n                  \n                \n\n\n\n$8"
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.instagram.com/bigschicken",
+          "https://www.facebook.com/Bigs-Chicken-265978097177559/?ref=br_tf"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Ate-Oh-Ate",
+        "address": "2454 East Burnside Street\nPortland, OR, 97214\nUnited States",
+        "phone": "(503) 445-6101",
+        "hours": "Mo 11:00-21:00, Tu 11:00-21:00, We 11:00-21:00, Th 11:00-21:00, Fr 11:00-21:00, Sa 11:00-21:00, Su 11:00-21:00",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Korean, Japanese"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://twitter.com/AteOhAtePtld",
+          "https://www.facebook.com/AteOhAte/",
+          "http://instagram.com/ateohatepdx"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Pastini",
+        "address": "",
+        "phone": "",
+        "hours": "",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.facebook.com/PastiniPastaria/",
+          "https://www.instagram.com/pastini/"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Mama Mia Trattoria",
+        "address": "439 Southwest 2nd Avenue                                                          , Portland",
+        "phone": "(503) 295-6464",
+        "hours": "HoursMonday - Friday 4:00 pm - Close (Last Seating 8:30 pm - Last Call 9:30 pm)Saturday & Sunday 1:00 pm - Close (Last Seating 8:30 pm - Last Call 9:30 pm)",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Pizza, Seafood"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.yelp.com",
+          "https://www.instagram.com/",
+          "https://www.twitter.com/MamaMiaPDX",
+          "https://www.facebook.com/45751918684"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "New Cascadia Traditional",
+        "address": "2502 SE DIVISION STREETPORTLAND, OR 97202",
+        "phone": "(503) 546-4901",
+        "hours": "Thursday 8am-8pm",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Pizza, American"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.instagram.com/newcascadia/",
+          "https://www.facebook.com/NewCascadiaTraditional"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Boke Bowl",
+        "address": "1028 SE Water AvePortland, OR97214",
+        "phone": "(503) 719-5089",
+        "hours": "HoursTuesday 11am-8pmWednesday 11am-8pmThursday 11am-8pmFriday 11am-8:30pmSaturday 11am-8:30pmSunday 11am-8pmCLOSED MONDAYS",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.instagram.com/boke_bowl",
+          "https://www.facebook.com/168092293210731"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Cafe Nell",
+        "address": "1987 NW Kearney StreetPortland, OR 97209",
+        "phone": "",
+        "hours": "Open 7 days a weekMonday – Thursday 11:30 am 9:00pmFriday 11:30 am – 10:00 pm",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.facebook.com/CafeNell",
+          "https://twitter.com/cafenell",
+          "https://www.instagram.com/cafenell/"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Yataimura Maru",
+        "address": "3810 SE Division St\nPortland, OR 97202\nUnited States",
+        "phone": "(503) 841-5527",
+        "hours": "Mo 11:30-14:30, Mo 16:00-22:00, Tu 11:30-14:30, Tu 16:00-22:00, We 11:30-14:30, We 16:00-22:00, Th 11:30-14:30, Th 16:00-22:00, Fr 11:30-14:30, Fr 16:00-23:00, Sa 11:30-23:00, Su 11:30-22:00",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Japanese"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.facebook.com/marupdx",
+          "https://www.yelp.com/waitlist/yataimura-maru-portland-2/widget"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Shigezo Izakaya",
+        "address": "910 SW Salmon St\nPortland, OR, 97205\nUnited States",
+        "phone": "(503) 688-5202",
+        "hours": "Mo 11:30-22:00, Tu 11:30-22:00, We 11:30-22:00, Th 11:30-22:00, Fr 11:30-23:00, Sa 11:30-23:00, Su 11:30-22:00",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Japanese, Sushi"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Portland Spirit Cruises & Events",
+        "address": "1010 SW Naito Pkwy\nPortland, OR 97204",
+        "phone": "(503) 224-3900",
+        "hours": "Monday - Friday: 8:00 am - 7:00 pm",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.facebook.com/PortlandSpiritCruises/",
+          "https://www.instagram.com/portlandspirit/",
+          "https://www.yelp.com/biz/portland-spirit-cruises-and-events-portland"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "RingSide Steakhouse",
+        "address": "",
+        "phone": "(503) 223-1513",
+        "hours": "",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Steakhouse"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.instagram.com/p/DIIFwcxvLNQ/",
+          "https://www.facebook.com/RingSideSteakhouse",
+          "https://twitter.com/RingSideSteak",
+          "https://www.instagram.com/p/DIC31mjBqt8/",
+          "https://www.instagram.com/ringsidesteakhouse/",
+          "https://www.instagram.com/p/DH2CdfzS5zu/",
+          "https://www.instagram.com/p/DJ5WfumPzYg/",
+          "https://www.instagram.com/p/DKIt-kdhJOU/"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Mediterranean Food Portland, OR",
+        "address": "2112 NW Kearney St\nPortland, OR 97210",
+        "phone": "(503) 221-1195",
+        "hours": "Monday4:00pm-9:00pm\n\n\nTuesday4:00pm-9:00pm\n\n\nWednesday4:00pm-9:00pm\n\n\nThursday4:00pm-9:00pm\n\n\nFriday4:00pm-10:00pm\n\n\n\nSaturday4:00pm-10:00pm\n\n\n\nSunday4:00pm-9:00pm\n\n\n\nHappy Hour4:00pm-5:00pm",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Pizza, Italian, French"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.facebook.com/Serratto",
+          "http://www.twitter.com/SerrattoPDX"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Swine Moonshine & Whiskey Bar",
+        "address": "808 Southwest Taylor StreetPortland, OR97205",
+        "phone": "(503) 943-5844",
+        "hours": "",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.instagram.com/swinemoonshine",
+          "https://www.facebook.com/248050678719804"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Urban Fondue",
+        "address": "2114 NW Glisan StPortland, OR97210",
+        "phone": "(503) 242-1400",
+        "hours": "MON - SAT TIL 6PM",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.facebook.com/117676684911802",
+          "https://www.instagram.com/urbanfondue"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Crystal Hotel",
+        "address": "At Crystal Hotel\n\n\n 303 SW 12th Ave., Portland, OR 97205\n\n\n\n (503) 384-2500 Contact Us",
+        "phone": "(503) 384-2500",
+        "hours": "Sunday-Thursday, 8am-10pm",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Mexican, Spanish"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.facebook.com/McMenamins/",
+          "https://www.facebook.com/McMenaminsCrystalHotelandHalsCafe",
+          "https://www.facebook.com/McMenamins",
+          "https://www.instagram.com/mcmenamins/"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Ate-Oh-Ate",
+        "address": "2454 East Burnside Street\nPortland, OR, 97214\nUnited States",
+        "phone": "(503) 445-6101",
+        "hours": "Mo 11:00-21:00, Tu 11:00-21:00, We 11:00-21:00, Th 11:00-21:00, Fr 11:00-21:00, Sa 11:00-21:00, Su 11:00-21:00",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Bbq"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://twitter.com/AteOhAtePtld",
+          "https://www.facebook.com/AteOhAte/",
+          "http://instagram.com/ateohatepdx"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Boke Bowl",
+        "address": "1028 SE Water AvePortland, OR97214",
+        "phone": "(503) 719-5089",
+        "hours": "HoursTuesday 11am-8pmWednesday 11am-8pmThursday 11am-8pmFriday 11am-8:30pmSaturday 11am-8:30pmSunday 11am-8pmCLOSED MONDAYS",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.instagram.com/boke_bowl",
+          "https://www.facebook.com/168092293210731"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "BOTTLE + KITCHEN",
+        "address": "50 SW Morrison St Portland, Oregon 97204",
+        "phone": "(503) 484-1415",
+        "hours": "BREAKFASTWEDNESDAY-SUNDAY7AM - 12PMDINNERWEDNESDAY-SUNDAY4PM - 9PM",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "American, French, Russian"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": "$16 \n                  \n                \n\n\n\n$17"
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.facebook.com/bottlekitchen/",
+          "https://www.instagram.com/bottle.and.kitchen/"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Bowery Bagels",
+        "address": "310 NW Broadway\nPortland, OR",
+        "phone": "",
+        "hours": ", , , , , ,",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Russian"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "http://instagram.com/bowerybagels",
+          "https://www.instagram.com/p/CA5_Od4hS7O/",
+          "https://www.instagram.com/p/CAlSUJUhS31/",
+          "https://www.instagram.com/p/CBnZk_Ihkbs/",
+          "https://www.instagram.com/p/CAOJBWmBPI2/",
+          "https://www.instagram.com/p/CBlo7bUHiHY/",
+          "https://www.facebook.com/BoweryBagels/"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Brix Tavern",
+        "address": "1338 Northwest Hoyt Street Portland, OR 97209",
+        "phone": "(503) 943-5995",
+        "hours": "Mon - Thur, 11 AM - 10 PMFri, 11 AM - 11 PM, Sat, 9:30 AM - 11 PMSun, 9:30 AM - 10 PM",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "American"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.facebook.com/201470573219653",
+          "https://www.instagram.com/brixtavern"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Eat Oyster Bar and Kitchen",
+        "address": "3808 N Williams Ave, Portland, OR 97227",
+        "phone": "(503) 281-1222",
+        "hours": "",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Cajun"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.instagram.com/eatoysterbar/"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "The Fireside",
+        "address": "801 NW 23rd Ave\nPortland, Oregon 97210",
+        "phone": "(503) 477-9505",
+        "hours": "Mo 11:00-22:00, Tu 11:00-22:00, We 11:00-22:00, Th 11:00-22:00, Fr 11:00-22:00, Sa 10:00-22:00, Su 10:00-22:00",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "http://www.facebook.com/pages/The-Fireside/500271346698117",
+          "https://www.instagram.com/pdxfireside/",
+          "https://www.instagram.com/p/DKm3YuLpKFY/",
+          "https://www.instagram.com/p/DKxc3bAz3d-/",
+          "https://www.instagram.com/p/DKh7So1S83p/",
+          "https://www.instagram.com/p/DKfRm0uy-2m/",
+          "https://www.instagram.com/p/DKu3KU8z86x/"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Huber's",
+        "address": "411 Southwest 3rd Avenue                                                          , Portland",
+        "phone": "(503) 228-5686",
+        "hours": "HoursMonday - Thursday: 11:30am - 10:00pmFriday - Saturday: 11:30am - 11:00pmSunday: 4:00pm - 10:00pmHappy Hour: 4pm - 6:30pm and 9pm - Close",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Spanish, American"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.yelp.com/reservations/hubers-cafe-portland-4",
+          "https://www.yelp.com/reservations/hubers-cafe-portland-2",
+          "https://www.twitter.com/Hubers_Portland",
+          "https://www.facebook.com/87608950979"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Kells Irish Pub",
+        "address": "112 Southwest 2nd Avenue, Portland, OR 97204",
+        "phone": "+ 503-227-4057",
+        "hours": "Wednesday - 4pm-11pm",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Laurelhurst Market",
+        "address": "3155 East Burnside Street\nPortland, OR, 97214\nUnited States",
+        "phone": "503-954-3235",
+        "hours": "Mo 17:00-22:00, Tu 17:00-22:00, We 17:00-22:00, Th 17:00-22:00, Fr 17:00-22:00, Sa 17:00-22:00, Su 17:00-22:00",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "steakhouse"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [
+          "Beverages"
+        ],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.instagram.com/laurelhurstmarket/",
+          "https://twitter.com/LaurelhurstMkt",
+          "https://www.facebook.com/LaurelhurstMarket/"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Le Pigeon",
+        "address": "738 East Burnside Street\nPortland, OR, 97214\nUnited States",
+        "phone": "(503) 546-8796",
+        "hours": ", , , , , ,",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [
+          "Wine And Beverages"
+        ],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.instagram.com/lepigeonpdx/"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Mucca V3",
+        "address": "",
+        "phone": "(503) 227-5521",
+        "hours": "DAILY5PM - 10PM",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Italian"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://twitter.com/muccaosteria?lang=en",
+          "https://www.instagram.com/muccaosteria/?hl=en"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Dan & Louis Oyster Bar",
+        "address": "208 SW Ankeny St, Portland, OR 97204",
+        "phone": "(503) 227-5906",
+        "hours": "ed the doors in 1907, five generations have carried on the fam",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Seafood"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [
+          "https://www.instagram.com/oysterbarpdx/",
+          "https://www.facebook.com/OysterBarPDX"
+        ],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    }
+  ]
+}
