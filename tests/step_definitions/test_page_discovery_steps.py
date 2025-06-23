@@ -22,7 +22,7 @@ def page_discovery_context():
         "max_depth": 2,
         "start_depth": 0,
         "depth_results": {},
-        "directory_url": None
+        "directory_url": None,
     }
 
 
@@ -31,16 +31,20 @@ def page_discovery_context():
 def page_discovery_initialized(page_discovery_context):
     """Initialize the page discovery system."""
     from src.scraper.page_discovery import PageDiscovery
-    
+
     # Initialize with a default base URL - will be updated when needed
-    page_discovery_context["page_discovery"] = PageDiscovery("https://restaurant-directory.com")
+    page_discovery_context["page_discovery"] = PageDiscovery(
+        "https://restaurant-directory.com"
+    )
 
 
 # Scenario 1: Discover links from restaurant directory
 @given("I have a restaurant directory page with multiple restaurant links")
 def directory_page_with_links(page_discovery_context):
     """Create a mock directory page with restaurant links."""
-    page_discovery_context["html_content"] = """
+    page_discovery_context[
+        "html_content"
+    ] = """
     <html>
         <body>
             <div class="directory">
@@ -64,8 +68,10 @@ def extract_links(page_discovery_context):
     page_discovery = page_discovery_context["page_discovery"]
     # Update the base_url to match test context
     page_discovery.base_url = page_discovery_context["base_url"]
-    
-    discovered_set = page_discovery.extract_all_internal_links(page_discovery_context["html_content"])
+
+    discovered_set = page_discovery.extract_all_internal_links(
+        page_discovery_context["html_content"]
+    )
     page_discovery_context["discovered_links"] = list(discovered_set)
 
 
@@ -75,9 +81,9 @@ def verify_restaurant_links_found(page_discovery_context):
     expected_links = {
         "https://restaurant-directory.com/restaurant/pizza-place",
         "https://restaurant-directory.com/restaurant/burger-joint",
-        "https://restaurant-directory.com/restaurant/sushi-bar"
+        "https://restaurant-directory.com/restaurant/sushi-bar",
     }
-    
+
     assert len(page_discovery_context["discovered_links"]) >= 3
     for link in expected_links:
         assert link in page_discovery_context["discovered_links"]
@@ -95,9 +101,15 @@ def verify_proper_urls(page_discovery_context):
 @then("duplicate links should be removed")
 def verify_no_duplicates(page_discovery_context):
     """Verify duplicate links are removed."""
-    assert len(page_discovery_context["discovered_links"]) == len(set(page_discovery_context["discovered_links"]))
+    assert len(page_discovery_context["discovered_links"]) == len(
+        set(page_discovery_context["discovered_links"])
+    )
     # Specifically check pizza-place appears only once
-    pizza_count = sum(1 for link in page_discovery_context["discovered_links"] if "pizza-place" in link)
+    pizza_count = sum(
+        1
+        for link in page_discovery_context["discovered_links"]
+        if "pizza-place" in link
+    )
     assert pizza_count == 1
 
 
@@ -105,7 +117,9 @@ def verify_no_duplicates(page_discovery_context):
 @given("I have a page with mixed types of links")
 def page_with_mixed_links(page_discovery_context):
     """Create a page with various types of links."""
-    page_discovery_context["html_content"] = """
+    page_discovery_context[
+        "html_content"
+    ] = """
     <html>
         <body>
             <a href="/restaurant/italian-bistro">Italian Bistro</a>
@@ -118,9 +132,10 @@ def page_with_mixed_links(page_discovery_context):
     </html>
     """
     page_discovery_context["base_url"] = "https://food-site.com"
-    
+
     # Update PageDiscovery to use the new base URL
     from src.scraper.page_discovery import PageDiscovery
+
     page_discovery_context["page_discovery"] = PageDiscovery("https://food-site.com")
 
 
@@ -136,9 +151,11 @@ def filter_links_by_pattern(page_discovery_context):
     page_discovery = page_discovery_context["page_discovery"]
     # Update the base_url to match test context
     page_discovery.base_url = page_discovery_context["base_url"]
-    
-    all_links = page_discovery.extract_all_internal_links(page_discovery_context["html_content"])
-    
+
+    all_links = page_discovery.extract_all_internal_links(
+        page_discovery_context["html_content"]
+    )
+
     # Filter links that match the pattern
     pattern = page_discovery_context["link_pattern"]
     if pattern == "/restaurant/*":
@@ -146,9 +163,10 @@ def filter_links_by_pattern(page_discovery_context):
     else:
         # Generic pattern matching
         import re
+
         pattern_regex = pattern.replace("*", ".*")
         filtered_links = [link for link in all_links if re.search(pattern_regex, link)]
-    
+
     page_discovery_context["filtered_links"] = filtered_links
 
 
@@ -157,12 +175,14 @@ def verify_pattern_matching(page_discovery_context):
     """Verify only matching links are returned."""
     for link in page_discovery_context["filtered_links"]:
         assert "/restaurant/" in link
-    
+
     expected_restaurants = ["italian-bistro", "mexican-grill", "cafe-luna"]
     assert len(page_discovery_context["filtered_links"]) == 3
-    
+
     for restaurant in expected_restaurants:
-        assert any(restaurant in link for link in page_discovery_context["filtered_links"])
+        assert any(
+            restaurant in link for link in page_discovery_context["filtered_links"]
+        )
 
 
 @then("non-matching links should be excluded")
@@ -195,9 +215,10 @@ def start_from_directory(page_discovery_context, depth):
     """Set starting depth."""
     page_discovery_context["start_depth"] = depth
     page_discovery_context["directory_url"] = "https://restaurants.com/directory"
-    
+
     # Update PageDiscovery to use the restaurants.com domain
     from src.scraper.page_discovery import PageDiscovery
+
     page_discovery_context["page_discovery"] = PageDiscovery("https://restaurants.com")
 
 
@@ -207,7 +228,7 @@ def discover_links_with_depth(page_discovery_context):
     # Simulate multi-level discovery using existing methods
     page_discovery_context["depth_results"] = {}
     max_depth = page_discovery_context["max_depth"]
-    
+
     # Level 0: Directory page
     directory_html = """
     <html>
@@ -217,18 +238,18 @@ def discover_links_with_depth(page_discovery_context):
         </body>
     </html>
     """
-    
+
     # Update PageDiscovery to use restaurants.com for this test
     page_discovery = page_discovery_context["page_discovery"]
     page_discovery.base_url = page_discovery_context["directory_url"]
-    
+
     # Discover from directory (depth 0)
     if 0 <= max_depth:
         links_0 = list(page_discovery.extract_all_internal_links(directory_html))
         page_discovery_context["depth_results"][0] = [
             {"url": link, "depth": 1} for link in links_0
         ]
-    
+
     # Level 1: Restaurant pages
     restaurant_html = """
     <html>
@@ -239,15 +260,15 @@ def discover_links_with_depth(page_discovery_context):
         </body>
     </html>
     """
-    
+
     # Discover from restaurant page (depth 1)
     if 1 <= max_depth:
         links_1 = list(page_discovery.extract_all_internal_links(restaurant_html))
         page_discovery_context["depth_results"][1] = [
             {"url": link, "depth": 2} for link in links_1
         ]
-    
-    # Level 2: Menu/Review pages  
+
+    # Level 2: Menu/Review pages
     menu_html = """
     <html>
         <body>
@@ -256,7 +277,7 @@ def discover_links_with_depth(page_discovery_context):
         </body>
     </html>
     """
-    
+
     # Try to discover from menu page (depth 2)
     # Since max_depth=2, links discovered at depth 2 would be at depth 3, which exceeds limit
     if 2 < max_depth:  # Only proceed if we can go beyond depth 2
@@ -275,7 +296,7 @@ def verify_directory_depth(page_discovery_context, depth):
     links = page_discovery_context["depth_results"][0]
     assert len(links) > 0
     for link_info in links:
-        assert link_info['depth'] == depth
+        assert link_info["depth"] == depth
 
 
 @then(parsers.parse("links from restaurant pages should be at depth {depth:d}"))
@@ -284,7 +305,7 @@ def verify_restaurant_depth(page_discovery_context, depth):
     links = page_discovery_context["depth_results"][1]
     assert len(links) > 0
     for link_info in links:
-        assert link_info['depth'] == depth
+        assert link_info["depth"] == depth
 
 
 @then(parsers.parse("no links should be followed beyond depth {depth:d}"))

@@ -7,13 +7,13 @@ class AppConfig:
     """Configuration for the Flask web application."""
 
     def __init__(
-        self, 
-        port: Optional[int] = None, 
-        host: Optional[str] = None, 
-        debug: Optional[bool] = None
+        self,
+        port: Optional[int] = None,
+        host: Optional[str] = None,
+        debug: Optional[bool] = None,
     ):
         """Initialize application configuration.
-        
+
         Args:
             port: Server port number (defaults to 8085 for multi-page version)
             host: Server host address (defaults to localhost)
@@ -28,17 +28,17 @@ class AppConfig:
                 self.port = int(env_port)
             except ValueError:
                 self.port = 8085  # Default for multi-page version
-        
+
         # Validate port range
         if not (1024 <= self.port <= 65535):
             raise ValueError(f"Port must be between 1024 and 65535, got {self.port}")
-        
+
         # Set host
         if host is not None:
             self.host = host
         else:
             self.host = os.environ.get("RAG_SCRAPER_HOST", "localhost")
-        
+
         # Set debug mode
         if debug is not None:
             self.debug = debug
@@ -48,11 +48,7 @@ class AppConfig:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert configuration to dictionary."""
-        return {
-            "port": self.port,
-            "host": self.host,
-            "debug": self.debug
-        }
+        return {"port": self.port, "host": self.host, "debug": self.debug}
 
     def get_server_url(self) -> str:
         """Get the full server URL."""

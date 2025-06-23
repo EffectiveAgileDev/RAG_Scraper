@@ -46,28 +46,28 @@ class MultiPageScraper:
         self.data_aggregator = DataAggregator()
         self.progress_notifier = MultiPageProgressNotifier()
         self.multi_strategy_scraper = MultiStrategyScraper(enable_ethical_scraping)
-        
+
         # Queue management
         self._page_queue = None
         self._visited_pages = set()
         self._queue_strategy = "BFS"
         self._queue_lock = threading.Lock()
         self._priority_queue = []  # For priority-based ordering
-        
+
         # Concurrent fetching statistics
         self._concurrent_stats = {
             "successful_fetches": 0,
             "failed_fetches": 0,
-            "total_time": 0.0
+            "total_time": 0.0,
         }
-        
+
         # Error handling
         self._error_log = []
         self._error_stats = {
             "total_errors": 0,
             "error_types": {},
             "retryable_errors": 0,
-            "non_retryable_errors": 0
+            "non_retryable_errors": 0,
         }
 
     def scrape_website(
@@ -315,7 +315,7 @@ class MultiPageScraper:
         return self.progress_notifier.get_current_progress_summary()
 
     # Queue Management Methods
-    
+
     def _initialize_page_queue(self):
         """Initialize the page queue for processing."""
         with self._queue_lock:
@@ -332,19 +332,23 @@ class MultiPageScraper:
         """
         with self._queue_lock:
             self._queue_strategy = strategy
-            
+
             # Remove duplicates and already visited pages
             unique_pages = []
             existing_in_queue = set(self._page_queue)
             for page in pages:
-                if page not in self._visited_pages and page not in existing_in_queue and page not in unique_pages:
+                if (
+                    page not in self._visited_pages
+                    and page not in existing_in_queue
+                    and page not in unique_pages
+                ):
                     unique_pages.append(page)
-            
+
             # Respect max pages limit
             current_total = len(self._page_queue) + len(self._visited_pages)
             available_slots = max(0, self.max_pages - current_total)
             unique_pages = unique_pages[:available_slots]
-            
+
             if strategy == "BFS":
                 # Add to the right (FIFO)
                 self._page_queue.extend(unique_pages)
@@ -353,7 +357,9 @@ class MultiPageScraper:
                 for page in unique_pages:
                     self._page_queue.appendleft(page)
 
-    def _add_pages_to_queue_with_priority(self, pages_with_priority: List[Tuple[str, int]]):
+    def _add_pages_to_queue_with_priority(
+        self, pages_with_priority: List[Tuple[str, int]]
+    ):
         """Add pages to queue with priority ordering.
 
         Args:
@@ -377,13 +383,13 @@ class MultiPageScraper:
                 _, url = heapq.heappop(self._priority_queue)
                 self._visited_pages.add(url)
                 return url
-            
+
             # Then check regular queue
             if self._page_queue:
                 url = self._page_queue.popleft()
                 self._visited_pages.add(url)
                 return url
-            
+
             return None
 
     def _has_pending_pages(self) -> bool:
@@ -412,11 +418,11 @@ class MultiPageScraper:
                 "total_queued": len(self._page_queue) + len(self._priority_queue),
                 "pending": len(self._page_queue) + len(self._priority_queue),
                 "visited": len(self._visited_pages),
-                "strategy": self._queue_strategy
+                "strategy": self._queue_strategy,
             }
 
     # Traversal Strategy Methods
-    
+
     def _get_traversal_strategy(self) -> str:
         """Get the current traversal strategy.
 
@@ -424,7 +430,7 @@ class MultiPageScraper:
             Current traversal strategy ("BFS" or "DFS")
         """
         return self._queue_strategy
-    
+
     def _set_traversal_strategy(self, strategy: str):
         """Set the traversal strategy.
 
@@ -436,7 +442,9 @@ class MultiPageScraper:
         else:
             raise ValueError(f"Invalid traversal strategy: {strategy}")
 
-    def _breadth_first_traversal(self, start_url: str, max_depth: Optional[int] = None) -> List[str]:
+    def _breadth_first_traversal(
+        self, start_url: str, max_depth: Optional[int] = None
+    ) -> List[str]:
         """Perform breadth-first traversal of website pages.
 
         Args:
@@ -449,29 +457,29 @@ class MultiPageScraper:
         visited_order = []
         self._initialize_page_queue()
         self._add_pages_to_queue([start_url], strategy="BFS")
-        
+
         current_depth = 0
         pages_at_current_depth = 1
         pages_at_next_depth = 0
-        
+
         while self._has_pending_pages():
             if max_depth is not None and current_depth >= max_depth:
                 break
-                
+
             if pages_at_current_depth == 0:
                 # Move to next depth level
                 current_depth += 1
                 pages_at_current_depth = pages_at_next_depth
                 pages_at_next_depth = 0
                 continue
-            
+
             current_url = self._get_next_page()
             if current_url is None:
                 break
-                
+
             visited_order.append(current_url)
             pages_at_current_depth -= 1
-            
+
             # Fetch page and discover new links
             try:
                 html_content = self._fetch_page(current_url)
@@ -479,22 +487,30 @@ class MultiPageScraper:
                     # Discover new pages from this page
                     if self.page_discovery is None:
                         self.page_discovery = PageDiscovery(current_url, self.max_pages)
-                    
-                    new_links = self.page_discovery.discover_navigation_links(html_content)
-                    relevant_links = self.page_discovery.filter_relevant_pages(new_links)
-                    
+
+                    new_links = self.page_discovery.discover_navigation_links(
+                        html_content
+                    )
+                    relevant_links = self.page_discovery.filter_relevant_pages(
+                        new_links
+                    )
+
                     # Add new links to queue for next depth level
                     new_pages = list(relevant_links)
                     if new_pages:
                         self._add_pages_to_queue(new_pages, strategy="BFS")
-                        pages_at_next_depth += len([p for p in new_pages if p not in self._visited_pages])
+                        pages_at_next_depth += len(
+                            [p for p in new_pages if p not in self._visited_pages]
+                        )
             except Exception:
                 # Continue traversal even if individual pages fail
                 continue
-        
+
         return visited_order
 
-    def _depth_first_traversal(self, start_url: str, max_depth: Optional[int] = None) -> List[str]:
+    def _depth_first_traversal(
+        self, start_url: str, max_depth: Optional[int] = None
+    ) -> List[str]:
         """Perform depth-first traversal of website pages.
 
         Args:
@@ -506,7 +522,7 @@ class MultiPageScraper:
         """
         visited_order = []
         self._initialize_page_queue()
-        
+
         def _dfs_recursive(url: str, current_depth: int = 0):
             if max_depth is not None and current_depth >= max_depth:
                 return
@@ -514,21 +530,25 @@ class MultiPageScraper:
                 return
             if len(visited_order) >= self.max_pages:
                 return
-            
+
             # Visit current page
             self._visited_pages.add(url)
             visited_order.append(url)
-            
+
             try:
                 # Fetch page and discover new links
                 html_content = self._fetch_page(url)
                 if html_content:
                     if self.page_discovery is None:
                         self.page_discovery = PageDiscovery(url, self.max_pages)
-                    
-                    new_links = self.page_discovery.discover_navigation_links(html_content)
-                    relevant_links = self.page_discovery.filter_relevant_pages(new_links)
-                    
+
+                    new_links = self.page_discovery.discover_navigation_links(
+                        html_content
+                    )
+                    relevant_links = self.page_discovery.filter_relevant_pages(
+                        new_links
+                    )
+
                     # Recursively visit each new link (depth-first)
                     for link in relevant_links:
                         if link not in self._visited_pages:
@@ -536,7 +556,7 @@ class MultiPageScraper:
             except Exception:
                 # Continue traversal even if individual pages fail
                 pass
-        
+
         _dfs_recursive(start_url)
         return visited_order
 
@@ -551,22 +571,22 @@ class MultiPageScraper:
         """
         visited_order = []
         self._initialize_page_queue()
-        
+
         # Get page priorities from PageDiscovery
         if self.page_discovery is None:
             self.page_discovery = PageDiscovery(start_url, self.max_pages)
-        
+
         # Start with initial page
         self._visited_pages.add(start_url)
         visited_order.append(start_url)
-        
+
         try:
             # Fetch initial page and discover links
             html_content = self._fetch_page(start_url)
             if html_content:
                 new_links = self.page_discovery.discover_navigation_links(html_content)
                 relevant_links = self.page_discovery.filter_relevant_pages(new_links)
-                
+
                 # Get priorities for each link
                 pages_with_priority = []
                 for link in relevant_links:
@@ -574,12 +594,14 @@ class MultiPageScraper:
                     priority_pages = self.page_discovery.prioritize_pages({link})
                     if priority_pages:
                         # Higher priority pages come first in the list
-                        priority = len(priority_pages) - list(priority_pages).index(link)
+                        priority = len(priority_pages) - list(priority_pages).index(
+                            link
+                        )
                         pages_with_priority.append((link, priority))
-                
+
                 # Add to priority queue
                 self._add_pages_to_queue_with_priority(pages_with_priority)
-                
+
                 # Process pages in priority order
                 while self._has_pending_pages():
                     current_url = self._get_next_page()
@@ -589,7 +611,7 @@ class MultiPageScraper:
         except Exception:
             # Continue even if errors occur
             pass
-        
+
         return visited_order
 
     def _get_traversal_stats(self) -> Dict[str, Any]:
@@ -599,21 +621,23 @@ class MultiPageScraper:
             Dictionary with traversal statistics
         """
         return {
-            "pages_discovered": len(self._visited_pages) + len(self._page_queue) + len(self._priority_queue),
+            "pages_discovered": len(self._visited_pages)
+            + len(self._page_queue)
+            + len(self._priority_queue),
             "pages_processed": len(self._visited_pages),
             "pages_failed": 0,  # Would need to track failures separately
-            "traversal_strategy": self._queue_strategy
+            "traversal_strategy": self._queue_strategy,
         }
 
     # Concurrent Fetching Methods
-    
+
     def _fetch_pages_concurrently(
-        self, 
-        pages: List[str], 
+        self,
+        pages: List[str],
         max_workers: int = 3,
         throttle_delay: float = 0.0,
         timeout: Optional[float] = None,
-        progress_callback: Optional[Callable] = None
+        progress_callback: Optional[Callable] = None,
     ) -> List[Optional[str]]:
         """Fetch multiple pages concurrently with optional throttling.
 
@@ -629,30 +653,28 @@ class MultiPageScraper:
         """
         start_time = time.time()
         results = [None] * len(pages)  # Maintain order
-        
+
         # Reset statistics
-        self._concurrent_stats.update({
-            "successful_fetches": 0,
-            "failed_fetches": 0,
-            "total_time": 0.0
-        })
-        
+        self._concurrent_stats.update(
+            {"successful_fetches": 0, "failed_fetches": 0, "total_time": 0.0}
+        )
+
         def fetch_with_index(url_index_tuple):
             url, index = url_index_tuple
             try:
                 if throttle_delay > 0:
                     time.sleep(throttle_delay)
-                
+
                 if progress_callback:
                     progress_callback(f"Fetching page: {url}")
-                
+
                 # Apply timeout if specified (simplified for testing)
                 if timeout:
                     # Use a simple approach for timeout testing
                     start_time = time.time()
                     html_content = self._fetch_page(url)
                     elapsed = time.time() - start_time
-                    
+
                     # If the request took longer than timeout, return None
                     if elapsed > timeout:
                         return index, None
@@ -660,44 +682,44 @@ class MultiPageScraper:
                 else:
                     html_content = self._fetch_page(url)
                     return index, html_content
-                    
+
             except Exception:
                 return index, None
-        
+
         # Create URL-index pairs to maintain order
         url_index_pairs = [(url, i) for i, url in enumerate(pages)]
-        
+
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # Submit all tasks
             future_to_index = {
-                executor.submit(fetch_with_index, url_index): url_index[1] 
+                executor.submit(fetch_with_index, url_index): url_index[1]
                 for url_index in url_index_pairs
             }
-            
+
             # Collect results as they complete
             for future in as_completed(future_to_index):
                 try:
                     index, html_content = future.result()
                     results[index] = html_content
-                    
+
                     if html_content is not None:
                         self._concurrent_stats["successful_fetches"] += 1
                     else:
                         self._concurrent_stats["failed_fetches"] += 1
-                        
+
                 except Exception:
                     index = future_to_index[future]
                     results[index] = None
                     self._concurrent_stats["failed_fetches"] += 1
-        
+
         self._concurrent_stats["total_time"] = time.time() - start_time
         return results
 
     def _process_pages_concurrently(
-        self, 
-        pages: List[str], 
+        self,
+        pages: List[str],
         max_workers: int = 3,
-        progress_callback: Optional[Callable] = None
+        progress_callback: Optional[Callable] = None,
     ) -> List[Optional[Dict[str, Any]]]:
         """Process multiple pages concurrently (fetch + process).
 
@@ -710,39 +732,39 @@ class MultiPageScraper:
             List of processing results (None for failed processes), maintaining input order
         """
         results = [None] * len(pages)
-        
+
         def process_with_index(url_index_tuple):
             url, index = url_index_tuple
             try:
                 if progress_callback:
                     progress_callback(f"Processing page: {url}")
-                
+
                 result = self._fetch_and_process_page(url)
                 return index, result
-                    
+
             except Exception:
                 return index, None
-        
+
         # Create URL-index pairs to maintain order
         url_index_pairs = [(url, i) for i, url in enumerate(pages)]
-        
+
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # Submit all tasks
             future_to_index = {
-                executor.submit(process_with_index, url_index): url_index[1] 
+                executor.submit(process_with_index, url_index): url_index[1]
                 for url_index in url_index_pairs
             }
-            
+
             # Collect results as they complete
             for future in as_completed(future_to_index):
                 try:
                     index, processing_result = future.result()
                     results[index] = processing_result
-                        
+
                 except Exception:
                     index = future_to_index[future]
                     results[index] = None
-        
+
         return results
 
     def _get_concurrent_fetch_stats(self) -> Dict[str, Any]:
@@ -754,8 +776,10 @@ class MultiPageScraper:
         return self._concurrent_stats.copy()
 
     # Error Handling Methods
-    
-    def _handle_page_error(self, url: str, error_type: str, error_message: str) -> Dict[str, Any]:
+
+    def _handle_page_error(
+        self, url: str, error_type: str, error_message: str
+    ) -> Dict[str, Any]:
         """Handle errors that occur during page processing.
 
         Args:
@@ -773,9 +797,9 @@ class MultiPageScraper:
             "timestamp": time.time(),
             "retry_attempted": False,
             "should_retry": self._should_retry_error(error_type),
-            "retry_delay": self._get_retry_delay(error_type)
+            "retry_delay": self._get_retry_delay(error_type),
         }
-        
+
         self._add_error_to_log(error_info)
         return error_info
 
@@ -795,17 +819,14 @@ class MultiPageScraper:
             "status_code": status_code,
             "timestamp": time.time(),
             "should_retry": status_code in [429, 500, 502, 503, 504],
-            "retry_delay": 5.0 if status_code == 429 else 1.0
+            "retry_delay": 5.0 if status_code == 429 else 1.0,
         }
-        
+
         self._add_error_to_log(error_info)
         return error_info
 
     def _retry_failed_page(
-        self, 
-        url: str, 
-        max_retries: int = 3, 
-        use_exponential_backoff: bool = False
+        self, url: str, max_retries: int = 3, use_exponential_backoff: bool = False
     ) -> Optional[str]:
         """Retry fetching a failed page.
 
@@ -821,27 +842,29 @@ class MultiPageScraper:
         for attempt in range(max_retries + 1):
             try:
                 if use_exponential_backoff and attempt > 0:
-                    delay = 2 ** attempt  # Exponential backoff: 2, 4, 8 seconds
+                    delay = 2**attempt  # Exponential backoff: 2, 4, 8 seconds
                     time.sleep(delay)
-                
+
                 result = self._fetch_page(url)
                 if result:
                     return result
-                
+
                 # If _fetch_page returns None but no exception, continue to next attempt
                 if attempt == max_retries:
                     return None
-                    
+
             except Exception as e:
                 if attempt == max_retries:
                     # Last attempt failed
                     self._handle_page_error(url, type(e).__name__, str(e))
                     return None
                 continue
-        
+
         return None
 
-    def _handle_processing_error(self, url: str, error_type: str, error_message: str) -> Dict[str, Any]:
+    def _handle_processing_error(
+        self, url: str, error_type: str, error_message: str
+    ) -> Dict[str, Any]:
         """Handle errors during page processing.
 
         Args:
@@ -857,13 +880,15 @@ class MultiPageScraper:
             "error_type": error_type,
             "error_message": error_message,
             "should_skip": error_type in ["HTMLParsingError", "JSONDecodeError"],
-            "should_retry": error_type in ["TemporaryError", "RateLimitError"]
+            "should_retry": error_type in ["TemporaryError", "RateLimitError"],
         }
-        
+
         self._add_error_to_log(error_info)
         return error_info
 
-    def _handle_dependency_error(self, error_type: str, error_message: str) -> Dict[str, Any]:
+    def _handle_dependency_error(
+        self, error_type: str, error_message: str
+    ) -> Dict[str, Any]:
         """Handle missing dependency errors.
 
         Args:
@@ -877,9 +902,9 @@ class MultiPageScraper:
             "error_type": error_type,
             "error_message": error_message,
             "is_critical": True,
-            "should_abort": True
+            "should_abort": True,
         }
-        
+
         self._add_error_to_log(error_info)
         return error_info
 
@@ -890,19 +915,24 @@ class MultiPageScraper:
             error_info: Dictionary containing error details
         """
         self._error_log.append(error_info)
-        
+
         # Update statistics
         self._error_stats["total_errors"] += 1
         error_type = error_info.get("error_type", "Unknown")
-        self._error_stats["error_types"][error_type] = self._error_stats["error_types"].get(error_type, 0) + 1
-        
+        self._error_stats["error_types"][error_type] = (
+            self._error_stats["error_types"].get(error_type, 0) + 1
+        )
+
         # Check if error should be retried based on type and other factors
         should_retry = (
-            error_info.get("should_retry", False) or 
-            self._should_retry_error(error_type) or
-            (error_type == "HTTPError" and error_info.get("status_code") in [500, 503])
+            error_info.get("should_retry", False)
+            or self._should_retry_error(error_type)
+            or (
+                error_type == "HTTPError"
+                and error_info.get("status_code") in [500, 503]
+            )
         )
-        
+
         if should_retry:
             self._error_stats["retryable_errors"] += 1
         else:
@@ -917,10 +947,7 @@ class MultiPageScraper:
         return self._error_stats.copy()
 
     def _apply_error_recovery_strategy(
-        self, 
-        url: str, 
-        error_info: Dict[str, Any], 
-        strategy: str = "auto"
+        self, url: str, error_info: Dict[str, Any], strategy: str = "auto"
     ) -> Dict[str, Any]:
         """Apply error recovery strategy.
 
@@ -937,7 +964,11 @@ class MultiPageScraper:
         elif strategy == "retry":
             return {"action": "retry", "url": url, "max_retries": 3}
         elif strategy == "fallback":
-            return {"action": "fallback", "url": url, "fallback_method": "simple_extract"}
+            return {
+                "action": "fallback",
+                "url": url,
+                "fallback_method": "simple_extract",
+            }
         else:  # auto
             error_type = error_info.get("error_type")
             if error_type == "HTTPError" and error_info.get("status_code") == 404:
@@ -956,7 +987,12 @@ class MultiPageScraper:
         Returns:
             True if error is critical
         """
-        critical_error_types = ["MemoryError", "PermissionError", "ImportError", "SystemExit"]
+        critical_error_types = [
+            "MemoryError",
+            "PermissionError",
+            "ImportError",
+            "SystemExit",
+        ]
         return error_info.get("error_type") in critical_error_types
 
     def _log_error(self, error_info: Dict[str, Any]):
@@ -986,7 +1022,7 @@ class MultiPageScraper:
         """
         successful_pages = []
         failed_pages = []
-        
+
         for page in pages:
             try:
                 result = self._fetch_and_process_page(page)
@@ -996,14 +1032,14 @@ class MultiPageScraper:
                     failed_pages.append(page)
             except Exception:
                 failed_pages.append(page)
-        
+
         success_rate = len(successful_pages) / len(pages) if pages else 0
-        
+
         return {
             "successful_pages": successful_pages,
             "failed_pages": failed_pages,
             "success_rate": success_rate,
-            "should_continue": success_rate >= 0.3  # Continue if at least 30% success
+            "should_continue": success_rate >= 0.3,  # Continue if at least 30% success
         }
 
     def _calculate_error_rate(self, window_seconds: int = 60) -> float:
@@ -1017,14 +1053,17 @@ class MultiPageScraper:
         """
         current_time = time.time()
         recent_errors = [
-            error for error in self._error_log 
+            error
+            for error in self._error_log
             if current_time - error.get("timestamp", 0) <= window_seconds
         ]
-        
+
         # Simple approximation: errors per minute
         return len(recent_errors) / max(1, window_seconds / 60)
 
-    def _should_trigger_circuit_breaker(self, error_rate: float, threshold: float = 0.8) -> bool:
+    def _should_trigger_circuit_breaker(
+        self, error_rate: float, threshold: float = 0.8
+    ) -> bool:
         """Check if circuit breaker should be triggered.
 
         Args:
@@ -1053,7 +1092,12 @@ class MultiPageScraper:
         Returns:
             True if error should be retried
         """
-        retryable_errors = ["TimeoutError", "ConnectionError", "TemporaryError", "RateLimitError"]
+        retryable_errors = [
+            "TimeoutError",
+            "ConnectionError",
+            "TemporaryError",
+            "RateLimitError",
+        ]
         return error_type in retryable_errors
 
     def _get_retry_delay(self, error_type: str) -> float:
@@ -1069,7 +1113,7 @@ class MultiPageScraper:
             "TimeoutError": 2.0,
             "ConnectionError": 1.0,
             "RateLimitError": 5.0,
-            "TemporaryError": 3.0
+            "TemporaryError": 3.0,
         }
         return delays.get(error_type, 1.0)
 

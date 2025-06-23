@@ -2,6 +2,8 @@
 import re
 from typing import List, Dict, Any, Optional
 from bs4 import BeautifulSoup
+from dataclasses import dataclass
+from ..common.extraction_base import BaseExtractionResult
 from .pattern_matchers import (
     PhonePatternMatcher,
     AddressPatternMatcher,
@@ -10,51 +12,11 @@ from .pattern_matchers import (
 )
 
 
-class HeuristicExtractionResult:
+@dataclass
+class HeuristicExtractionResult(BaseExtractionResult):
     """Result of heuristic extraction with restaurant data."""
 
-    def __init__(
-        self,
-        name: str = "",
-        address: str = "",
-        phone: str = "",
-        hours: str = "",
-        price_range: str = "",
-        cuisine: str = "",
-        menu_items: Optional[Dict[str, List[str]]] = None,
-        social_media: Optional[List[str]] = None,
-        confidence: str = "medium",
-        source: str = "heuristic",
-    ):
-        self.name = name
-        self.address = address
-        self.phone = phone
-        self.hours = hours
-        self.price_range = price_range
-        self.cuisine = cuisine
-        self.menu_items = menu_items or {}
-        self.social_media = social_media or []
-        self.confidence = confidence
-        self.source = source
-
-    def is_valid(self) -> bool:
-        """Check if extraction result has valid data."""
-        return bool(self.name and self.name.strip())
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert result to dictionary."""
-        return {
-            "name": self.name,
-            "address": self.address,
-            "phone": self.phone,
-            "hours": self.hours,
-            "price_range": self.price_range,
-            "cuisine": self.cuisine,
-            "menu_items": self.menu_items,
-            "social_media": self.social_media,
-            "confidence": self.confidence,
-            "source": self.source,
-        }
+    source: str = "heuristic"
 
 
 class HeuristicExtractor:

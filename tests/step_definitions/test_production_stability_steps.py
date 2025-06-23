@@ -18,6 +18,7 @@ scenarios("../features/production_stability.feature")
 @dataclass
 class SystemHealth:
     """Data class for system health metrics."""
+
     cpu_usage: float
     memory_usage_mb: float
     network_status: str
@@ -29,6 +30,7 @@ class SystemHealth:
 @dataclass
 class ErrorRecoveryData:
     """Data class for error recovery information."""
+
     url: str
     error_type: str
     retry_count: int
@@ -53,7 +55,7 @@ def stability_context():
         "session_data": {},
         "notification_system": None,
         "resource_manager": None,
-        "batch_optimizer": None
+        "batch_optimizer": None,
     }
 
 
@@ -62,13 +64,13 @@ def sample_stability_urls():
     """Sample URLs for stability testing."""
     return [
         "https://reliable-restaurant1.com",
-        "https://reliable-restaurant2.com", 
+        "https://reliable-restaurant2.com",
         "https://unreliable-restaurant1.com",  # Will fail
         "https://reliable-restaurant3.com",
         "https://timeout-restaurant.com",  # Will timeout
         "https://reliable-restaurant4.com",
         "https://server-error-restaurant.com",  # Will give 500 error
-        "https://reliable-restaurant5.com"
+        "https://reliable-restaurant5.com",
     ]
 
 
@@ -85,6 +87,7 @@ def access_stability_monitoring_system(stability_context):
     # This will fail initially - need to implement ProductionStabilityMonitor
     try:
         from src.scraper.production_stability_monitor import ProductionStabilityMonitor
+
         stability_context["stability_system"] = ProductionStabilityMonitor()
     except ImportError:
         # Expected to fail in RED phase
@@ -97,7 +100,7 @@ def stability_system_initialized(stability_context):
     if stability_context["stability_system"] is None:
         # Mock for RED phase
         stability_context["stability_system"] = Mock()
-    
+
     stability_context["system_initialized"] = True
 
 
@@ -113,12 +116,12 @@ def enhanced_error_recovery_enabled(stability_context):
     """Enable enhanced error recovery."""
     stability_system = stability_context["stability_system"]
     stability_context["error_recovery_enabled"] = True
-    
+
     try:
         stability_system.enable_error_recovery(
             exponential_backoff=True,
             max_retries=3,
-            retry_strategies=["connection", "timeout", "server_error"]
+            retry_strategies=["connection", "timeout", "server_error"],
         )
     except AttributeError:
         # Expected to fail in RED phase
@@ -130,12 +133,10 @@ def start_scraping_with_error_recovery(stability_context):
     """Start scraping process with error recovery enabled."""
     stability_system = stability_context["stability_system"]
     urls = stability_context["restaurant_urls"]
-    
+
     try:
         session_id = stability_system.start_production_session(
-            urls=urls,
-            error_recovery=True,
-            performance_monitoring=True
+            urls=urls, error_recovery=True, performance_monitoring=True
         )
         stability_context["session_id"] = session_id
     except AttributeError:
@@ -147,7 +148,7 @@ def start_scraping_with_error_recovery(stability_context):
 def system_encounters_connection_failures(stability_context, count):
     """Simulate connection failures on specified number of URLs."""
     stability_system = stability_context["stability_system"]
-    
+
     try:
         # Simulate connection failures
         failed_urls = stability_context["restaurant_urls"][:count]
@@ -162,7 +163,7 @@ def system_encounters_connection_failures(stability_context, count):
 def verify_exponential_backoff_retry(stability_context):
     """Verify automatic retry with exponential backoff."""
     stability_system = stability_context["stability_system"]
-    
+
     try:
         retry_manager = stability_system.get_retry_manager()
         retry_logs = retry_manager.get_retry_history()
@@ -177,7 +178,7 @@ def verify_exponential_backoff_retry(stability_context):
 def verify_successful_urls_continue(stability_context):
     """Verify successful URLs continue processing."""
     stability_system = stability_context["stability_system"]
-    
+
     try:
         processing_status = stability_system.get_processing_status()
         successful_count = processing_status.successful_urls_count
@@ -191,13 +192,13 @@ def verify_successful_urls_continue(stability_context):
 def verify_error_recovery_logs(stability_context):
     """Verify detailed error recovery logs."""
     stability_system = stability_context["stability_system"]
-    
+
     try:
         recovery_logger = stability_system.get_recovery_logger()
         recovery_logs = recovery_logger.get_detailed_logs()
         assert len(recovery_logs) > 0, "Should have recovery logs"
-        assert all('error_type' in log for log in recovery_logs)
-        assert all('recovery_strategy' in log for log in recovery_logs)
+        assert all("error_type" in log for log in recovery_logs)
+        assert all("recovery_strategy" in log for log in recovery_logs)
     except (AttributeError, AssertionError):
         # Expected to fail in RED phase
         assert False, "Error recovery logging not implemented"
@@ -207,7 +208,7 @@ def verify_error_recovery_logs(stability_context):
 def verify_recovery_notifications(stability_context):
     """Verify recovery attempt notifications."""
     stability_system = stability_context["stability_system"]
-    
+
     try:
         notification_system = stability_system.get_notification_system()
         recovery_notifications = notification_system.get_recovery_notifications()
@@ -217,24 +218,30 @@ def verify_recovery_notifications(stability_context):
         assert False, "Recovery notifications not implemented"
 
 
-@then("the final results should include both successful and failed URLs with recovery details")
+@then(
+    "the final results should include both successful and failed URLs with recovery details"
+)
 def verify_final_results_with_recovery_details(stability_context):
     """Verify final results include recovery details."""
     stability_system = stability_context["stability_system"]
-    
+
     try:
         final_results = stability_system.get_final_results()
         assert "successful_urls" in final_results, "Should have successful URLs"
         assert "failed_urls" in final_results, "Should have failed URLs"
         assert "recovery_details" in final_results, "Should have recovery details"
-        assert len(final_results["recovery_details"]) > 0, "Should have recovery information"
+        assert (
+            len(final_results["recovery_details"]) > 0
+        ), "Should have recovery information"
     except (AttributeError, AssertionError):
         # Expected to fail in RED phase
         assert False, "Final results with recovery details not implemented"
 
 
 # Scenario: Memory management optimization for large batches
-@given(parsers.parse("I have {count:d} restaurant URLs for memory optimization testing"))
+@given(
+    parsers.parse("I have {count:d} restaurant URLs for memory optimization testing")
+)
 def have_urls_for_memory_optimization(stability_context, sample_stability_urls, count):
     """Set up URLs for memory optimization testing."""
     # Create a larger list for memory testing
@@ -251,13 +258,13 @@ def memory_optimization_enabled(stability_context):
     """Enable memory management optimization."""
     stability_system = stability_context["stability_system"]
     stability_context["memory_optimization_enabled"] = True
-    
+
     try:
         stability_system.enable_memory_optimization(
             max_memory_mb=400,
             gc_frequency=10,
             batch_size_adjustment=True,
-            proactive_cleanup=True
+            proactive_cleanup=True,
         )
     except AttributeError:
         # Expected to fail in RED phase
@@ -269,20 +276,22 @@ def start_large_batch_with_memory_monitoring(stability_context):
     """Start large batch processing with memory monitoring."""
     stability_system = stability_context["stability_system"]
     urls = stability_context["restaurant_urls"]
-    
+
     try:
         batch_session = stability_system.start_memory_optimized_batch(urls)
         stability_context["batch_session_id"] = batch_session
     except AttributeError:
         # Expected to fail in RED phase
-        stability_context["stability_errors"] = ["Memory optimized batch not implemented"]
+        stability_context["stability_errors"] = [
+            "Memory optimized batch not implemented"
+        ]
 
 
 @then("the system should implement intelligent memory cleanup between batches")
 def verify_intelligent_memory_cleanup(stability_context):
     """Verify intelligent memory cleanup between batches."""
     stability_system = stability_context["stability_system"]
-    
+
     try:
         memory_manager = stability_system.get_memory_manager()
         cleanup_events = memory_manager.get_cleanup_history()
@@ -297,11 +306,13 @@ def verify_intelligent_memory_cleanup(stability_context):
 def verify_memory_usage_limit(stability_context, limit):
     """Verify memory usage stays within limits."""
     stability_system = stability_context["stability_system"]
-    
+
     try:
         memory_stats = stability_system.get_memory_statistics()
         max_usage = memory_stats.peak_memory_mb
-        assert max_usage <= limit, f"Memory usage {max_usage}MB exceeded limit {limit}MB"
+        assert (
+            max_usage <= limit
+        ), f"Memory usage {max_usage}MB exceeded limit {limit}MB"
     except (AttributeError, AssertionError):
         # Expected to fail in RED phase
         assert False, "Memory usage monitoring not implemented"
@@ -311,7 +322,7 @@ def verify_memory_usage_limit(stability_context, limit):
 def verify_proactive_garbage_collection(stability_context):
     """Verify proactive garbage collection."""
     stability_system = stability_context["stability_system"]
-    
+
     try:
         gc_manager = stability_system.get_gc_manager()
         gc_events = gc_manager.get_proactive_gc_events()
@@ -325,11 +336,13 @@ def verify_proactive_garbage_collection(stability_context):
 def verify_memory_warnings(stability_context):
     """Verify memory usage warnings."""
     stability_system = stability_context["stability_system"]
-    
+
     try:
         warning_system = stability_system.get_warning_system()
         memory_warnings = warning_system.get_memory_warnings()
-        assert any(warning.warning_type == "memory_usage" for warning in memory_warnings)
+        assert any(
+            warning.warning_type == "memory_usage" for warning in memory_warnings
+        )
     except (AttributeError, AssertionError):
         # Expected to fail in RED phase
         assert False, "Memory usage warnings not implemented"
@@ -339,7 +352,7 @@ def verify_memory_warnings(stability_context):
 def verify_no_memory_overflow_errors(stability_context):
     """Verify no memory overflow errors."""
     stability_system = stability_context["stability_system"]
-    
+
     try:
         error_log = stability_system.get_error_log()
         memory_errors = [e for e in error_log if "memory" in e.error_type.lower()]
@@ -358,7 +371,7 @@ def have_varying_complexity_urls(stability_context):
         "https://complex-restaurant.com",  # Complex site with many pages
         "https://medium-restaurant.com",  # Medium complexity
         "https://heavy-js-restaurant.com",  # JavaScript heavy
-        "https://large-menu-restaurant.com"  # Large menu data
+        "https://large-menu-restaurant.com",  # Large menu data
     ]
 
 
@@ -367,12 +380,12 @@ def performance_monitoring_enabled(stability_context):
     """Enable performance monitoring."""
     stability_system = stability_context["stability_system"]
     stability_context["performance_monitoring_enabled"] = True
-    
+
     try:
         stability_system.enable_performance_monitoring(
             track_processing_time=True,
             identify_bottlenecks=True,
-            optimization_suggestions=True
+            optimization_suggestions=True,
         )
     except AttributeError:
         # Expected to fail in RED phase
@@ -384,7 +397,7 @@ def start_scraping_with_performance_tracking(stability_context):
     """Start scraping with performance tracking."""
     stability_system = stability_context["stability_system"]
     urls = stability_context["restaurant_urls"]
-    
+
     try:
         perf_session = stability_system.start_performance_tracked_session(urls)
         stability_context["performance_session_id"] = perf_session
@@ -397,13 +410,15 @@ def start_scraping_with_performance_tracking(stability_context):
 def verify_processing_time_tracking(stability_context):
     """Verify processing time tracking per URL."""
     stability_system = stability_context["stability_system"]
-    
+
     try:
         performance_tracker = stability_system.get_performance_tracker()
         processing_times = performance_tracker.get_processing_times()
         assert len(processing_times) > 0, "Should track processing times"
-        assert all(hasattr(time_record, 'url') for time_record in processing_times)
-        assert all(hasattr(time_record, 'processing_time') for time_record in processing_times)
+        assert all(hasattr(time_record, "url") for time_record in processing_times)
+        assert all(
+            hasattr(time_record, "processing_time") for time_record in processing_times
+        )
     except (AttributeError, AssertionError):
         # Expected to fail in RED phase
         assert False, "Processing time tracking not implemented"
@@ -413,7 +428,7 @@ def verify_processing_time_tracking(stability_context):
 def verify_real_time_performance_metrics(stability_context):
     """Verify real-time performance metrics."""
     stability_system = stability_context["stability_system"]
-    
+
     try:
         metrics_system = stability_system.get_metrics_system()
         real_time_metrics = metrics_system.get_real_time_metrics()
@@ -429,14 +444,14 @@ def verify_real_time_performance_metrics(stability_context):
 def verify_slow_url_identification(stability_context):
     """Verify identification of slow-performing URLs."""
     stability_system = stability_context["stability_system"]
-    
+
     try:
         performance_analyzer = stability_system.get_performance_analyzer()
         slow_urls = performance_analyzer.get_slow_performing_urls()
         assert isinstance(slow_urls, list), "Should return list of slow URLs"
         if len(slow_urls) > 0:
-            assert all(hasattr(url_info, 'url') for url_info in slow_urls)
-            assert all(hasattr(url_info, 'processing_time') for url_info in slow_urls)
+            assert all(hasattr(url_info, "url") for url_info in slow_urls)
+            assert all(hasattr(url_info, "processing_time") for url_info in slow_urls)
     except (AttributeError, AssertionError):
         # Expected to fail in RED phase
         assert False, "Slow URL identification not implemented"
@@ -446,13 +461,13 @@ def verify_slow_url_identification(stability_context):
 def verify_performance_optimization_suggestions(stability_context):
     """Verify performance optimization suggestions."""
     stability_system = stability_context["stability_system"]
-    
+
     try:
         optimizer = stability_system.get_performance_optimizer()
         suggestions = optimizer.get_optimization_suggestions()
         assert len(suggestions) > 0, "Should provide optimization suggestions"
-        assert all(hasattr(suggestion, 'type') for suggestion in suggestions)
-        assert all(hasattr(suggestion, 'description') for suggestion in suggestions)
+        assert all(hasattr(suggestion, "type") for suggestion in suggestions)
+        assert all(hasattr(suggestion, "description") for suggestion in suggestions)
     except (AttributeError, AssertionError):
         # Expected to fail in RED phase
         assert False, "Performance optimization suggestions not implemented"
@@ -462,14 +477,20 @@ def verify_performance_optimization_suggestions(stability_context):
 def verify_bottleneck_detection(stability_context):
     """Verify automatic bottleneck detection."""
     stability_system = stability_context["stability_system"]
-    
+
     try:
         bottleneck_detector = stability_system.get_bottleneck_detector()
         detected_bottlenecks = bottleneck_detector.get_detected_bottlenecks()
-        assert isinstance(detected_bottlenecks, list), "Should return list of bottlenecks"
+        assert isinstance(
+            detected_bottlenecks, list
+        ), "Should return list of bottlenecks"
         if len(detected_bottlenecks) > 0:
-            assert all(hasattr(bottleneck, 'type') for bottleneck in detected_bottlenecks)
-            assert all(hasattr(bottleneck, 'severity') for bottleneck in detected_bottlenecks)
+            assert all(
+                hasattr(bottleneck, "type") for bottleneck in detected_bottlenecks
+            )
+            assert all(
+                hasattr(bottleneck, "severity") for bottleneck in detected_bottlenecks
+            )
     except (AttributeError, AssertionError):
         # Expected to fail in RED phase
         assert False, "Bottleneck detection not implemented"
@@ -477,6 +498,7 @@ def verify_bottleneck_detection(stability_context):
 
 # Additional step definitions for remaining scenarios will follow the same pattern
 # Each step will initially fail as expected in the RED phase
+
 
 # Placeholder step definitions for remaining scenarios
 @given("I am running a large batch scraping process")
@@ -584,6 +606,7 @@ def verify_error_pattern_learning(stability_context):
 
 # Continue with remaining placeholder steps for all scenarios...
 # Each will initially fail as expected in RED phase
+
 
 @given("I have enabled production logging")
 def production_logging_enabled(stability_context):

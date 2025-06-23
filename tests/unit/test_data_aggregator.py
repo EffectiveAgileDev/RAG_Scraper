@@ -486,12 +486,14 @@ class TestEnhancedDataAggregator:
     def aggregator(self):
         """Create DataAggregator instance for testing."""
         from src.scraper.data_aggregator import DataAggregator
+
         return DataAggregator()
 
     @pytest.fixture
     def sample_entities(self):
         """Create sample restaurant entities for testing."""
         from src.scraper.data_aggregator import RestaurantEntity
+
         return [
             RestaurantEntity(
                 entity_id="rest_1",
@@ -501,146 +503,150 @@ class TestEnhancedDataAggregator:
                 data={
                     "address": "123 Main St",
                     "phone": "555-0001",
-                    "cuisine": "Italian"
-                }
+                    "cuisine": "Italian",
+                },
             ),
             RestaurantEntity(
                 entity_id="menu_1",
                 name="Mario's Pizza Menu",
                 url="https://restaurant1.com/menu",
                 entity_type="menu",
-                data={
-                    "items": ["Pizza", "Pasta", "Salads"]
-                }
+                data={"items": ["Pizza", "Pasta", "Salads"]},
             ),
             RestaurantEntity(
                 entity_id="contact_1",
                 name="Mario's Pizza Contact",
                 url="https://restaurant1.com/contact",
                 entity_type="contact",
-                data={
-                    "email": "info@marios.com",
-                    "hours": "Mon-Sun 11am-10pm"
-                }
-            )
+                data={"email": "info@marios.com", "hours": "Mon-Sun 11am-10pm"},
+            ),
         ]
 
     @pytest.fixture
     def sample_relationships(self):
         """Create sample entity relationships."""
         from src.scraper.data_aggregator import EntityRelationship
+
         return [
             EntityRelationship(
                 parent_id="rest_1",
                 child_id="menu_1",
                 relationship_type="has_menu",
-                strength=0.9
+                strength=0.9,
             ),
             EntityRelationship(
                 parent_id="rest_1",
                 child_id="contact_1",
                 relationship_type="has_contact",
-                strength=0.8
-            )
+                strength=0.8,
+            ),
         ]
 
     def test_create_enhanced_data_aggregator(self, aggregator):
         """Test creating enhanced DataAggregator instance."""
         assert aggregator is not None
-        assert hasattr(aggregator, 'aggregate_entities')
-        assert hasattr(aggregator, 'deduplicate_entities')
-        assert hasattr(aggregator, 'create_hierarchical_structure')
+        assert hasattr(aggregator, "aggregate_entities")
+        assert hasattr(aggregator, "deduplicate_entities")
+        assert hasattr(aggregator, "create_hierarchical_structure")
 
     def test_aggregate_entities_by_restaurant_name(self, aggregator):
         """Test aggregating entities with same restaurant name."""
         from src.scraper.data_aggregator import RestaurantEntity
-        
+
         entities = [
             RestaurantEntity(
                 entity_id="page_1",
                 name="Mario's Pizza",
                 url="https://restaurant1.com",
                 entity_type="main",
-                data={"address": "123 Main St", "phone": "555-0001"}
+                data={"address": "123 Main St", "phone": "555-0001"},
             ),
             RestaurantEntity(
                 entity_id="page_2",
                 name="Mario's Pizza",
                 url="https://restaurant1.com/menu",
                 entity_type="menu",
-                data={"items": ["Pizza", "Pasta"]}
+                data={"items": ["Pizza", "Pasta"]},
             ),
             RestaurantEntity(
                 entity_id="page_3",
                 name="Mario's Pizza",
                 url="https://restaurant1.com/contact",
                 entity_type="contact",
-                data={"email": "info@marios.com"}
-            )
+                data={"email": "info@marios.com"},
+            ),
         ]
-        
+
         result = aggregator.aggregate_entities(entities)
-        
+
         # Should consolidate entities with same name
         assert len(result) == 1
         aggregated_entity = result[0]
         assert aggregated_entity.name == "Mario's Pizza"
-        
+
         # Should merge data from all entities
         assert "address" in aggregated_entity.data
         assert "phone" in aggregated_entity.data
         assert "items" in aggregated_entity.data
         assert "email" in aggregated_entity.data
 
-    def test_aggregate_with_relationships(self, aggregator, sample_entities, sample_relationships):
+    def test_aggregate_with_relationships(
+        self, aggregator, sample_entities, sample_relationships
+    ):
         """Test aggregating entities with relationship information."""
-        result = aggregator.aggregate_with_relationships(sample_entities, sample_relationships)
-        
+        result = aggregator.aggregate_with_relationships(
+            sample_entities, sample_relationships
+        )
+
         assert isinstance(result, list)
         assert len(result) > 0
-        
+
         # Check that relationships are preserved in result
         main_entity = next((e for e in result if e.entity_type == "restaurant"), None)
         assert main_entity is not None
-        
+
         # Should have relationship metadata
-        assert hasattr(main_entity, 'relationships') or 'relationships' in main_entity.data
+        assert (
+            hasattr(main_entity, "relationships") or "relationships" in main_entity.data
+        )
 
     def test_deduplicate_entities_by_url_similarity(self, aggregator):
         """Test deduplicating entities by URL similarity."""
         from src.scraper.data_aggregator import RestaurantEntity
-        
+
         entities = [
             RestaurantEntity(
                 entity_id="dup_1",
                 name="Mario's Pizza",
                 url="https://restaurant1.com",
                 entity_type="restaurant",
-                data={"address": "123 Main St"}
+                data={"address": "123 Main St"},
             ),
             RestaurantEntity(
                 entity_id="dup_2",
                 name="Mario's Pizzeria",  # Slightly different name
                 url="https://restaurant1.com",  # Same URL
                 entity_type="restaurant",
-                data={"phone": "555-0001"}
+                data={"phone": "555-0001"},
             ),
             RestaurantEntity(
                 entity_id="unique_1",
                 name="Luigi's Pasta",
                 url="https://restaurant2.com",
                 entity_type="restaurant",
-                data={"address": "456 Oak Ave"}
-            )
+                data={"address": "456 Oak Ave"},
+            ),
         ]
-        
+
         result = aggregator.deduplicate_entities(entities)
-        
+
         # Should have 2 unique entities (by URL)
         assert len(result) == 2
-        
+
         # Check that duplicate data was merged
-        merged_entity = next((e for e in result if e.url == "https://restaurant1.com"), None)
+        merged_entity = next(
+            (e for e in result if e.url == "https://restaurant1.com"), None
+        )
         assert merged_entity is not None
         assert "address" in merged_entity.data
         assert "phone" in merged_entity.data
@@ -648,18 +654,14 @@ class TestEnhancedDataAggregator:
     def test_merge_entities_with_priority_rules(self, aggregator):
         """Test merging entities with data priority rules."""
         from src.scraper.data_aggregator import RestaurantEntity
-        
+
         entities = [
             RestaurantEntity(
                 entity_id="merge_1",
                 name="Mario's Pizza",
                 url="https://main-site.com",
                 entity_type="restaurant",
-                data={
-                    "address": "123 Main St",
-                    "phone": "555-0001",
-                    "rating": 4.2
-                }
+                data={"address": "123 Main St", "phone": "555-0001", "rating": 4.2},
             ),
             RestaurantEntity(
                 entity_id="merge_2",
@@ -670,16 +672,16 @@ class TestEnhancedDataAggregator:
                     "address": "123 Main Street",  # More detailed
                     "phone": "(555) 000-1",  # Different format
                     "rating": 4.5,  # Higher rating
-                    "cuisine": "Italian"  # Additional info
-                }
-            )
+                    "cuisine": "Italian",  # Additional info
+                },
+            ),
         ]
-        
+
         result = aggregator.merge_entities(entities)
-        
+
         assert result is not None
         assert isinstance(result, RestaurantEntity)
-        
+
         # Should keep most detailed/accurate information
         assert result.data["address"] == "123 Main Street"  # More detailed
         assert result.data["rating"] == 4.5  # Higher rating
@@ -688,36 +690,36 @@ class TestEnhancedDataAggregator:
     def test_create_hierarchical_structure_with_levels(self, aggregator):
         """Test creating hierarchical data structure with multiple levels."""
         from src.scraper.data_aggregator import RestaurantEntity
-        
+
         entities = [
             RestaurantEntity(
                 entity_id="dir_1",
                 name="Restaurant Directory",
                 url="https://directory.com",
                 entity_type="directory",
-                data={"level": 0}
+                data={"level": 0},
             ),
             RestaurantEntity(
                 entity_id="rest_1",
                 name="Mario's Pizza",
                 url="https://restaurant1.com",
                 entity_type="restaurant",
-                data={"level": 1, "parent": "dir_1"}
+                data={"level": 1, "parent": "dir_1"},
             ),
             RestaurantEntity(
                 entity_id="menu_1",
                 name="Mario's Menu",
                 url="https://restaurant1.com/menu",
                 entity_type="menu",
-                data={"level": 2, "parent": "rest_1"}
-            )
+                data={"level": 2, "parent": "rest_1"},
+            ),
         ]
-        
+
         result = aggregator.create_hierarchical_structure(entities)
-        
+
         assert isinstance(result, list)
         assert len(result) > 0
-        
+
         # Should maintain hierarchical relationships
         root_entities = [e for e in result if e.data.get("level") == 0]
         assert len(root_entities) > 0
@@ -725,14 +727,14 @@ class TestEnhancedDataAggregator:
     def test_entity_relationship_creation_and_validation(self):
         """Test creating and validating EntityRelationship objects."""
         from src.scraper.data_aggregator import EntityRelationship
-        
+
         relationship = EntityRelationship(
             parent_id="parent_1",
             child_id="child_1",
             relationship_type="has_menu",
-            strength=0.9
+            strength=0.9,
         )
-        
+
         assert relationship.parent_id == "parent_1"
         assert relationship.child_id == "child_1"
         assert relationship.relationship_type == "has_menu"
@@ -742,45 +744,49 @@ class TestEnhancedDataAggregator:
     def test_restaurant_entity_similarity_calculation(self):
         """Test RestaurantEntity similarity calculation."""
         from src.scraper.data_aggregator import RestaurantEntity
-        
+
         entity1 = RestaurantEntity(
             entity_id="e1",
             name="Mario's Pizza",
             url="https://marios.com",
             entity_type="restaurant",
-            data={"address": "123 Main St"}
+            data={"address": "123 Main St"},
         )
-        
+
         entity2 = RestaurantEntity(
             entity_id="e2",
             name="Mario's Pizzeria",  # Similar name
             url="https://marios-pizza.com",  # Similar URL
             entity_type="restaurant",
-            data={"address": "123 Main Street"}  # Similar address
+            data={"address": "123 Main Street"},  # Similar address
         )
-        
+
         entity3 = RestaurantEntity(
             entity_id="e3",
             name="Luigi's Pasta",  # Different name
             url="https://luigis.com",  # Different URL
             entity_type="restaurant",
-            data={"address": "456 Oak Ave"}  # Different address
+            data={"address": "456 Oak Ave"},  # Different address
         )
-        
+
         similarity_12 = entity1.calculate_similarity(entity2)
         similarity_13 = entity1.calculate_similarity(entity3)
-        
+
         assert similarity_12 > similarity_13
         assert 0 <= similarity_12 <= 1
         assert 0 <= similarity_13 <= 1
 
-    def test_cross_reference_mapping_creation(self, aggregator, sample_entities, sample_relationships):
+    def test_cross_reference_mapping_creation(
+        self, aggregator, sample_entities, sample_relationships
+    ):
         """Test creating cross-reference mapping between entities."""
-        cross_refs = aggregator.create_cross_reference_mapping(sample_entities, sample_relationships)
-        
+        cross_refs = aggregator.create_cross_reference_mapping(
+            sample_entities, sample_relationships
+        )
+
         assert isinstance(cross_refs, dict)
         assert len(cross_refs) > 0
-        
+
         # Should map entity IDs to related entity IDs
         for entity_id, related_ids in cross_refs.items():
             assert isinstance(related_ids, list)
@@ -788,18 +794,14 @@ class TestEnhancedDataAggregator:
     def test_data_merging_strategies(self, aggregator):
         """Test different data merging strategies."""
         from src.scraper.data_aggregator import RestaurantEntity
-        
+
         entities = [
             RestaurantEntity(
                 entity_id="strategy_1",
                 name="Restaurant A",
                 url="https://resta.com",
                 entity_type="restaurant",
-                data={
-                    "phone": "555-0001",
-                    "rating": 4.0,
-                    "reviews": 100
-                }
+                data={"phone": "555-0001", "rating": 4.0, "reviews": 100},
             ),
             RestaurantEntity(
                 entity_id="strategy_2",
@@ -810,16 +812,16 @@ class TestEnhancedDataAggregator:
                     "phone": "555-0001",
                     "rating": 4.5,  # Different rating
                     "reviews": 150,  # Different review count
-                    "cuisine": "Italian"  # Additional field
-                }
-            )
+                    "cuisine": "Italian",  # Additional field
+                },
+            ),
         ]
-        
+
         # Test max value strategy
         result_max = aggregator.merge_entities(entities, strategy="max_value")
         assert result_max.data["rating"] == 4.5  # Should take max
         assert result_max.data["reviews"] == 150  # Should take max
-        
+
         # Test latest strategy
         result_latest = aggregator.merge_entities(entities, strategy="latest")
         # Should prefer data from later entity
@@ -828,7 +830,7 @@ class TestEnhancedDataAggregator:
     def test_preserve_source_information_during_aggregation(self, aggregator):
         """Test preserving source information during aggregation."""
         from src.scraper.data_aggregator import RestaurantEntity
-        
+
         entities = [
             RestaurantEntity(
                 entity_id="source_1",
@@ -836,7 +838,7 @@ class TestEnhancedDataAggregator:
                 url="https://main-site.com",
                 entity_type="restaurant",
                 data={"address": "123 Main St"},
-                source_info={"site": "main", "timestamp": "2024-01-01"}
+                source_info={"site": "main", "timestamp": "2024-01-01"},
             ),
             RestaurantEntity(
                 entity_id="source_2",
@@ -844,16 +846,19 @@ class TestEnhancedDataAggregator:
                 url="https://review-site.com",
                 entity_type="restaurant",
                 data={"rating": 4.5},
-                source_info={"site": "reviews", "timestamp": "2024-01-02"}
-            )
+                source_info={"site": "reviews", "timestamp": "2024-01-02"},
+            ),
         ]
-        
+
         result = aggregator.aggregate_entities(entities)
-        
+
         # Should preserve source information
         assert len(result) > 0
         aggregated_entity = result[0]
-        assert hasattr(aggregated_entity, 'source_info') or 'sources' in aggregated_entity.data
+        assert (
+            hasattr(aggregated_entity, "source_info")
+            or "sources" in aggregated_entity.data
+        )
 
 
 class TestHierarchicalNode:
@@ -862,21 +867,17 @@ class TestHierarchicalNode:
     def test_hierarchical_node_creation(self):
         """Test creating HierarchicalNode objects."""
         from src.scraper.data_aggregator import RestaurantEntity, HierarchicalNode
-        
+
         entity = RestaurantEntity(
             entity_id="test_1",
             name="Test Restaurant",
             url="https://test.com",
             entity_type="restaurant",
-            data={"address": "123 Test St"}
+            data={"address": "123 Test St"},
         )
-        
-        node = HierarchicalNode(
-            entity=entity,
-            parent=None,
-            children=[]
-        )
-        
+
+        node = HierarchicalNode(entity=entity, parent=None, children=[])
+
         assert node.entity == entity
         assert node.parent is None
         assert node.children == []
@@ -885,27 +886,27 @@ class TestHierarchicalNode:
     def test_hierarchical_node_depth_calculation(self):
         """Test hierarchical node depth calculation."""
         from src.scraper.data_aggregator import RestaurantEntity, HierarchicalNode
-        
+
         # Create parent node
         parent_entity = RestaurantEntity(
             entity_id="parent_1",
             name="Directory",
             url="https://dir.com",
             entity_type="directory",
-            data={}
+            data={},
         )
         parent_node = HierarchicalNode(parent_entity, None, [])
-        
+
         # Create child node
         child_entity = RestaurantEntity(
             entity_id="child_1",
             name="Restaurant",
             url="https://rest.com",
             entity_type="restaurant",
-            data={}
+            data={},
         )
         child_node = HierarchicalNode(child_entity, parent_node, [])
         parent_node.children.append(child_node)
-        
+
         assert parent_node.get_depth() == 0
         assert child_node.get_depth() == 1

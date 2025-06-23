@@ -7,8 +7,14 @@ from unittest.mock import Mock, MagicMock
 import tempfile
 import os
 
-from src.file_generator.format_selection_manager import FormatSelectionManager, SelectionMode
-from src.file_generator.file_generator_service import FileGeneratorService, FileGenerationRequest
+from src.file_generator.format_selection_manager import (
+    FormatSelectionManager,
+    SelectionMode,
+)
+from src.file_generator.file_generator_service import (
+    FileGeneratorService,
+    FileGenerationRequest,
+)
 from src.scraper.multi_strategy_scraper import RestaurantData
 
 # Load scenarios from feature file
@@ -25,11 +31,11 @@ def format_selection_context():
         "generated_files": [],
         "errors": [],
         "interface_state": {},
-        "file_service": None
+        "file_service": None,
     }
 
 
-@pytest.fixture  
+@pytest.fixture
 def sample_restaurant_data():
     """Sample restaurant data for testing."""
     return [
@@ -39,16 +45,16 @@ def sample_restaurant_data():
             phone="(555) 123-4567",
             hours="Mon-Fri: 9AM-10PM",
             cuisine="Italian",
-            price_range="$$"
+            price_range="$$",
         ),
         RestaurantData(
             name="Test Restaurant 2",
-            address="456 Test Ave, Test City, TC 12346", 
+            address="456 Test Ave, Test City, TC 12346",
             phone="(555) 987-6543",
             hours="Daily: 11AM-11PM",
             cuisine="American",
-            price_range="$"
-        )
+            price_range="$",
+        ),
     ]
 
 
@@ -62,7 +68,9 @@ def rag_scraper_interface_running(format_selection_context):
 @given("I have access to the export format selection interface")
 def access_format_selection_interface(format_selection_context):
     """Initialize format selection manager."""
-    format_selection_context["format_manager"] = FormatSelectionManager(SelectionMode.SINGLE)
+    format_selection_context["format_manager"] = FormatSelectionManager(
+        SelectionMode.SINGLE
+    )
     format_selection_context["file_service"] = FileGeneratorService()
 
 
@@ -89,12 +97,12 @@ def verify_single_format_options(format_selection_context):
     """Verify single format selection options."""
     manager = format_selection_context["format_manager"]
     available_formats = manager.get_available_formats()
-    
+
     # Should have three single-choice formats
     assert "text" in available_formats
     assert "pdf" in available_formats
     assert "json" in available_formats
-    
+
     # Should be in single selection mode
     assert manager.get_selection_mode() == "single"
 
@@ -110,14 +118,14 @@ def verify_single_choice_presentation(format_selection_context):
 def verify_single_selection_only(format_selection_context):
     """Verify only one format can be selected."""
     manager = format_selection_context["format_manager"]
-    
+
     # Select multiple formats and verify only the last one remains
     manager.select_format("text")
     assert manager.get_selected_formats() == ["text"]
-    
-    manager.select_format("pdf") 
+
+    manager.select_format("pdf")
     assert manager.get_selected_formats() == ["pdf"]  # Should replace text
-    
+
     manager.select_format("json")
     assert manager.get_selected_formats() == ["json"]  # Should replace pdf
 
@@ -127,7 +135,7 @@ def verify_no_multi_format_options(format_selection_context):
     """Verify no multi-format options exist."""
     manager = format_selection_context["format_manager"]
     available_formats = manager.get_available_formats()
-    
+
     # Should not have multi-format options
     assert "both" not in available_formats
     assert "all" not in available_formats
@@ -155,16 +163,16 @@ def execute_scraping_process(format_selection_context):
     """Execute the scraping process with selected format."""
     manager = format_selection_context["format_manager"]
     restaurant_data = format_selection_context["restaurant_data"]
-    
+
     # Create file generation request
     with tempfile.TemporaryDirectory() as temp_dir:
         request = FileGenerationRequest(
             restaurant_data=restaurant_data,
             file_format=format_selection_context["selected_format"],
             output_directory=temp_dir,
-            format_manager=manager
+            format_manager=manager,
         )
-        
+
         # Mock file generation since we're testing format selection logic
         format_selection_context["generated_files"] = [f"{temp_dir}/test.txt"]
 
@@ -175,7 +183,7 @@ def verify_text_file_only(format_selection_context):
     manager = format_selection_context["format_manager"]
     selected = manager.get_selected_formats()
     assert selected == ["text"]
-    
+
     # Verify no other formats are selected
     assert "pdf" not in selected
     assert "json" not in selected
@@ -185,10 +193,10 @@ def verify_text_file_only(format_selection_context):
 def verify_no_pdf_or_json_files(format_selection_context):
     """Verify no other format files are generated."""
     generated_files = format_selection_context["generated_files"]
-    
+
     # Should only have text files
     for file_path in generated_files:
-        assert file_path.endswith('.txt'), f"Unexpected file type: {file_path}"
+        assert file_path.endswith(".txt"), f"Unexpected file type: {file_path}"
 
 
 @then("the text file should contain properly formatted restaurant data")
@@ -276,7 +284,7 @@ def verify_json_file_format(format_selection_context):
     """Verify JSON file contains structured data."""
     manager = format_selection_context["format_manager"]
     config = manager.get_format_configuration("json")
-    
+
     # Should have JSON-specific configuration available
     assert isinstance(config, dict)
 
@@ -337,7 +345,7 @@ def attempt_scraping_without_format(format_selection_context):
     """Attempt to start scraping without format selection."""
     manager = format_selection_context["format_manager"]
     instructions = manager.get_export_instructions()
-    
+
     if instructions["total_formats"] == 0:
         format_selection_context["errors"].append("No export format selected")
 
@@ -361,7 +369,9 @@ def verify_scraping_not_started(format_selection_context):
 def verify_prompted_for_format_selection(format_selection_context):
     """Verify user is prompted for format selection."""
     errors = format_selection_context["errors"]
-    assert any("select" in error.lower() and "format" in error.lower() for error in errors)
+    assert any(
+        "select" in error.lower() and "format" in error.lower() for error in errors
+    )
 
 
 @then("the error message should be clear and user-friendly")
@@ -432,11 +442,11 @@ def customize_field_selection_core_only(format_selection_context):
     """Customize field selection to core fields only."""
     manager = format_selection_context["format_manager"]
     field_selection = {
-        'core_fields': True,
-        'extended_fields': False,
-        'additional_fields': False,
-        'contact_fields': False,
-        'descriptive_fields': False
+        "core_fields": True,
+        "extended_fields": False,
+        "additional_fields": False,
+        "contact_fields": False,
+        "descriptive_fields": False,
     }
     result = manager.select_format("json", field_selection=field_selection)
     assert result["success"] is True
@@ -447,11 +457,11 @@ def customize_field_selection_core_only(format_selection_context):
 def verify_json_respects_both_selections(format_selection_context):
     """Verify JSON output respects format and field selections."""
     manager = format_selection_context["format_manager"]
-    
+
     # Should have JSON format selected
     selected = manager.get_selected_formats()
     assert "json" in selected
-    
+
     # Should have field selection configured
     config = manager.get_format_configuration("json")
     assert "field_selection" in config
@@ -463,7 +473,7 @@ def verify_only_chosen_fields_in_json(format_selection_context):
     manager = format_selection_context["format_manager"]
     config = manager.get_format_configuration("json")
     field_selection = config["field_selection"]
-    
+
     # Should have core fields enabled
     assert field_selection["core_fields"] is True
     # Should have other fields disabled
@@ -476,7 +486,7 @@ def verify_format_specific_customization(format_selection_context):
     """Verify format-specific customization works."""
     manager = format_selection_context["format_manager"]
     config = manager.get_format_configuration("json")
-    
+
     # Should have configuration stored for JSON format
     assert config is not None
     assert "field_selection" in config
@@ -487,7 +497,9 @@ def verify_format_specific_customization(format_selection_context):
 def using_updated_export_interface(format_selection_context):
     """Using the updated export interface."""
     # Initialize with single selection mode (updated interface)
-    format_selection_context["format_manager"] = FormatSelectionManager(SelectionMode.SINGLE)
+    format_selection_context["format_manager"] = FormatSelectionManager(
+        SelectionMode.SINGLE
+    )
 
 
 @then('I should not see any "Both", "All formats", or multiple selection options')
@@ -495,7 +507,7 @@ def verify_no_multi_format_options_available(format_selection_context):
     """Verify no multi-format options are available."""
     manager = format_selection_context["format_manager"]
     available_formats = manager.get_available_formats()
-    
+
     # Should not contain legacy multi-format options
     assert "both" not in available_formats
     assert "all" not in available_formats
@@ -507,10 +519,10 @@ def verify_no_multi_format_options_available(format_selection_context):
 def verify_no_multiple_selection_checkboxes(format_selection_context):
     """Verify no multiple selection mechanism exists."""
     manager = format_selection_context["format_manager"]
-    
+
     # Should be in single selection mode
     assert manager.get_selection_mode() == "single"
-    
+
     # Attempting to select multiple should only keep the last one
     manager.select_format("text")
     manager.select_format("pdf")
@@ -530,12 +542,12 @@ def verify_single_choice_indication(format_selection_context):
 def verify_legacy_code_inactive(format_selection_context):
     """Verify legacy multi-format code is inactive."""
     manager = format_selection_context["format_manager"]
-    
+
     # Cannot set to multiple mode if not supported
     # (In our implementation, we do support multiple mode for flexibility,
     # but the interface defaults to single mode)
     assert manager.get_selection_mode() == "single"
-    
+
     # Multiple selection should not be the default behavior
     instructions = manager.get_export_instructions()
     assert instructions["selection_mode"] == "single"

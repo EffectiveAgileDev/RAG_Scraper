@@ -6,7 +6,7 @@ from pytest_bdd import scenarios, given, when, then, parsers
 
 
 # Load scenarios from the feature file
-scenarios('../features/rate_limiting.feature')
+scenarios("../features/rate_limiting.feature")
 
 
 # Context for rate limiting tests
@@ -58,15 +58,17 @@ def given_restaurant_urls_multiple_domains_with_table(rate_limiting_context, tab
     """Set up restaurant URLs from multiple domains with table data."""
     rate_limiting_context.domain_configs = {}
     # Parse the table data (this is a simple simulation)
-    lines = table.strip().split('\n')
+    lines = table.strip().split("\n")
     for line in lines[1:]:  # Skip header
-        if '|' in line:
-            parts = [p.strip() for p in line.split('|')[1:-1]]  # Remove empty parts from start/end
+        if "|" in line:
+            parts = [
+                p.strip() for p in line.split("|")[1:-1]
+            ]  # Remove empty parts from start/end
             if len(parts) >= 3:
                 domain, urls, rate_limit = parts[0], int(parts[1]), float(parts[2])
                 rate_limiting_context.domain_configs[domain] = {
-                    'urls': urls,
-                    'rate_limit': rate_limit
+                    "urls": urls,
+                    "rate_limit": rate_limit,
                 }
 
 
@@ -94,21 +96,27 @@ def then_domains_rate_limited_independently(rate_limiting_context):
 @then("fast-restaurants.com requests should be limited to 1 request per second")
 def then_fast_restaurants_rate_limited(rate_limiting_context):
     """Verify fast-restaurants.com is limited to 1 request per second."""
-    expected_rate = rate_limiting_context.domain_configs['fast-restaurants.com']['rate_limit']
+    expected_rate = rate_limiting_context.domain_configs["fast-restaurants.com"][
+        "rate_limit"
+    ]
     assert expected_rate == 1.0
 
 
 @then("slow-restaurants.com requests should be limited to 1 request per 3 seconds")
 def then_slow_restaurants_rate_limited(rate_limiting_context):
     """Verify slow-restaurants.com is limited to 1 request per 3 seconds."""
-    expected_rate = rate_limiting_context.domain_configs['slow-restaurants.com']['rate_limit']
+    expected_rate = rate_limiting_context.domain_configs["slow-restaurants.com"][
+        "rate_limit"
+    ]
     assert expected_rate == 3.0
 
 
 @then("mixed-restaurants.com requests should be limited to 1 request per 2 seconds")
 def then_mixed_restaurants_rate_limited(rate_limiting_context):
     """Verify mixed-restaurants.com is limited to 1 request per 2 seconds."""
-    expected_rate = rate_limiting_context.domain_configs['mixed-restaurants.com']['rate_limit']
+    expected_rate = rate_limiting_context.domain_configs["mixed-restaurants.com"][
+        "rate_limit"
+    ]
     assert expected_rate == 2.0
 
 
@@ -123,7 +131,9 @@ def then_concurrent_processing_respects_limits(rate_limiting_context):
 def then_total_time_reflects_delays(rate_limiting_context):
     """Verify total scraping time reflects domain-specific delays."""
     # Mock calculation of expected time based on domain configs
-    total_urls = sum(config['urls'] for config in rate_limiting_context.domain_configs.values())
+    total_urls = sum(
+        config["urls"] for config in rate_limiting_context.domain_configs.values()
+    )
     assert total_urls == 12  # 4 + 3 + 5
 
 
@@ -148,7 +158,7 @@ def when_attempt_scrape_with_retry(rate_limiting_context):
     rate_limiting_context.retry_attempts = []
     # Mock retry attempts with exponential backoff
     for i in range(4):
-        delay = rate_limiting_context.base_delay * (2 ** i)
+        delay = rate_limiting_context.base_delay * (2**i)
         rate_limiting_context.retry_attempts.append(delay)
 
 
@@ -220,7 +230,10 @@ def then_scraper_waits_exactly_10_seconds(rate_limiting_context):
 @then("the retry-after value should override default rate limiting")
 def then_retry_after_overrides_default(rate_limiting_context):
     """Verify retry-after overrides default rate limiting."""
-    assert rate_limiting_context.actual_wait_time == rate_limiting_context.retry_after_value
+    assert (
+        rate_limiting_context.actual_wait_time
+        == rate_limiting_context.retry_after_value
+    )
 
 
 @then("the retry attempt should be logged with the server-specified delay")
@@ -242,16 +255,21 @@ def then_subsequent_requests_resume_normal(rate_limiting_context):
 def given_domain_specific_throttling_rules_with_table(rate_limiting_context, table):
     """Set up domain-specific throttling rules with table data."""
     rate_limiting_context.throttling_rules = {}
-    lines = table.strip().split('\n')
+    lines = table.strip().split("\n")
     for line in lines[1:]:  # Skip header
-        if '|' in line:
-            parts = [p.strip() for p in line.split('|')[1:-1]]
+        if "|" in line:
+            parts = [p.strip() for p in line.split("|")[1:-1]]
             if len(parts) >= 4:
-                pattern, delay, max_concurrent, retry_limit = parts[0], float(parts[1]), int(parts[2]), int(parts[3])
+                pattern, delay, max_concurrent, retry_limit = (
+                    parts[0],
+                    float(parts[1]),
+                    int(parts[2]),
+                    int(parts[3]),
+                )
                 rate_limiting_context.throttling_rules[pattern] = {
-                    'delay': delay,
-                    'max_concurrent': max_concurrent,
-                    'retry_limit': retry_limit
+                    "delay": delay,
+                    "max_concurrent": max_concurrent,
+                    "retry_limit": retry_limit,
                 }
 
 
@@ -271,20 +289,20 @@ def then_domains_follow_specific_rules(rate_limiting_context):
 def then_max_concurrent_enforced(rate_limiting_context):
     """Verify max concurrent requests are enforced per domain."""
     for rule in rate_limiting_context.throttling_rules.values():
-        assert 'max_concurrent' in rule
+        assert "max_concurrent" in rule
 
 
 @then("retry limits should be respected per domain")
 def then_retry_limits_respected(rate_limiting_context):
     """Verify retry limits are respected per domain."""
     for rule in rate_limiting_context.throttling_rules.values():
-        assert 'retry_limit' in rule
+        assert "retry_limit" in rule
 
 
 @then("default rules should apply to unmatched domains")
 def then_default_rules_apply(rate_limiting_context):
     """Verify default rules apply to unmatched domains."""
-    assert 'default' in rate_limiting_context.throttling_rules
+    assert "default" in rate_limiting_context.throttling_rules
 
 
 # Concurrent request rate limiting scenario
@@ -331,7 +349,10 @@ def then_domains_processed_independently(rate_limiting_context):
 @then("total active requests should not exceed system-wide limits")
 def then_total_requests_not_exceed_limits(rate_limiting_context):
     """Verify total active requests don't exceed system-wide limits."""
-    max_total = rate_limiting_context.total_domains * rate_limiting_context.max_concurrent_per_domain
+    max_total = (
+        rate_limiting_context.total_domains
+        * rate_limiting_context.max_concurrent_per_domain
+    )
     assert max_total == 15  # 5 domains * 3 concurrent per domain
 
 
@@ -345,11 +366,14 @@ def then_domain_delays_still_enforced(rate_limiting_context):
 # For brevity, I'm implementing the core scenarios that demonstrate the TDD approach.
 # The remaining scenarios would follow the same structure.
 
+
 # Rate limit recovery scenario
 @given("I have a restaurant website that temporarily blocks requests")
 def given_website_temporarily_blocks(rate_limiting_context):
     """Set up website that temporarily blocks requests."""
-    rate_limiting_context.temporarily_blocked_website = "http://temp-blocked-restaurant.com"
+    rate_limiting_context.temporarily_blocked_website = (
+        "http://temp-blocked-restaurant.com"
+    )
     rate_limiting_context.block_count = 0
 
 
@@ -407,9 +431,9 @@ def given_various_rate_limiting_configurations(rate_limiting_context):
 def when_configure_invalid_settings(rate_limiting_context):
     """Configure rate limiting with invalid settings."""
     rate_limiting_context.invalid_configs = {
-        'negative_delay': {'value': -1.0, 'expected_result': 'validation_error'},
-        'zero_max_requests': {'value': 0, 'expected_result': 'validation_error'},
-        'excessive_delay': {'value': 3600, 'expected_result': 'capped_to_limit'}
+        "negative_delay": {"value": -1.0, "expected_result": "validation_error"},
+        "zero_max_requests": {"value": 0, "expected_result": "validation_error"},
+        "excessive_delay": {"value": 3600, "expected_result": "capped_to_limit"},
     }
 
 
@@ -423,8 +447,8 @@ def then_invalid_configs_rejected(rate_limiting_context):
 @then("excessive values should be capped to safe limits")
 def then_excessive_values_capped(rate_limiting_context):
     """Verify excessive values are capped to safe limits."""
-    excessive_config = rate_limiting_context.invalid_configs['excessive_delay']
-    assert excessive_config['expected_result'] == 'capped_to_limit'
+    excessive_config = rate_limiting_context.invalid_configs["excessive_delay"]
+    assert excessive_config["expected_result"] == "capped_to_limit"
 
 
 @then("default configurations should be applied for missing settings")
@@ -442,19 +466,21 @@ def then_validation_prevents_instability(rate_limiting_context):
 
 
 # Adaptive rate limiting scenario
-@given(parsers.parse("I have restaurant websites with varying response times:\n{table}"))
+@given(
+    parsers.parse("I have restaurant websites with varying response times:\n{table}")
+)
 def given_websites_with_varying_response_times(rate_limiting_context, table):
     """Set up websites with varying response times."""
     rate_limiting_context.response_times = {}
-    lines = table.strip().split('\n')
+    lines = table.strip().split("\n")
     for line in lines[1:]:  # Skip header
-        if '|' in line:
-            parts = [p.strip() for p in line.split('|')[1:-1]]
+        if "|" in line:
+            parts = [p.strip() for p in line.split("|")[1:-1]]
             if len(parts) >= 2:
                 website, response_time = parts[0], parts[1]
                 # Convert response time to milliseconds
-                if 'ms' in response_time:
-                    time_ms = int(response_time.replace('ms', ''))
+                if "ms" in response_time:
+                    time_ms = int(response_time.replace("ms", ""))
                     rate_limiting_context.response_times[website] = time_ms
 
 
@@ -551,7 +577,10 @@ def then_data_extraction_rate_limited(rate_limiting_context):
 @then("the total scraping time should reflect rate limiting delays")
 def then_total_time_reflects_rate_limiting_delays(rate_limiting_context):
     """Verify total scraping time reflects rate limiting delays."""
-    expected_time = rate_limiting_context.discoverable_pages * rate_limiting_context.rate_limit_delay
+    expected_time = (
+        rate_limiting_context.discoverable_pages
+        * rate_limiting_context.rate_limit_delay
+    )
     assert expected_time == 16.0  # 8 pages * 2 seconds
 
 
@@ -566,22 +595,22 @@ def then_progress_tracking_accounts_for_delays(rate_limiting_context):
 def when_configure_invalid_settings_with_table(rate_limiting_context, table):
     """Configure rate limiting with invalid settings from table."""
     rate_limiting_context.invalid_configs = {}
-    lines = table.strip().split('\n')
+    lines = table.strip().split("\n")
     for line in lines[1:]:  # Skip header
-        if '|' in line:
-            parts = [p.strip() for p in line.split('|')[1:-1]]
+        if "|" in line:
+            parts = [p.strip() for p in line.split("|")[1:-1]]
             if len(parts) >= 3:
                 setting, value, expected_result = parts[0], parts[1], parts[2]
                 # Convert value to appropriate type
-                if value == '-1.0':
+                if value == "-1.0":
                     value = -1.0
-                elif value == '0':
+                elif value == "0":
                     value = 0
-                elif value == '3600':
+                elif value == "3600":
                     value = 3600
                 rate_limiting_context.invalid_configs[setting] = {
-                    'value': value,
-                    'expected_result': expected_result
+                    "value": value,
+                    "expected_result": expected_result,
                 }
 
 
@@ -608,14 +637,14 @@ def when_scraping_operations_complete(rate_limiting_context):
 def then_see_detailed_statistics(rate_limiting_context, table):
     """Verify detailed rate limiting statistics are available."""
     rate_limiting_context.expected_statistics = {}
-    lines = table.strip().split('\n')
+    lines = table.strip().split("\n")
     for line in lines[1:]:  # Skip header
-        if '|' in line:
-            parts = [p.strip() for p in line.split('|')[1:-1]]
+        if "|" in line:
+            parts = [p.strip() for p in line.split("|")[1:-1]]
             if len(parts) >= 2:
-                metric, tracked = parts[0], parts[1] == 'yes'
+                metric, tracked = parts[0], parts[1] == "yes"
                 rate_limiting_context.expected_statistics[metric] = tracked
-    
+
     # Verify expected statistics
     assert len(rate_limiting_context.expected_statistics) == 5
 

@@ -22,7 +22,7 @@ def ui_test_context():
         "format_options": [],
         "selected_format": None,
         "field_selections": {},
-        "form_data": {}
+        "form_data": {},
     }
 
 
@@ -30,6 +30,7 @@ def ui_test_context():
 def test_client(ui_test_context):
     """Create test client for Flask app."""
     from src.web_interface.app import create_app
+
     app = create_app(testing=True)
     ui_test_context["app"] = app
     ui_test_context["client"] = app.test_client()
@@ -46,7 +47,7 @@ def rag_scraper_interface_running(ui_test_context, test_client):
 @given("I am on the main scraping interface")
 def on_main_scraping_interface(ui_test_context, test_client):
     """Navigate to the main scraping interface."""
-    response = test_client.get('/')
+    response = test_client.get("/")
     assert response.status_code == 200
     ui_test_context["response"] = response
     ui_test_context["page_content"] = response.get_data(as_text=True)
@@ -57,11 +58,11 @@ def on_main_scraping_interface(ui_test_context, test_client):
 def view_format_selection_section(ui_test_context):
     """Extract format selection section from page content."""
     content = ui_test_context["page_content"]
-    
+
     # Extract format options from HTML
     format_pattern = r'<label class="format-option[^"]*"[^>]*data-format="([^"]*)"[^>]*>.*?<div class="format-title">([^<]*)</div>.*?<div class="format-desc">([^<]*)</div>'
     format_matches = re.findall(format_pattern, content, re.DOTALL)
-    
+
     ui_test_context["format_options"] = [
         {"value": match[0], "title": match[1], "description": match[2]}
         for match in format_matches
@@ -72,20 +73,24 @@ def view_format_selection_section(ui_test_context):
 def verify_three_format_options(ui_test_context):
     """Verify exactly three format options exist."""
     format_options = ui_test_context["format_options"]
-    assert len(format_options) == 3, f"Expected 3 format options, found {len(format_options)}"
-    
+    assert (
+        len(format_options) == 3
+    ), f"Expected 3 format options, found {len(format_options)}"
+
     titles = [option["title"].strip() for option in format_options]
     expected_titles = ["TEXT", "PDF", "JSON"]  # Case-insensitive check
-    
+
     for expected in expected_titles:
-        assert any(expected.upper() in title.upper() for title in titles), f"Missing format option: {expected}"
+        assert any(
+            expected.upper() in title.upper() for title in titles
+        ), f"Missing format option: {expected}"
 
 
 @then("the format options should be presented as radio buttons")
 def verify_radio_button_presentation(ui_test_context):
     """Verify format options use radio buttons."""
     content = ui_test_context["page_content"]
-    
+
     # Check for radio button inputs
     radio_pattern = r'<input type="radio"[^>]*name="fileFormat"'
     radio_matches = re.findall(radio_pattern, content)
@@ -97,13 +102,13 @@ def verify_no_multi_format_options(ui_test_context):
     """Verify no legacy multi-format options exist."""
     content = ui_test_context["page_content"]
     format_options = ui_test_context["format_options"]
-    
+
     # Check format option titles
     for option in format_options:
         title = option["title"].upper()
         assert "DUAL" not in title, f"Found legacy DUAL option: {option}"
         assert "BOTH" not in title, f"Found legacy BOTH option: {option}"
-    
+
     # Check for legacy values in HTML
     assert 'value="both"' not in content, "Found legacy 'both' value in HTML"
     assert 'data-format="both"' not in content, "Found legacy 'both' data attribute"
@@ -113,20 +118,26 @@ def verify_no_multi_format_options(ui_test_context):
 def verify_text_default_selection(ui_test_context):
     """Verify Text option is selected by default."""
     content = ui_test_context["page_content"]
-    
+
     # Look for checked radio button
     text_checked_pattern = r'<input[^>]*type="radio"[^>]*value="text"[^>]*checked'
-    assert re.search(text_checked_pattern, content), "Text option should be checked by default"
+    assert re.search(
+        text_checked_pattern, content
+    ), "Text option should be checked by default"
 
 
 @then("each format option should have a descriptive subtitle")
 def verify_descriptive_subtitles(ui_test_context):
     """Verify each format option has a description."""
     format_options = ui_test_context["format_options"]
-    
+
     for option in format_options:
-        assert option["description"].strip(), f"Format option {option['title']} missing description"
-        assert len(option["description"].strip()) > 10, f"Description too short for {option['title']}"
+        assert option[
+            "description"
+        ].strip(), f"Format option {option['title']} missing description"
+        assert (
+            len(option["description"].strip()) > 10
+        ), f"Description too short for {option['title']}"
 
 
 # Scenario: JSON format option availability
@@ -142,31 +153,41 @@ def verify_json_format_option_exists(ui_test_context):
 def verify_json_option_title(ui_test_context):
     """Verify JSON option has correct title."""
     format_options = ui_test_context["format_options"]
-    json_option = next((opt for opt in format_options if "JSON" in opt["title"].upper()), None)
+    json_option = next(
+        (opt for opt in format_options if "JSON" in opt["title"].upper()), None
+    )
     assert json_option is not None, "JSON option not found"
-    assert "JSON" in json_option["title"].upper(), f"JSON title incorrect: {json_option['title']}"
+    assert (
+        "JSON" in json_option["title"].upper()
+    ), f"JSON title incorrect: {json_option['title']}"
 
 
-@then('the JSON option should have the description "Structured data for system integration"')
+@then(
+    'the JSON option should have the description "Structured data for system integration"'
+)
 def verify_json_option_description(ui_test_context):
     """Verify JSON option has appropriate description."""
     format_options = ui_test_context["format_options"]
-    json_option = next((opt for opt in format_options if "JSON" in opt["title"].upper()), None)
+    json_option = next(
+        (opt for opt in format_options if "JSON" in opt["title"].upper()), None
+    )
     assert json_option is not None, "JSON option not found"
-    
+
     description = json_option["description"]
     # Check for key terms that should be in JSON description
     key_terms = ["structured", "data", "system", "integration"]
     description_lower = description.lower()
     found_terms = [term for term in key_terms if term in description_lower]
-    assert len(found_terms) >= 2, f"JSON description should mention structured data/integration: {description}"
+    assert (
+        len(found_terms) >= 2
+    ), f"JSON description should mention structured data/integration: {description}"
 
 
 @then("the JSON option should be selectable")
 def verify_json_option_selectable(ui_test_context):
     """Verify JSON option is selectable."""
     content = ui_test_context["page_content"]
-    
+
     # Check for JSON radio button
     json_radio_pattern = r'<input[^>]*type="radio"[^>]*value="json"'
     assert re.search(json_radio_pattern, content), "JSON radio button not found"
@@ -206,10 +227,12 @@ def verify_other_options_deselected(ui_test_context):
 def verify_form_indicates_pdf(ui_test_context):
     """Verify form data shows PDF selection."""
     form_data = ui_test_context["form_data"]
-    assert form_data.get("fileFormat") == "pdf", "Form should indicate PDF format selected"
+    assert (
+        form_data.get("fileFormat") == "pdf"
+    ), "Form should indicate PDF format selected"
 
 
-# Scenario: JSON format selection with field customization  
+# Scenario: JSON format selection with field customization
 @when('I select the "JSON" format option')
 def select_json_format_option(ui_test_context):
     """Simulate selecting the JSON format option."""
@@ -231,18 +254,24 @@ def verify_field_selection_options_appear(ui_test_context):
     # For now, we'll simulate this behavior
     if ui_test_context["selected_format"] == "json":
         ui_test_context["field_selection_visible"] = True
-    assert ui_test_context.get("field_selection_visible"), "Field selection should be visible for JSON"
+    assert ui_test_context.get(
+        "field_selection_visible"
+    ), "Field selection should be visible for JSON"
 
 
-@then('the field selection should include "Core Fields", "Extended Fields", "Contact Fields"')
+@then(
+    'the field selection should include "Core Fields", "Extended Fields", "Contact Fields"'
+)
 def verify_field_selection_categories(ui_test_context):
     """Verify field selection includes expected categories."""
     # This would check the actual HTML content for field selection UI
     expected_categories = ["Core Fields", "Extended Fields", "Contact Fields"]
     ui_test_context["available_field_categories"] = expected_categories
-    
+
     # Verify categories are available
-    assert len(ui_test_context["available_field_categories"]) >= 3, "Should have at least 3 field categories"
+    assert (
+        len(ui_test_context["available_field_categories"]) >= 3
+    ), "Should have at least 3 field categories"
 
 
 @then("I should be able to toggle individual field categories")
@@ -252,12 +281,15 @@ def verify_field_categories_toggleable(ui_test_context):
     ui_test_context["field_selections"] = {
         "core_fields": True,
         "extended_fields": False,
-        "contact_fields": True
+        "contact_fields": True,
     }
-    assert len(ui_test_context["field_selections"]) > 0, "Should be able to configure field selections"
+    assert (
+        len(ui_test_context["field_selections"]) > 0
+    ), "Should be able to configure field selections"
 
 
 # Additional step definitions for missing scenarios
+
 
 @when("I view the format selection options")
 def view_format_selection_options(ui_test_context):
@@ -265,7 +297,7 @@ def view_format_selection_options(ui_test_context):
     view_format_selection_section(ui_test_context)
 
 
-@given("I have selected the \"JSON\" format")
+@given('I have selected the "JSON" format')
 def have_selected_json_format(ui_test_context):
     """Have selected JSON format."""
     ui_test_context["selected_format"] = "json"
@@ -278,14 +310,17 @@ def have_configured_custom_field_selections(ui_test_context):
     ui_test_context["field_selections"] = {
         "core_fields": True,
         "extended_fields": False,
-        "contact_fields": True
+        "contact_fields": True,
     }
 
 
 @when("I enter some restaurant URLs")
 def enter_restaurant_urls(ui_test_context):
     """Simulate entering restaurant URLs."""
-    ui_test_context["form_data"]["urls"] = ["https://restaurant1.com", "https://restaurant2.com"]
+    ui_test_context["form_data"]["urls"] = [
+        "https://restaurant1.com",
+        "https://restaurant2.com",
+    ]
 
 
 @when("I change other form fields")
@@ -295,7 +330,7 @@ def change_other_form_fields(ui_test_context):
     ui_test_context["form_data"]["fileMode"] = "multiple"
 
 
-@then("the \"JSON\" format should remain selected")
+@then('the "JSON" format should remain selected')
 def verify_json_format_remains_selected(ui_test_context):
     """Verify JSON format remains selected."""
     assert ui_test_context["selected_format"] == "json"
@@ -321,7 +356,7 @@ def verify_distinct_visual_indicator(ui_test_context):
     """Verify selected format has distinct visual indicator."""
     content = ui_test_context["page_content"]
     # Check for 'checked' attribute or 'selected' class
-    assert 'checked' in content or 'selected' in content
+    assert "checked" in content or "selected" in content
 
 
 @then("hover effects should provide visual feedback")
@@ -329,7 +364,7 @@ def verify_hover_effects(ui_test_context):
     """Verify hover effects exist (simulated check)."""
     content = ui_test_context["page_content"]
     # Check for CSS hover styles in the page
-    assert ':hover' in content or 'hover' in content
+    assert ":hover" in content or "hover" in content
 
 
 @then("the interface should follow the terminal/cyberpunk design theme")
@@ -337,7 +372,7 @@ def verify_terminal_cyberpunk_theme(ui_test_context):
     """Verify terminal/cyberpunk design theme."""
     content = ui_test_context["page_content"]
     # Check for terminal-style CSS classes and colors
-    assert 'terminal' in content or 'format-option' in content
+    assert "terminal" in content or "format-option" in content
 
 
 @when("I submit the scraping form")
@@ -346,7 +381,7 @@ def submit_scraping_form(ui_test_context):
     ui_test_context["form_submitted"] = True
 
 
-@then("the request should include format=\"json\"")
+@then('the request should include format="json"')
 def verify_request_includes_json_format(ui_test_context):
     """Verify request includes JSON format."""
     form_data = ui_test_context["form_data"]
@@ -392,7 +427,7 @@ def verify_screen_reader_announcements(ui_test_context):
     """Verify screen reader accessibility."""
     content = ui_test_context["page_content"]
     # Check for accessibility features - labels are sufficient for this test
-    assert 'label' in content and 'input' in content
+    assert "label" in content and "input" in content
 
 
 @then("the interface should follow accessibility best practices")
@@ -400,10 +435,10 @@ def verify_accessibility_best_practices(ui_test_context):
     """Verify accessibility best practices."""
     content = ui_test_context["page_content"]
     # Check for basic accessibility features
-    assert 'label' in content and 'input' in content
+    assert "label" in content and "input" in content
 
 
-@given("I have selected the \"JSON\" format option")
+@given('I have selected the "JSON" format option')
 def have_selected_json_format_option(ui_test_context):
     """Have selected JSON format option."""
     ui_test_context["selected_format"] = "json"
@@ -422,7 +457,7 @@ def verify_grouped_field_categories(ui_test_context):
     assert ui_test_context.get("field_selection_visible") is True
 
 
-@then("I should be able to \"Select All\" or \"Deselect All\" fields")
+@then('I should be able to "Select All" or "Deselect All" fields')
 def verify_select_all_deselect_all(ui_test_context):
     """Verify Select All/Deselect All functionality."""
     # Simulated check for bulk selection functionality
@@ -449,7 +484,11 @@ def verify_real_time_field_updates(ui_test_context):
 @given("I have entered valid restaurant URLs")
 def have_entered_valid_restaurant_urls(ui_test_context):
     """Have entered valid restaurant URLs."""
-    ui_test_context["form_data"]["urls"] = ["https://restaurant1.com", "https://restaurant2.com"]
+    ui_test_context["form_data"]["urls"] = [
+        "https://restaurant1.com",
+        "https://restaurant2.com",
+    ]
+
 
 # Scenario: Legacy format removal validation
 @when("I inspect the format selection interface")
@@ -484,8 +523,10 @@ def verify_no_both_value(ui_test_context):
 def verify_no_multiple_selection_checkboxes(ui_test_context):
     """Verify no checkboxes for multiple format selection."""
     content = ui_test_context["inspected_content"]
-    
+
     # Should only have radio buttons, not checkboxes for format selection
     format_checkbox_pattern = r'<input[^>]*type="checkbox"[^>]*name="fileFormat"'
     checkbox_matches = re.findall(format_checkbox_pattern, content)
-    assert len(checkbox_matches) == 0, "Found checkboxes for format selection - should only use radio buttons"
+    assert (
+        len(checkbox_matches) == 0
+    ), "Found checkboxes for format selection - should only use radio buttons"

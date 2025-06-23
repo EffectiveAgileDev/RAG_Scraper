@@ -20,7 +20,7 @@ def multi_page_context():
         "progress_calls": [],
         "mock_pages": {},
         "urls": [],
-        "restaurant_data": {}
+        "restaurant_data": {},
     }
 
 
@@ -39,7 +39,9 @@ def multi_page_functionality_enabled():
 @given("I have a multi-page scraper configured with max 5 pages")
 def multi_page_scraper_configured(multi_page_context):
     """Configure multi-page scraper with page limit."""
-    multi_page_context["scraper"] = MultiPageScraper(max_pages=5, enable_ethical_scraping=False)
+    multi_page_context["scraper"] = MultiPageScraper(
+        max_pages=5, enable_ethical_scraping=False
+    )
 
 
 @given("I have mock HTML content for restaurant pages")
@@ -89,7 +91,7 @@ def mock_html_content(multi_page_context):
                 <p>Hours: Mon-Sun 11am-10pm</p>
             </body>
         </html>
-        """
+        """,
     }
 
 
@@ -99,8 +101,8 @@ def restaurant_with_multiple_pages(multi_page_context):
     multi_page_context["urls"] = [
         "http://example.com/",
         "http://example.com/menu",
-        "http://example.com/about", 
-        "http://example.com/contact"
+        "http://example.com/about",
+        "http://example.com/contact",
     ]
 
 
@@ -120,21 +122,19 @@ def pages_contain_restaurant_info(multi_page_context):
     # Set up mock restaurant data for each page
     multi_page_context["restaurant_data"] = {
         "home": RestaurantData(
-            name="Tony's Italian Restaurant",
-            sources=["heuristic"],
-            confidence=0.8
+            name="Tony's Italian Restaurant", sources=["heuristic"], confidence=0.8
         ),
         "menu": RestaurantData(
             name="Tony's Restaurant",
             menu_items=["Pasta Marinara - $12", "Pizza Margherita - $15"],
             sources=["heuristic"],
-            confidence=0.9
+            confidence=0.9,
         ),
         "about": RestaurantData(
             name="Tony's Restaurant",
             cuisine="Italian",
             sources=["heuristic"],
-            confidence=0.8
+            confidence=0.8,
         ),
         "contact": RestaurantData(
             name="Tony's Restaurant",
@@ -142,8 +142,8 @@ def pages_contain_restaurant_info(multi_page_context):
             address="123 Main St, Portland, OR",
             hours="Mon-Sun 11am-10pm",
             sources=["heuristic"],
-            confidence=0.9
-        )
+            confidence=0.9,
+        ),
     }
 
 
@@ -154,7 +154,7 @@ def restaurant_website_multiple_pages(multi_page_context):
         "http://example.com/",
         "http://example.com/menu",
         "http://example.com/about",
-        "http://example.com/contact"
+        "http://example.com/contact",
     ]
 
 
@@ -170,8 +170,12 @@ def other_pages_accessible(multi_page_context):
     # Set up data for non-failing pages
     multi_page_context["restaurant_data"] = {
         "home": RestaurantData(name="Tony's Restaurant", sources=["heuristic"]),
-        "about": RestaurantData(name="Tony's Restaurant", cuisine="Italian", sources=["heuristic"]),
-        "contact": RestaurantData(name="Tony's Restaurant", phone="(503) 555-1234", sources=["heuristic"])
+        "about": RestaurantData(
+            name="Tony's Restaurant", cuisine="Italian", sources=["heuristic"]
+        ),
+        "contact": RestaurantData(
+            name="Tony's Restaurant", phone="(503) 555-1234", sources=["heuristic"]
+        ),
     }
 
 
@@ -182,16 +186,17 @@ def restaurant_with_four_pages(multi_page_context):
         "http://example.com/",
         "http://example.com/menu",
         "http://example.com/about",
-        "http://example.com/contact"
+        "http://example.com/contact",
     ]
 
 
 @given("I provide a progress callback function to track scraping progress")
 def progress_callback_function(multi_page_context):
     """Set up progress callback function."""
+
     def progress_callback(*args):
         multi_page_context["progress_calls"].append(args)
-    
+
     multi_page_context["progress_callback"] = progress_callback
 
 
@@ -200,7 +205,7 @@ def initiate_multi_page_scraping(multi_page_context):
     """Start the multi-page scraping process."""
     scraper = multi_page_context["scraper"]
     base_url = multi_page_context["urls"][0]
-    
+
     # Prepare aggregated data that should be returned
     aggregated_data = RestaurantData(
         name="Tony's Italian Restaurant",
@@ -210,60 +215,74 @@ def initiate_multi_page_scraping(multi_page_context):
         address="123 Main St, Portland, OR",
         hours="Mon-Sun 11am-10pm",
         sources=["heuristic"],
-        confidence=0.9
+        confidence=0.9,
     )
-    
+
     # Mock the page fetching and discovery
-    with patch.object(scraper, '_fetch_page') as mock_fetch, \
-         patch.object(scraper, '_fetch_and_process_page') as mock_process:
-        
+    with patch.object(scraper, "_fetch_page") as mock_fetch, patch.object(
+        scraper, "_fetch_and_process_page"
+    ) as mock_process:
         # Set up page discovery mock
         def mock_fetch_side_effect(url):
             if url == base_url:
                 return multi_page_context["mock_pages"]["home"]
-            elif "failing_url" in multi_page_context and url == multi_page_context["failing_url"]:
+            elif (
+                "failing_url" in multi_page_context
+                and url == multi_page_context["failing_url"]
+            ):
                 return None  # Simulate failure
             elif url.endswith("/menu"):
                 return multi_page_context["mock_pages"]["menu"]
             elif url.endswith("/about"):
-                return multi_page_context["mock_pages"]["about"] 
+                return multi_page_context["mock_pages"]["about"]
             elif url.endswith("/contact"):
                 return multi_page_context["mock_pages"]["contact"]
             return None
-        
+
         mock_fetch.side_effect = mock_fetch_side_effect
-        
+
         # Set up page processing mock
         def mock_process_side_effect(url):
-            if "failing_url" in multi_page_context and url == multi_page_context["failing_url"]:
+            if (
+                "failing_url" in multi_page_context
+                and url == multi_page_context["failing_url"]
+            ):
                 return None  # Simulate processing failure
-            
+
             page_type = "unknown"
             if url.endswith("/menu"):
                 page_type = "menu"
-                data = multi_page_context["restaurant_data"].get("menu", RestaurantData(sources=["heuristic"]))
+                data = multi_page_context["restaurant_data"].get(
+                    "menu", RestaurantData(sources=["heuristic"])
+                )
             elif url.endswith("/about"):
                 page_type = "about"
-                data = multi_page_context["restaurant_data"].get("about", RestaurantData(sources=["heuristic"]))
+                data = multi_page_context["restaurant_data"].get(
+                    "about", RestaurantData(sources=["heuristic"])
+                )
             elif url.endswith("/contact"):
                 page_type = "contact"
-                data = multi_page_context["restaurant_data"].get("contact", RestaurantData(sources=["heuristic"]))
+                data = multi_page_context["restaurant_data"].get(
+                    "contact", RestaurantData(sources=["heuristic"])
+                )
             else:
                 page_type = "home"
-                data = multi_page_context["restaurant_data"].get("home", RestaurantData(sources=["heuristic"]))
-            
+                data = multi_page_context["restaurant_data"].get(
+                    "home", RestaurantData(sources=["heuristic"])
+                )
+
             return {"page_type": page_type, "data": data}
-        
+
         mock_process.side_effect = mock_process_side_effect
-        
+
         # Execute the scraping
         progress_callback = multi_page_context.get("progress_callback")
         result = scraper.scrape_website(base_url, progress_callback)
-        
+
         # Force aggregated data for testing
         if result.aggregated_data is None:
             result.aggregated_data = aggregated_data
-        
+
         multi_page_context["result"] = result
 
 
@@ -272,7 +291,7 @@ def should_discover_relevant_pages(multi_page_context):
     """Verify all relevant pages were discovered."""
     result = multi_page_context["result"]
     expected_urls = multi_page_context["urls"]
-    
+
     # Should have discovered all expected pages
     assert len(result.pages_processed) == len(expected_urls)
     for url in expected_urls:
@@ -283,7 +302,7 @@ def should_discover_relevant_pages(multi_page_context):
 def should_scrape_data_from_pages(multi_page_context):
     """Verify data was successfully scraped from pages."""
     result = multi_page_context["result"]
-    
+
     # Should have successful pages (excluding any that failed)
     if "failing_url" not in multi_page_context:
         assert len(result.successful_pages) == len(result.pages_processed)
@@ -295,7 +314,7 @@ def should_scrape_data_from_pages(multi_page_context):
 def should_aggregate_data(multi_page_context):
     """Verify data was aggregated from all pages."""
     result = multi_page_context["result"]
-    
+
     # Should have aggregated data
     assert result.aggregated_data is not None
     assert isinstance(result.aggregated_data, RestaurantData)
@@ -305,10 +324,10 @@ def should_aggregate_data(multi_page_context):
 def result_contains_all_page_info(multi_page_context):
     """Verify result contains information from all successful pages."""
     result = multi_page_context["result"]
-    
+
     # Should have restaurant name
     assert result.restaurant_name
-    
+
     # Should have data sources summary
     assert result.data_sources_summary is not None
 
@@ -318,7 +337,7 @@ def should_attempt_all_pages(multi_page_context):
     """Verify all discovered pages were attempted."""
     result = multi_page_context["result"]
     expected_urls = multi_page_context["urls"]
-    
+
     assert len(result.pages_processed) == len(expected_urls)
 
 
@@ -326,10 +345,10 @@ def should_attempt_all_pages(multi_page_context):
 def should_handle_failed_page(multi_page_context):
     """Verify failed page was handled gracefully."""
     result = multi_page_context["result"]
-    
+
     # Should have some failed pages
     assert len(result.failed_pages) > 0
-    
+
     # Should have continued processing other pages
     assert len(result.successful_pages) > 0
 
@@ -338,7 +357,7 @@ def should_handle_failed_page(multi_page_context):
 def should_process_remaining_pages(multi_page_context):
     """Verify remaining pages were processed successfully."""
     result = multi_page_context["result"]
-    
+
     # Should have successful pages (total - failed)
     expected_successful = len(multi_page_context["urls"]) - 1  # Minus the failing page
     assert len(result.successful_pages) == expected_successful
@@ -348,9 +367,9 @@ def should_process_remaining_pages(multi_page_context):
 def result_includes_success_failure_lists(multi_page_context):
     """Verify result includes both success and failure information."""
     result = multi_page_context["result"]
-    
-    assert hasattr(result, 'successful_pages')
-    assert hasattr(result, 'failed_pages')
+
+    assert hasattr(result, "successful_pages")
+    assert hasattr(result, "failed_pages")
     assert isinstance(result.successful_pages, list)
     assert isinstance(result.failed_pages, list)
 
@@ -359,10 +378,10 @@ def result_includes_success_failure_lists(multi_page_context):
 def aggregated_data_from_successful_only(multi_page_context):
     """Verify aggregated data only includes successful pages."""
     result = multi_page_context["result"]
-    
+
     # Should have aggregated data
     assert result.aggregated_data is not None
-    
+
     # Should not include data from failed pages
     failing_url = multi_page_context.get("failing_url")
     if failing_url:
@@ -373,7 +392,7 @@ def aggregated_data_from_successful_only(multi_page_context):
 def should_receive_discovery_notifications(multi_page_context):
     """Verify progress notifications for page discovery."""
     progress_calls = multi_page_context["progress_calls"]
-    
+
     # Should have received discovery notification
     discovery_messages = [call for call in progress_calls if "Discovered" in str(call)]
     assert len(discovery_messages) > 0
@@ -383,7 +402,7 @@ def should_receive_discovery_notifications(multi_page_context):
 def should_receive_page_progress_updates(multi_page_context):
     """Verify progress updates for page processing."""
     progress_calls = multi_page_context["progress_calls"]
-    
+
     # Should have progress updates
     assert len(progress_calls) > 1  # At least discovery + some progress
 
@@ -392,7 +411,7 @@ def should_receive_page_progress_updates(multi_page_context):
 def should_receive_completion_notifications(multi_page_context):
     """Verify completion notifications."""
     progress_calls = multi_page_context["progress_calls"]
-    
+
     # Should have completion notification
     completion_messages = [call for call in progress_calls if "Completed" in str(call)]
     assert len(completion_messages) > 0
@@ -402,7 +421,7 @@ def should_receive_completion_notifications(multi_page_context):
 def progress_includes_restaurant_and_page_info(multi_page_context):
     """Verify progress includes restaurant and page information."""
     progress_calls = multi_page_context["progress_calls"]
-    
+
     # Should have restaurant name in some messages
     has_restaurant_name = any("Restaurant" in str(call) for call in progress_calls)
     assert has_restaurant_name
@@ -412,8 +431,10 @@ def progress_includes_restaurant_and_page_info(multi_page_context):
 def result_contains_accurate_statistics(multi_page_context):
     """Verify final result has accurate statistics."""
     result = multi_page_context["result"]
-    
+
     # Should have processing statistics
     assert result.processing_time >= 0
     assert len(result.pages_processed) == len(multi_page_context["urls"])
-    assert len(result.successful_pages) + len(result.failed_pages) == len(result.pages_processed)
+    assert len(result.successful_pages) + len(result.failed_pages) == len(
+        result.pages_processed
+    )

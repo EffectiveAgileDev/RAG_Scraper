@@ -1308,17 +1308,14 @@ https://restaurant3.com
             # Initialize Advanced Progress Monitor session
             global advanced_monitor, active_scraper
             session_id = advanced_monitor.start_monitoring_session(
-                urls=urls, 
-                enable_real_time_updates=True
+                urls=urls, enable_real_time_updates=True
             )
-            
+
             # Enable advanced features
             advanced_monitor.enable_advanced_features(
-                time_estimation=True,
-                real_time_updates=True, 
-                error_notifications=True
+                time_estimation=True, real_time_updates=True, error_notifications=True
             )
-            
+
             # Enable multi-page monitoring if URLs suggest multi-page sites
             if any("menu" in url.lower() or "page" in url.lower() for url in urls):
                 advanced_monitor.enable_multipage_monitoring()
@@ -1326,17 +1323,24 @@ https://restaurant3.com
             # Progress callback that updates Advanced Progress Monitor
             def progress_callback(message, percentage=None, time_estimate=None):
                 global advanced_monitor, active_scraper
-                
+
                 # Update current operation
                 if message:
                     try:
                         from src.scraper.advanced_progress_monitor import OperationType
+
                         if "analyzing" in message.lower():
-                            advanced_monitor.set_current_operation(OperationType.ANALYZING_PAGE_STRUCTURE)
+                            advanced_monitor.set_current_operation(
+                                OperationType.ANALYZING_PAGE_STRUCTURE
+                            )
                         elif "extract" in message.lower():
-                            advanced_monitor.set_current_operation(OperationType.EXTRACTING_DATA)
+                            advanced_monitor.set_current_operation(
+                                OperationType.EXTRACTING_DATA
+                            )
                         elif "menu" in message.lower():
-                            advanced_monitor.set_current_operation(OperationType.PROCESSING_MENU_ITEMS)
+                            advanced_monitor.set_current_operation(
+                                OperationType.PROCESSING_MENU_ITEMS
+                            )
                     except:
                         pass  # Fall back gracefully if operation setting fails
 
@@ -1353,27 +1357,33 @@ https://restaurant3.com
 
             # Update Advanced Progress Monitor with completion data
             successful_urls = set()
-            
+
             # Track which URLs were successful (RestaurantData doesn't have source_url, so we track by result count)
             if result.successful_extractions:
                 # Assume first N URLs were successful where N = number of successful extractions
                 successful_count = min(len(result.successful_extractions), len(urls))
                 successful_urls = set(urls[:successful_count])
-            
+
             for i, url in enumerate(urls):
                 if url in successful_urls:
                     # Simulate processing time for successful URLs
-                    processing_time = 3.0 + (i * 0.5)  
-                    advanced_monitor.update_url_completion(url, processing_time, success=True)
+                    processing_time = 3.0 + (i * 0.5)
+                    advanced_monitor.update_url_completion(
+                        url, processing_time, success=True
+                    )
                 elif url in result.failed_urls:
                     # Add error notification for failed URLs
                     error_msg = "Failed to extract data"
-                    advanced_monitor.add_error_notification(url, "extraction_error", error_msg)
+                    advanced_monitor.add_error_notification(
+                        url, "extraction_error", error_msg
+                    )
                     advanced_monitor.update_url_completion(url, 1.0, success=False)
                 else:
                     # Default case for unprocessed URLs
                     processing_time = 2.0 + (i * 0.3)
-                    advanced_monitor.update_url_completion(url, processing_time, success=True)
+                    advanced_monitor.update_url_completion(
+                        url, processing_time, success=True
+                    )
 
             # Clear active scraper
             active_scraper = None
@@ -1443,7 +1453,7 @@ https://restaurant3.com
             # Get real-time progress from Advanced Progress Monitor
             current_status = advanced_monitor.get_current_status()
             ui_state = advanced_monitor.get_ui_state()
-            
+
             # Get additional monitoring data
             progress_data = {
                 "current_url": current_status.current_url,
@@ -1453,21 +1463,21 @@ https://restaurant3.com
                 "estimated_time_remaining": current_status.estimated_time_remaining,
                 "current_operation": current_status.current_operation,
                 "memory_usage_mb": current_status.memory_usage_mb,
-                "status": "processing" if advanced_monitor.active_session_id else "idle",
+                "status": "processing"
+                if advanced_monitor.active_session_id
+                else "idle",
                 "processing_time": len(advanced_monitor.url_processing_times),
-                
                 # Advanced monitoring features
                 "session_id": advanced_monitor.active_session_id,
                 "progress_bar_percentage": ui_state.get("progress_bar_percentage", 0),
                 "status_message": ui_state.get("status_message", "Ready"),
-                
                 # Multi-page progress if enabled
                 "page_progress": None,
                 "notifications": [],
                 "error_notifications": [],
-                "completion_events": []
+                "completion_events": [],
             }
-            
+
             # Add multi-page progress if session exists
             if advanced_monitor.active_session_id:
                 try:
@@ -1476,54 +1486,68 @@ https://restaurant3.com
                         progress_data["page_progress"] = {
                             "current_page": page_progress.current_page,
                             "total_pages": page_progress.total_pages,
-                            "progress_message": advanced_monitor.get_current_progress_message()
+                            "progress_message": advanced_monitor.get_current_progress_message(),
                         }
-                    
+
                     # Add notifications safely
-                    progress_data["notifications"] = advanced_monitor.get_page_notifications()[-5:]  # Last 5
-                    
+                    progress_data[
+                        "notifications"
+                    ] = advanced_monitor.get_page_notifications()[
+                        -5:
+                    ]  # Last 5
+
                     # Add error notifications safely
                     error_notifications = []
-                    for err in advanced_monitor.get_error_notifications()[-3:]:  # Last 3
+                    for err in advanced_monitor.get_error_notifications()[
+                        -3:
+                    ]:  # Last 3
                         try:
-                            error_notifications.append({
-                                "url": err.url,
-                                "error_type": err.error_type,
-                                "message": err.error_message,
-                                "timestamp": err.timestamp.isoformat()
-                            })
+                            error_notifications.append(
+                                {
+                                    "url": err.url,
+                                    "error_type": err.error_type,
+                                    "message": err.error_message,
+                                    "timestamp": err.timestamp.isoformat(),
+                                }
+                            )
                         except:
                             pass  # Skip malformed error notifications
                     progress_data["error_notifications"] = error_notifications
-                    
-                    progress_data["completion_events"] = advanced_monitor.get_completion_events()[-3:]  # Last 3
+
+                    progress_data[
+                        "completion_events"
+                    ] = advanced_monitor.get_completion_events()[
+                        -3:
+                    ]  # Last 3
                 except Exception as e:
                     # If there's an error getting advanced data, continue with basic data
                     pass
 
             return jsonify(progress_data)
-            
+
         except Exception as e:
             # Fallback to basic progress data
-            return jsonify({
-                "current_url": "",
-                "urls_completed": 0,
-                "urls_total": 0,
-                "progress_percentage": 0,
-                "estimated_time_remaining": 0,
-                "current_operation": "",
-                "memory_usage_mb": 0,
-                "status": "idle",
-                "processing_time": 0,
-                "session_id": None,
-                "progress_bar_percentage": 0,
-                "status_message": "Ready",
-                "page_progress": None,
-                "notifications": [],
-                "error_notifications": [],
-                "completion_events": [],
-                "error": str(e)
-            })
+            return jsonify(
+                {
+                    "current_url": "",
+                    "urls_completed": 0,
+                    "urls_total": 0,
+                    "progress_percentage": 0,
+                    "estimated_time_remaining": 0,
+                    "current_operation": "",
+                    "memory_usage_mb": 0,
+                    "status": "idle",
+                    "processing_time": 0,
+                    "session_id": None,
+                    "progress_bar_percentage": 0,
+                    "status_message": "Ready",
+                    "page_progress": None,
+                    "notifications": [],
+                    "error_notifications": [],
+                    "completion_events": [],
+                    "error": str(e),
+                }
+            )
 
     # File download endpoint
     @app.route("/api/download/<filename>")
@@ -1760,9 +1784,9 @@ def get_current_progress():
 
 if __name__ == "__main__":
     from src.config.app_config import get_app_config
-    
+
     app = create_app()
     config = get_app_config()
     config.host = "0.0.0.0"  # Override default for direct app.py execution
-    
+
     app.run(host=config.host, port=config.port, debug=config.debug)

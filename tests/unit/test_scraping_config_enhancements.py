@@ -19,9 +19,9 @@ class TestScrapingConfigEnhancements:
             max_pages_per_site=25,
             page_discovery_enabled=True,
             follow_pagination=True,
-            max_crawl_depth=3
+            max_crawl_depth=3,
         )
-        
+
         assert config.max_pages_per_site == 25
         assert config.page_discovery_enabled is True
         assert config.follow_pagination is True
@@ -31,32 +31,33 @@ class TestScrapingConfigEnhancements:
         """Test link pattern configuration structure."""
         link_patterns = {
             "include": ["/restaurants/.*", "/menu/.*"],
-            "exclude": [".*(login|signup).*", ".*\\.(jpg|png|gif|pdf)$"]
+            "exclude": [".*(login|signup).*", ".*\\.(jpg|png|gif|pdf)$"],
         }
-        
+
         config = ScrapingConfig(
-            urls=["https://example.com"],
-            link_patterns=link_patterns
+            urls=["https://example.com"], link_patterns=link_patterns
         )
-        
-        assert hasattr(config, 'link_patterns')
+
+        assert hasattr(config, "link_patterns")
         assert config.link_patterns["include"] == ["/restaurants/.*", "/menu/.*"]
-        assert config.link_patterns["exclude"] == [".*(login|signup).*", ".*\\.(jpg|png|gif|pdf)$"]
+        assert config.link_patterns["exclude"] == [
+            ".*(login|signup).*",
+            ".*\\.(jpg|png|gif|pdf)$",
+        ]
 
     def test_crawl_settings_configuration(self):
         """Test crawl settings configuration."""
         crawl_settings = {
             "max_crawl_depth": 3,
             "follow_pagination": True,
-            "respect_robots_txt": True
+            "respect_robots_txt": True,
         }
-        
+
         config = ScrapingConfig(
-            urls=["https://example.com"],
-            crawl_settings=crawl_settings
+            urls=["https://example.com"], crawl_settings=crawl_settings
         )
-        
-        assert hasattr(config, 'crawl_settings')
+
+        assert hasattr(config, "crawl_settings")
         assert config.crawl_settings["max_crawl_depth"] == 3
         assert config.crawl_settings["follow_pagination"] is True
         assert config.crawl_settings["respect_robots_txt"] is True
@@ -67,26 +68,25 @@ class TestScrapingConfigEnhancements:
             "restaurant1.com": {
                 "rate_limit": 1.0,
                 "max_pages": 50,
-                "user_agent": "RAG_Scraper/1.0 Polite"
+                "user_agent": "RAG_Scraper/1.0 Polite",
             },
             "restaurant2.com": {
                 "rate_limit": 3.0,
                 "max_pages": 20,
-                "user_agent": "RAG_Scraper/1.0 Fast"
+                "user_agent": "RAG_Scraper/1.0 Fast",
             },
             "default": {
                 "rate_limit": 2.0,
                 "max_pages": 10,
-                "user_agent": "RAG_Scraper/1.0"
-            }
+                "user_agent": "RAG_Scraper/1.0",
+            },
         }
-        
+
         config = ScrapingConfig(
-            urls=["https://example.com"],
-            per_domain_settings=per_domain_settings
+            urls=["https://example.com"], per_domain_settings=per_domain_settings
         )
-        
-        assert hasattr(config, 'per_domain_settings')
+
+        assert hasattr(config, "per_domain_settings")
         assert config.per_domain_settings["restaurant1.com"]["rate_limit"] == 1.0
         assert config.per_domain_settings["restaurant1.com"]["max_pages"] == 50
         assert config.per_domain_settings["default"]["rate_limit"] == 2.0
@@ -95,24 +95,15 @@ class TestScrapingConfigEnhancements:
         """Test validation ensures positive values for certain parameters."""
         # max_pages_per_site must be positive
         with pytest.raises(ValueError, match="must be positive"):
-            ScrapingConfig(
-                urls=["https://example.com"],
-                max_pages_per_site=-5
-            )
-        
+            ScrapingConfig(urls=["https://example.com"], max_pages_per_site=-5)
+
         # max_crawl_depth must be at least 1
         with pytest.raises(ValueError, match="must be at least 1"):
-            ScrapingConfig(
-                urls=["https://example.com"],
-                max_crawl_depth=0
-            )
-        
+            ScrapingConfig(urls=["https://example.com"], max_crawl_depth=0)
+
         # page_timeout must be positive
         with pytest.raises(ValueError, match="must be positive"):
-            ScrapingConfig(
-                urls=["https://example.com"],
-                page_timeout=-30
-            )
+            ScrapingConfig(urls=["https://example.com"], page_timeout=-30)
 
     def test_configuration_validation_link_patterns(self):
         """Test validation of link pattern configuration."""
@@ -122,8 +113,8 @@ class TestScrapingConfigEnhancements:
                 urls=["https://example.com"],
                 link_patterns={
                     "include": ["[invalid regex"],  # Missing closing bracket
-                    "exclude": []
-                }
+                    "exclude": [],
+                },
             )
 
     def test_configuration_validation_per_domain(self):
@@ -133,17 +124,14 @@ class TestScrapingConfigEnhancements:
             ScrapingConfig(
                 urls=["https://example.com"],
                 per_domain_settings={
-                    "example.com": {
-                        "rate_limit": -1.0,
-                        "max_pages": 10
-                    }
-                }
+                    "example.com": {"rate_limit": -1.0, "max_pages": 10}
+                },
             )
 
     def test_default_multi_page_configuration_values(self):
         """Test default values for multi-page configuration."""
         config = ScrapingConfig(urls=["https://example.com"])
-        
+
         # Check defaults
         assert config.max_pages_per_site == 10
         assert config.page_discovery_enabled is True
@@ -160,12 +148,12 @@ class TestScrapingConfigEnhancements:
             follow_pagination=True,
             link_patterns={
                 "include": ["/restaurants/.*"],
-                "exclude": [".*(login|signup).*"]
-            }
+                "exclude": [".*(login|signup).*"],
+            },
         )
-        
+
         config_dict = config.to_dict()
-        
+
         assert "max_crawl_depth" in config_dict
         assert config_dict["max_crawl_depth"] == 3
         assert "follow_pagination" in config_dict
@@ -180,14 +168,11 @@ class TestScrapingConfigEnhancements:
             "max_pages_per_site": 30,
             "max_crawl_depth": 4,
             "follow_pagination": True,
-            "link_patterns": {
-                "include": ["/menu/.*"],
-                "exclude": [".*\\.pdf$"]
-            }
+            "link_patterns": {"include": ["/menu/.*"], "exclude": [".*\\.pdf$"]},
         }
-        
+
         config = ScrapingConfig.from_dict(data)
-        
+
         assert config.max_pages_per_site == 30
         assert config.max_crawl_depth == 4
         assert config.follow_pagination is True
@@ -195,39 +180,33 @@ class TestScrapingConfigEnhancements:
 
     def test_save_and_load_enhanced_configuration(self):
         """Test saving and loading enhanced configuration."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             temp_file = f.name
-        
+
         try:
             # Create config with new properties
             original_config = ScrapingConfig(
                 urls=["https://example.com"],
                 max_crawl_depth=5,
                 follow_pagination=True,
-                link_patterns={
-                    "include": ["/reviews/.*"],
-                    "exclude": [".*\\.jpg$"]
-                },
+                link_patterns={"include": ["/reviews/.*"], "exclude": [".*\\.jpg$"]},
                 per_domain_settings={
-                    "example.com": {
-                        "rate_limit": 1.5,
-                        "max_pages": 25
-                    }
-                }
+                    "example.com": {"rate_limit": 1.5, "max_pages": 25}
+                },
             )
-            
+
             # Save to file
             original_config.save_to_file(temp_file)
-            
+
             # Load from file
             loaded_config = ScrapingConfig.load_from_file(temp_file)
-            
+
             # Verify loaded values
             assert loaded_config.max_crawl_depth == 5
             assert loaded_config.follow_pagination is True
             assert loaded_config.link_patterns["include"] == ["/reviews/.*"]
             assert loaded_config.per_domain_settings["example.com"]["rate_limit"] == 1.5
-            
+
         finally:
             if os.path.exists(temp_file):
                 os.unlink(temp_file)
@@ -235,10 +214,9 @@ class TestScrapingConfigEnhancements:
     def test_max_total_pages_configuration(self):
         """Test max total pages configuration."""
         config = ScrapingConfig(
-            urls=["https://example1.com", "https://example2.com"],
-            max_total_pages=100
+            urls=["https://example1.com", "https://example2.com"], max_total_pages=100
         )
-        
+
         assert config.max_total_pages == 100
 
     def test_should_follow_link_method(self):
@@ -247,18 +225,18 @@ class TestScrapingConfigEnhancements:
             urls=["https://example.com"],
             link_patterns={
                 "include": ["/restaurants/.*", "/menu/.*"],
-                "exclude": [".*(login|signup).*", ".*\\.(jpg|png|gif|pdf)$"]
-            }
+                "exclude": [".*(login|signup).*", ".*\\.(jpg|png|gif|pdf)$"],
+            },
         )
-        
+
         # Should follow matching include patterns
         assert config.should_follow_link("/restaurants/italian") is True
         assert config.should_follow_link("/menu/lunch") is True
-        
+
         # Should not follow excluded patterns
         assert config.should_follow_link("/user/login") is False
         assert config.should_follow_link("/images/food.jpg") is False
-        
+
         # Should not follow non-matching patterns
         assert config.should_follow_link("/about-us") is False
 
@@ -267,22 +245,16 @@ class TestScrapingConfigEnhancements:
         config = ScrapingConfig(
             urls=["https://example.com"],
             per_domain_settings={
-                "restaurant1.com": {
-                    "rate_limit": 1.0,
-                    "max_pages": 50
-                },
-                "default": {
-                    "rate_limit": 2.0,
-                    "max_pages": 10
-                }
-            }
+                "restaurant1.com": {"rate_limit": 1.0, "max_pages": 50},
+                "default": {"rate_limit": 2.0, "max_pages": 10},
+            },
         )
-        
+
         # Get specific domain settings
         settings = config.get_domain_settings("restaurant1.com")
         assert settings["rate_limit"] == 1.0
         assert settings["max_pages"] == 50
-        
+
         # Get default settings for unknown domain
         default_settings = config.get_domain_settings("unknown.com")
         assert default_settings["rate_limit"] == 2.0
@@ -293,37 +265,28 @@ class TestScrapingConfigEnhancements:
         config = ScrapingConfig(
             urls=["https://example.com"],
             page_timeout=45,
-            crawl_timeout=600  # 10 minutes for entire crawl
+            crawl_timeout=600,  # 10 minutes for entire crawl
         )
-        
+
         assert config.page_timeout == 45
         assert config.crawl_timeout == 600
 
     def test_concurrent_requests_configuration(self):
         """Test concurrent requests configuration."""
-        config = ScrapingConfig(
-            urls=["https://example.com"],
-            concurrent_requests=5
-        )
-        
+        config = ScrapingConfig(urls=["https://example.com"], concurrent_requests=5)
+
         assert config.concurrent_requests == 5
-        
+
         # Test validation
         with pytest.raises(ValueError, match="must be at least 1"):
-            ScrapingConfig(
-                urls=["https://example.com"],
-                concurrent_requests=0
-            )
+            ScrapingConfig(urls=["https://example.com"], concurrent_requests=0)
 
     def test_respect_robots_txt_configuration(self):
         """Test robots.txt respect configuration."""
-        config = ScrapingConfig(
-            urls=["https://example.com"],
-            respect_robots_txt=False
-        )
-        
+        config = ScrapingConfig(urls=["https://example.com"], respect_robots_txt=False)
+
         assert config.respect_robots_txt is False
-        
+
         # Default should be True
         default_config = ScrapingConfig(urls=["https://example.com"])
         assert default_config.respect_robots_txt is True

@@ -26,7 +26,7 @@ def json_export_context():
         "generated_files": [],
         "json_content": None,
         "field_selection": None,
-        "output_directory": None
+        "output_directory": None,
     }
 
 
@@ -44,9 +44,12 @@ def rich_restaurant_data():
             menu_items={
                 "appetizers": ["Calamari", "Bruschetta"],
                 "mains": ["Pasta Primavera", "Grilled Salmon"],
-                "desserts": ["Tiramisu", "Chocolate Cake"]
+                "desserts": ["Tiramisu", "Chocolate Cake"],
             },
-            social_media=["https://facebook.com/richrestaurant", "https://twitter.com/richrest"]
+            social_media=[
+                "https://facebook.com/richrestaurant",
+                "https://twitter.com/richrest",
+            ],
         ),
         RestaurantData(
             name="Comprehensive Cafe",
@@ -57,10 +60,10 @@ def rich_restaurant_data():
             price_range="$$",
             menu_items={
                 "breakfast": ["Pancakes", "Omelet"],
-                "lunch": ["Burgers", "Salads"]
+                "lunch": ["Burgers", "Salads"],
             },
-            social_media=["https://instagram.com/comprehensivecafe"]
-        )
+            social_media=["https://instagram.com/comprehensivecafe"],
+        ),
     ]
 
 
@@ -79,7 +82,11 @@ def access_export_format_interface(json_export_context):
 
 
 # Scenario: JSON export format selection and generation
-@given(parsers.parse("I have {count:d} valid restaurant website URLs with comprehensive data"))
+@given(
+    parsers.parse(
+        "I have {count:d} valid restaurant website URLs with comprehensive data"
+    )
+)
 def have_restaurant_urls_with_data(json_export_context, rich_restaurant_data, count):
     """Set up restaurant data."""
     # Use the rich data up to the requested count
@@ -99,46 +106,50 @@ def execute_scraping_process(json_export_context):
     """Execute scraping and JSON generation."""
     generator = json_export_context["json_generator"]
     restaurant_data = json_export_context["restaurant_data"]
-    
+
     # Convert RestaurantData to dictionaries
     restaurant_dicts = []
     for restaurant in restaurant_data:
         restaurant_dict = {
-            'name': restaurant.name,
-            'address': restaurant.address,
-            'phone': restaurant.phone,
-            'hours': restaurant.hours,
-            'website': getattr(restaurant, 'website', None),
-            'cuisine_types': [restaurant.cuisine] if restaurant.cuisine else [],
-            'special_features': getattr(restaurant, 'special_features', []),
-            'parking': getattr(restaurant, 'parking', None),
-            'reservations': getattr(restaurant, 'reservations', None),
-            'menu_items': list(restaurant.menu_items.keys()) if restaurant.menu_items else [],
-            'pricing': restaurant.price_range,
-            'email': getattr(restaurant, 'email', None),
-            'social_media': restaurant.social_media,
-            'delivery_options': getattr(restaurant, 'delivery_options', []),
-            'dietary_accommodations': getattr(restaurant, 'dietary_accommodations', []),
-            'ambiance': getattr(restaurant, 'ambiance', None)
+            "name": restaurant.name,
+            "address": restaurant.address,
+            "phone": restaurant.phone,
+            "hours": restaurant.hours,
+            "website": getattr(restaurant, "website", None),
+            "cuisine_types": [restaurant.cuisine] if restaurant.cuisine else [],
+            "special_features": getattr(restaurant, "special_features", []),
+            "parking": getattr(restaurant, "parking", None),
+            "reservations": getattr(restaurant, "reservations", None),
+            "menu_items": list(restaurant.menu_items.keys())
+            if restaurant.menu_items
+            else [],
+            "pricing": restaurant.price_range,
+            "email": getattr(restaurant, "email", None),
+            "social_media": restaurant.social_media,
+            "delivery_options": getattr(restaurant, "delivery_options", []),
+            "dietary_accommodations": getattr(restaurant, "dietary_accommodations", []),
+            "ambiance": getattr(restaurant, "ambiance", None),
         }
         restaurant_dicts.append(restaurant_dict)
-    
+
     # Create persistent temp directory for testing
     temp_dir = tempfile.mkdtemp()
     json_export_context["output_directory"] = temp_dir
     output_path = os.path.join(temp_dir, "test_export.json")
-    
+
     # Apply field selection if configured
     field_selection = None
     if json_export_context["format_manager"]:
         config = json_export_context["format_manager"].get_format_configuration("json")
         field_selection = config.get("field_selection")
-    
-    result = generator.generate_json_file(restaurant_dicts, output_path, field_selection=field_selection)
-    
+
+    result = generator.generate_json_file(
+        restaurant_dicts, output_path, field_selection=field_selection
+    )
+
     if result["success"]:
         # Read the generated JSON content
-        with open(output_path, 'r') as f:
+        with open(output_path, "r") as f:
             json_export_context["json_content"] = json.load(f)
         json_export_context["generated_files"] = [output_path]
 
@@ -158,9 +169,9 @@ def verify_all_restaurant_info(json_export_context):
     json_content = json_export_context["json_content"]
     restaurants = json_content["restaurants"]
     original_data = json_export_context["restaurant_data"]
-    
+
     assert len(restaurants) == len(original_data)
-    
+
     # Verify first restaurant has required fields
     first_restaurant = restaurants[0]
     assert "basic_info" in first_restaurant
@@ -171,12 +182,12 @@ def verify_all_restaurant_info(json_export_context):
 def verify_json_structure_valid(json_export_context):
     """Verify JSON structure validity."""
     json_content = json_export_context["json_content"]
-    
+
     # Should have metadata
     assert "metadata" in json_content
     assert "generation_timestamp" in json_content["metadata"]
     assert "restaurant_count" in json_content["metadata"]
-    
+
     # Should have restaurants array
     assert "restaurants" in json_content
     assert isinstance(json_content["restaurants"], list)
@@ -194,7 +205,9 @@ def verify_json_saved_to_directory(json_export_context):
 @given("I have a restaurant website URL with rich data content")
 def have_rich_data_url(json_export_context, rich_restaurant_data):
     """Set up rich restaurant data."""
-    json_export_context["restaurant_data"] = rich_restaurant_data[:1]  # Single rich restaurant
+    json_export_context["restaurant_data"] = rich_restaurant_data[
+        :1
+    ]  # Single rich restaurant
 
 
 @given("all field extraction options are enabled")
@@ -202,24 +215,26 @@ def enable_all_field_extraction(json_export_context):
     """Enable all field extraction options."""
     manager = json_export_context["format_manager"]
     field_selection = {
-        'core_fields': True,
-        'extended_fields': True,
-        'additional_fields': True,
-        'contact_fields': True,
-        'descriptive_fields': True
+        "core_fields": True,
+        "extended_fields": True,
+        "additional_fields": True,
+        "contact_fields": True,
+        "descriptive_fields": True,
     }
     result = manager.select_format("json", field_selection=field_selection)
     assert result["success"] is True
     json_export_context["field_selection"] = field_selection
 
 
-@then("the generated JSON should contain core fields: name, address, phone, hours, website")
+@then(
+    "the generated JSON should contain core fields: name, address, phone, hours, website"
+)
 def verify_core_fields_present(json_export_context):
     """Verify core fields are present in JSON."""
     json_content = json_export_context["json_content"]
     restaurant = json_content["restaurants"][0]
     basic_info = restaurant["basic_info"]
-    
+
     assert "name" in basic_info
     assert "address" in basic_info
     assert "phone" in basic_info
@@ -227,49 +242,57 @@ def verify_core_fields_present(json_export_context):
     assert "website" in basic_info
 
 
-@then("the JSON should contain extended fields: cuisine types, special features, parking information")
+@then(
+    "the JSON should contain extended fields: cuisine types, special features, parking information"
+)
 def verify_extended_fields_present(json_export_context):
     """Verify extended fields are present in JSON."""
     json_content = json_export_context["json_content"]
     restaurant = json_content["restaurants"][0]
     additional_details = restaurant["additional_details"]
-    
+
     assert "cuisine_types" in additional_details
     assert "special_features" in additional_details
     assert "parking" in additional_details
 
 
-@then("the JSON should contain additional fields: reservation information, featured menu items, pricing specials")
+@then(
+    "the JSON should contain additional fields: reservation information, featured menu items, pricing specials"
+)
 def verify_additional_fields_present(json_export_context):
     """Verify additional fields are present in JSON."""
     json_content = json_export_context["json_content"]
     restaurant = json_content["restaurants"][0]
     additional_details = restaurant["additional_details"]
-    
+
     assert "reservations" in additional_details
     assert "menu_items" in additional_details
     assert "pricing" in additional_details
 
 
-@then("the JSON should contain contact fields: email addresses, social media links, delivery options")
+@then(
+    "the JSON should contain contact fields: email addresses, social media links, delivery options"
+)
 def verify_contact_fields_present(json_export_context):
     """Verify contact fields are present in JSON."""
     json_content = json_export_context["json_content"]
     restaurant = json_content["restaurants"][0]
     contact_info = restaurant["contact_info"]
-    
+
     assert "email" in contact_info
     assert "social_media" in contact_info
     assert "delivery_options" in contact_info
 
 
-@then("the JSON should contain descriptive fields: dietary accommodations, ambiance descriptions")
+@then(
+    "the JSON should contain descriptive fields: dietary accommodations, ambiance descriptions"
+)
 def verify_descriptive_fields_present(json_export_context):
     """Verify descriptive fields are present in JSON."""
     json_content = json_export_context["json_content"]
     restaurant = json_content["restaurants"][0]
     characteristics = restaurant["characteristics"]
-    
+
     assert "dietary_accommodations" in characteristics
     assert "ambiance" in characteristics
 
@@ -280,30 +303,32 @@ def configure_limited_field_selection(json_export_context):
     """Configure limited field selection."""
     manager = json_export_context["format_manager"]
     field_selection = {
-        'core_fields': True,
-        'extended_fields': False,
-        'additional_fields': False,
-        'contact_fields': True,
-        'descriptive_fields': False
+        "core_fields": True,
+        "extended_fields": False,
+        "additional_fields": False,
+        "contact_fields": True,
+        "descriptive_fields": False,
     }
     result = manager.select_format("json", field_selection=field_selection)
     assert result["success"] is True
     json_export_context["field_selection"] = field_selection
 
 
-@then("the generated JSON should contain only: name, address, phone, hours, website, email, social media")
+@then(
+    "the generated JSON should contain only: name, address, phone, hours, website, email, social media"
+)
 def verify_limited_fields_only(json_export_context):
     """Verify only selected fields are present."""
     json_content = json_export_context["json_content"]
     restaurant = json_content["restaurants"][0]
-    
+
     # Should have basic info (core fields)
     basic_info = restaurant["basic_info"]
     assert "name" in basic_info
     assert "address" in basic_info
     assert "phone" in basic_info
     assert "hours" in basic_info
-    
+
     # Should have contact info
     contact_info = restaurant["contact_info"]
     assert "email" in contact_info
@@ -315,23 +340,29 @@ def verify_excluded_fields_absent(json_export_context):
     """Verify excluded fields are not present or are empty."""
     json_content = json_export_context["json_content"]
     restaurant = json_content["restaurants"][0]
-    
+
     # Extended fields should be empty/minimal
     additional_details = restaurant["additional_details"]
-    assert additional_details["cuisine_types"] == [] or len(additional_details["cuisine_types"]) == 0
-    assert additional_details["special_features"] == [] or len(additional_details["special_features"]) == 0
+    assert (
+        additional_details["cuisine_types"] == []
+        or len(additional_details["cuisine_types"]) == 0
+    )
+    assert (
+        additional_details["special_features"] == []
+        or len(additional_details["special_features"]) == 0
+    )
 
 
 @then("the JSON structure should remain valid with selected fields only")
 def verify_structure_valid_with_selection(json_export_context):
     """Verify JSON structure remains valid with field selection."""
     json_content = json_export_context["json_content"]
-    
+
     # Should still have proper structure
     assert "metadata" in json_content
     assert "restaurants" in json_content
     assert len(json_content["restaurants"]) > 0
-    
+
     # Each restaurant should have the expected sections
     restaurant = json_content["restaurants"][0]
     assert "basic_info" in restaurant
@@ -356,7 +387,7 @@ def generate_json_export_file(json_export_context):
 def verify_structured_format(json_export_context):
     """Verify JSON has structured format with nested objects."""
     json_content = json_export_context["json_content"]
-    
+
     # Should have nested structure
     restaurant = json_content["restaurants"][0]
     assert isinstance(restaurant["basic_info"], dict)
@@ -378,7 +409,7 @@ def verify_restaurant_objects_structured(json_export_context):
     """Verify each restaurant is properly structured."""
     json_content = json_export_context["json_content"]
     restaurants = json_content["restaurants"]
-    
+
     for restaurant in restaurants:
         assert isinstance(restaurant, dict)
         assert "basic_info" in restaurant
@@ -392,12 +423,12 @@ def verify_logical_field_groupings(json_export_context):
     """Verify fields are logically grouped."""
     json_content = json_export_context["json_content"]
     restaurant = json_content["restaurants"][0]
-    
+
     # Basic info should contain core restaurant data
     basic_info = restaurant["basic_info"]
     assert "name" in basic_info
     assert "address" in basic_info
-    
+
     # Contact info should contain communication data
     contact_info = restaurant["contact_info"]
     assert "social_media" in contact_info
@@ -407,13 +438,13 @@ def verify_logical_field_groupings(json_export_context):
 def verify_json_schema_validation(json_export_context):
     """Verify JSON passes schema validation."""
     json_content = json_export_context["json_content"]
-    
+
     # Basic schema validation - proper structure exists
     assert isinstance(json_content, dict)
     assert "metadata" in json_content
     assert "restaurants" in json_content
     assert isinstance(json_content["restaurants"], list)
-    
+
     # Metadata should have required fields
     metadata = json_content["metadata"]
     assert "generation_timestamp" in metadata
@@ -423,14 +454,21 @@ def verify_json_schema_validation(json_export_context):
 
 # Missing step definitions for remaining scenarios
 
+
 @given("I have a restaurant website URL with comprehensive data")
 def have_comprehensive_data_url(json_export_context, rich_restaurant_data):
     """Set up comprehensive restaurant data."""
     json_export_context["restaurant_data"] = rich_restaurant_data[:1]
 
 
-@given(parsers.parse("I have {count:d} restaurant website URLs with varying data completeness"))
-def have_varying_data_completeness_urls(json_export_context, rich_restaurant_data, count):
+@given(
+    parsers.parse(
+        "I have {count:d} restaurant website URLs with varying data completeness"
+    )
+)
+def have_varying_data_completeness_urls(
+    json_export_context, rich_restaurant_data, count
+):
     """Set up restaurants with varying data completeness."""
     # Create restaurants with varying completeness
     restaurants = rich_restaurant_data[:count]
@@ -451,7 +489,7 @@ def have_incomplete_malformed_data(json_export_context):
             phone="invalid-phone",  # Malformed phone
             hours="",  # Missing hours
             cuisine="",  # Missing cuisine
-            price_range=""  # Missing price range
+            price_range="",  # Missing price range
         )
     ]
     json_export_context["restaurant_data"] = incomplete_data
@@ -473,7 +511,7 @@ def have_batch_processing_urls(json_export_context, rich_restaurant_data, count)
             cuisine=base_restaurant.cuisine,
             price_range=base_restaurant.price_range,
             menu_items=base_restaurant.menu_items,
-            social_media=base_restaurant.social_media
+            social_media=base_restaurant.social_media,
         )
         restaurants.append(restaurant)
     json_export_context["restaurant_data"] = restaurants
@@ -507,7 +545,7 @@ def verify_restaurants_as_separate_objects(json_export_context):
     """Verify each restaurant is a separate object."""
     json_content = json_export_context["json_content"]
     restaurants = json_content["restaurants"]
-    
+
     for restaurant in restaurants:
         assert isinstance(restaurant, dict)
         assert "basic_info" in restaurant
@@ -518,7 +556,7 @@ def verify_missing_fields_handled(json_export_context):
     """Verify missing fields are handled appropriately."""
     json_content = json_export_context["json_content"]
     restaurants = json_content["restaurants"]
-    
+
     # Should have appropriate handling for missing/empty fields
     for restaurant in restaurants:
         basic_info = restaurant["basic_info"]
@@ -533,7 +571,7 @@ def verify_consistent_structure(json_export_context):
     """Verify consistent JSON structure across all restaurants."""
     json_content = json_export_context["json_content"]
     restaurants = json_content["restaurants"]
-    
+
     # All restaurants should have the same structure
     if len(restaurants) > 1:
         first_keys = set(restaurants[0].keys())
@@ -555,7 +593,7 @@ def verify_invalid_data_sanitized(json_export_context):
     """Verify invalid data is sanitized."""
     json_content = json_export_context["json_content"]
     restaurants = json_content["restaurants"]
-    
+
     # Check that the structure is maintained even with invalid input
     for restaurant in restaurants:
         assert isinstance(restaurant, dict)
@@ -566,7 +604,7 @@ def verify_invalid_data_sanitized(json_export_context):
 def verify_json_valid_with_incomplete_data(json_export_context):
     """Verify JSON remains valid with incomplete data."""
     json_content = json_export_context["json_content"]
-    
+
     # Should still have valid JSON structure
     assert "metadata" in json_content
     assert "restaurants" in json_content
@@ -577,7 +615,7 @@ def verify_json_valid_with_incomplete_data(json_export_context):
 def verify_errors_logged_not_in_output(json_export_context):
     """Verify errors are logged but not in JSON output."""
     json_content = json_export_context["json_content"]
-    
+
     # JSON should not contain error information
     assert "errors" not in json_content
     assert "warnings" not in json_content
@@ -616,14 +654,19 @@ def verify_acceptable_memory_usage(json_export_context):
 def verify_efficient_structure(json_export_context):
     """Verify JSON structure is efficient for parsing."""
     json_content = json_export_context["json_content"]
-    
+
     # Should have logical structure that's easy to parse
     assert "restaurants" in json_content
     assert isinstance(json_content["restaurants"], list)
-    
+
     # Each restaurant should have consistent structure
     if json_content["restaurants"]:
         restaurant = json_content["restaurants"][0]
-        expected_sections = ["basic_info", "additional_details", "contact_info", "characteristics"]
+        expected_sections = [
+            "basic_info",
+            "additional_details",
+            "contact_info",
+            "characteristics",
+        ]
         for section in expected_sections:
             assert section in restaurant

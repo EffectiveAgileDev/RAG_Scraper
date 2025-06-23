@@ -9,7 +9,7 @@ from difflib import SequenceMatcher
 @dataclass
 class RestaurantEntity:
     """Enhanced entity representation for multi-page restaurant data."""
-    
+
     entity_id: str
     name: str
     url: str
@@ -17,7 +17,7 @@ class RestaurantEntity:
     data: Dict[str, Any] = field(default_factory=dict)
     source_info: Optional[Dict[str, Any]] = None
     relationships: List[str] = field(default_factory=list)
-    
+
     def is_valid(self) -> bool:
         """Validate entity has required fields."""
         if not self.entity_id or not self.entity_id.strip():
@@ -29,25 +29,27 @@ class RestaurantEntity:
         if not self.entity_type or not self.entity_type.strip():
             return False
         return True
-    
-    def calculate_similarity(self, other: 'RestaurantEntity') -> float:
+
+    def calculate_similarity(self, other: "RestaurantEntity") -> float:
         """Calculate similarity with another entity (0.0 to 1.0)."""
         if not isinstance(other, RestaurantEntity):
             return 0.0
-        
+
         # Name similarity (weight: 0.4)
         name_sim = SequenceMatcher(None, self.name.lower(), other.name.lower()).ratio()
-        
+
         # URL similarity (weight: 0.3)
         url_sim = SequenceMatcher(None, self.url.lower(), other.url.lower()).ratio()
-        
+
         # Address similarity if available (weight: 0.3)
         addr_sim = 0.0
         self_addr = self.data.get("address", "")
         other_addr = other.data.get("address", "")
         if self_addr and other_addr:
-            addr_sim = SequenceMatcher(None, self_addr.lower(), other_addr.lower()).ratio()
-        
+            addr_sim = SequenceMatcher(
+                None, self_addr.lower(), other_addr.lower()
+            ).ratio()
+
         # Weighted average
         total_sim = (name_sim * 0.4) + (url_sim * 0.3) + (addr_sim * 0.3)
         return min(1.0, max(0.0, total_sim))
@@ -56,49 +58,51 @@ class RestaurantEntity:
 @dataclass
 class EntityRelationship:
     """Represents relationship between two entities."""
-    
+
     parent_id: str
     child_id: str
     relationship_type: str  # parent_child, has_menu, has_contact, etc.
     strength: float = 1.0  # 0.0 to 1.0
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def __post_init__(self):
         """Validate relationship after initialization."""
         if not 0.0 <= self.strength <= 1.0:
-            raise ValueError(f"Relationship strength must be between 0.0 and 1.0, got {self.strength}")
-    
+            raise ValueError(
+                f"Relationship strength must be between 0.0 and 1.0, got {self.strength}"
+            )
+
     def is_valid(self) -> bool:
         """Validate relationship has required fields."""
         return (
-            bool(self.parent_id and self.parent_id.strip()) and
-            bool(self.child_id and self.child_id.strip()) and
-            bool(self.relationship_type and self.relationship_type.strip()) and
-            0.0 <= self.strength <= 1.0
+            bool(self.parent_id and self.parent_id.strip())
+            and bool(self.child_id and self.child_id.strip())
+            and bool(self.relationship_type and self.relationship_type.strip())
+            and 0.0 <= self.strength <= 1.0
         )
 
 
 @dataclass
 class HierarchicalNode:
     """Node in a hierarchical data structure."""
-    
+
     entity: RestaurantEntity
-    parent: Optional['HierarchicalNode'] = None
-    children: List['HierarchicalNode'] = field(default_factory=list)
-    
+    parent: Optional["HierarchicalNode"] = None
+    children: List["HierarchicalNode"] = field(default_factory=list)
+
     def get_depth(self) -> int:
         """Get depth of this node in the hierarchy."""
         if self.parent is None:
             return 0
         return self.parent.get_depth() + 1
-    
-    def add_child(self, child: 'HierarchicalNode') -> None:
+
+    def add_child(self, child: "HierarchicalNode") -> None:
         """Add a child node."""
         child.parent = self
         if child not in self.children:
             self.children.append(child)
-    
-    def get_all_descendants(self) -> List['HierarchicalNode']:
+
+    def get_all_descendants(self) -> List["HierarchicalNode"]:
         """Get all descendant nodes."""
         descendants = []
         for child in self.children:
@@ -454,24 +458,26 @@ class DataAggregator:
         summary["fields_found"] = list(summary["fields_found"])
 
         return summary
-    
+
     # Enhanced methods for entity-based aggregation
-    
-    def aggregate_entities(self, entities: List[RestaurantEntity]) -> List[RestaurantEntity]:
+
+    def aggregate_entities(
+        self, entities: List[RestaurantEntity]
+    ) -> List[RestaurantEntity]:
         """Aggregate entities by consolidating similar ones.
-        
+
         Args:
             entities: List of RestaurantEntity objects to aggregate
-            
+
         Returns:
             List of aggregated entities
         """
         if not entities:
             return []
-        
+
         # Group entities by name similarity
         groups = self._group_entities_by_similarity(entities)
-        
+
         # Aggregate each group
         aggregated = []
         for group in groups:
@@ -480,45 +486,48 @@ class DataAggregator:
             else:
                 merged_entity = self._merge_entity_group(group)
                 aggregated.append(merged_entity)
-        
+
         return aggregated
-    
-    def aggregate_with_relationships(self, entities: List[RestaurantEntity], 
-                                   relationships: List[EntityRelationship]) -> List[RestaurantEntity]:
+
+    def aggregate_with_relationships(
+        self, entities: List[RestaurantEntity], relationships: List[EntityRelationship]
+    ) -> List[RestaurantEntity]:
         """Aggregate entities while preserving relationships.
-        
+
         Args:
             entities: List of entities to aggregate
             relationships: List of relationships between entities
-            
+
         Returns:
             List of aggregated entities with relationship metadata
         """
         # First aggregate entities
         aggregated_entities = self.aggregate_entities(entities)
-        
+
         # Add relationship information to entities
         relationship_map = self._build_relationship_map(relationships)
-        
+
         for entity in aggregated_entities:
             if entity.entity_id in relationship_map:
                 entity.relationships = relationship_map[entity.entity_id]
                 entity.data["relationships"] = relationship_map[entity.entity_id]
-        
+
         return aggregated_entities
-    
-    def deduplicate_entities(self, entities: List[RestaurantEntity]) -> List[RestaurantEntity]:
+
+    def deduplicate_entities(
+        self, entities: List[RestaurantEntity]
+    ) -> List[RestaurantEntity]:
         """Remove duplicate entities based on URL and name similarity.
-        
+
         Args:
             entities: List of entities to deduplicate
-            
+
         Returns:
             List of unique entities with merged data
         """
         if not entities:
             return []
-        
+
         # Group by exact URL first
         url_groups = {}
         for entity in entities:
@@ -526,7 +535,7 @@ class DataAggregator:
             if url not in url_groups:
                 url_groups[url] = []
             url_groups[url].append(entity)
-        
+
         # Merge entities with same URL
         url_merged = []
         for url, group in url_groups.items():
@@ -535,27 +544,28 @@ class DataAggregator:
             else:
                 merged = self._merge_entity_group(group)
                 url_merged.append(merged)
-        
+
         # Now check for name similarity across different URLs
         return self._deduplicate_by_name_similarity(url_merged)
-    
-    def merge_entities(self, entities: List[RestaurantEntity], 
-                      strategy: str = "priority") -> RestaurantEntity:
+
+    def merge_entities(
+        self, entities: List[RestaurantEntity], strategy: str = "priority"
+    ) -> RestaurantEntity:
         """Merge multiple entities into one using specified strategy.
-        
+
         Args:
             entities: List of entities to merge
             strategy: Merging strategy ('priority', 'max_value', 'latest')
-            
+
         Returns:
             Merged entity
         """
         if not entities:
             raise ValueError("Cannot merge empty entity list")
-        
+
         if len(entities) == 1:
             return entities[0]
-        
+
         # Use first entity as base
         merged = RestaurantEntity(
             entity_id=entities[0].entity_id,
@@ -563,9 +573,9 @@ class DataAggregator:
             url=entities[0].url,
             entity_type=entities[0].entity_type,
             data={},
-            source_info=entities[0].source_info
+            source_info=entities[0].source_info,
         )
-        
+
         # Apply merging strategy
         if strategy == "max_value":
             merged.data = self._merge_data_max_value(entities)
@@ -573,7 +583,7 @@ class DataAggregator:
             merged.data = self._merge_data_latest(entities)
         else:  # priority strategy
             merged.data = self._merge_data_priority(entities)
-        
+
         # Preserve source information
         sources = []
         for entity in entities:
@@ -581,29 +591,31 @@ class DataAggregator:
                 sources.append(entity.source_info)
         if sources:
             merged.data["sources"] = sources
-        
+
         return merged
-    
-    def create_hierarchical_structure(self, entities: List[RestaurantEntity]) -> List[RestaurantEntity]:
+
+    def create_hierarchical_structure(
+        self, entities: List[RestaurantEntity]
+    ) -> List[RestaurantEntity]:
         """Create hierarchical structure from flat entity list.
-        
+
         Args:
             entities: List of entities to organize hierarchically
-            
+
         Returns:
             List of entities organized in hierarchical order
         """
         # Sort by level if available
         sorted_entities = sorted(entities, key=lambda e: e.data.get("level", 0))
-        
+
         # Create nodes and maintain hierarchy
         nodes = {}
         root_nodes = []
-        
+
         for entity in sorted_entities:
             node = HierarchicalNode(entity=entity)
             nodes[entity.entity_id] = node
-            
+
             # Check if this entity has a parent
             parent_id = entity.data.get("parent")
             if parent_id and parent_id in nodes:
@@ -611,66 +623,68 @@ class DataAggregator:
                 parent_node.add_child(node)
             else:
                 root_nodes.append(node)
-        
+
         # Convert back to entity list maintaining hierarchy
         result = []
         for root in root_nodes:
             result.append(root.entity)
             result.extend([desc.entity for desc in root.get_all_descendants()])
-        
+
         return result
-    
-    def create_cross_reference_mapping(self, entities: List[RestaurantEntity], 
-                                     relationships: List[EntityRelationship]) -> Dict[str, List[str]]:
+
+    def create_cross_reference_mapping(
+        self, entities: List[RestaurantEntity], relationships: List[EntityRelationship]
+    ) -> Dict[str, List[str]]:
         """Create cross-reference mapping between entities.
-        
+
         Args:
             entities: List of entities
             relationships: List of relationships
-            
+
         Returns:
             Dictionary mapping entity IDs to related entity IDs
         """
         cross_refs = {}
-        
+
         # Initialize all entity IDs
         for entity in entities:
             cross_refs[entity.entity_id] = []
-        
+
         # Add relationships
         for rel in relationships:
             if rel.parent_id in cross_refs:
                 cross_refs[rel.parent_id].append(rel.child_id)
             if rel.child_id in cross_refs:
                 cross_refs[rel.child_id].append(rel.parent_id)
-        
+
         return cross_refs
-    
-    def _group_entities_by_similarity(self, entities: List[RestaurantEntity], 
-                                    threshold: float = 0.8) -> List[List[RestaurantEntity]]:
+
+    def _group_entities_by_similarity(
+        self, entities: List[RestaurantEntity], threshold: float = 0.8
+    ) -> List[List[RestaurantEntity]]:
         """Group entities by name similarity.
-        
+
         Args:
             entities: List of entities to group
             threshold: Similarity threshold for grouping
-            
+
         Returns:
             List of entity groups
         """
         groups = []
         used = set()
-        
+
         for i, entity in enumerate(entities):
             if i in used:
                 continue
-            
+
             group = [entity]
             used.add(i)
-            
-            for j, other in enumerate(entities[i+1:], i+1):
+
+            for j, other in enumerate(entities[i + 1 :], i + 1):
                 if j in used:
                     continue
-                
+
                 # Check for exact name match first (higher priority)
                 if entity.name.strip().lower() == other.name.strip().lower():
                     group.append(other)
@@ -681,211 +695,230 @@ class DataAggregator:
                     if similarity >= threshold:
                         group.append(other)
                         used.add(j)
-            
+
             groups.append(group)
-        
+
         return groups
-    
+
     def _merge_entity_group(self, entities: List[RestaurantEntity]) -> RestaurantEntity:
         """Merge a group of similar entities.
-        
+
         Args:
             entities: List of entities to merge
-            
+
         Returns:
             Merged entity
         """
         if not entities:
             raise ValueError("Cannot merge empty entity group")
-        
+
         if len(entities) == 1:
             return entities[0]
-        
+
         # Use entity with most complete data as base
         base_entity = max(entities, key=lambda e: len(e.data))
-        
+
         merged = RestaurantEntity(
             entity_id=base_entity.entity_id,
             name=base_entity.name,
             url=base_entity.url,
             entity_type=base_entity.entity_type,
             data={},
-            source_info=base_entity.source_info
+            source_info=base_entity.source_info,
         )
-        
+
         # Merge all data
         merged.data = self._merge_data_priority(entities)
-        
+
         return merged
-    
-    def _build_relationship_map(self, relationships: List[EntityRelationship]) -> Dict[str, List[str]]:
+
+    def _build_relationship_map(
+        self, relationships: List[EntityRelationship]
+    ) -> Dict[str, List[str]]:
         """Build mapping of entity IDs to their relationships.
-        
+
         Args:
             relationships: List of relationships
-            
+
         Returns:
             Dictionary mapping entity IDs to relationship info
         """
         rel_map = {}
-        
+
         for rel in relationships:
             # Add to parent
             if rel.parent_id not in rel_map:
                 rel_map[rel.parent_id] = []
-            rel_map[rel.parent_id].append({
-                "type": rel.relationship_type,
-                "target": rel.child_id,
-                "strength": rel.strength,
-                "role": "parent"
-            })
-            
+            rel_map[rel.parent_id].append(
+                {
+                    "type": rel.relationship_type,
+                    "target": rel.child_id,
+                    "strength": rel.strength,
+                    "role": "parent",
+                }
+            )
+
             # Add to child
             if rel.child_id not in rel_map:
                 rel_map[rel.child_id] = []
-            rel_map[rel.child_id].append({
-                "type": rel.relationship_type,
-                "target": rel.parent_id,
-                "strength": rel.strength,
-                "role": "child"
-            })
-        
+            rel_map[rel.child_id].append(
+                {
+                    "type": rel.relationship_type,
+                    "target": rel.parent_id,
+                    "strength": rel.strength,
+                    "role": "child",
+                }
+            )
+
         return rel_map
-    
-    def _deduplicate_by_name_similarity(self, entities: List[RestaurantEntity], 
-                                      threshold: float = 0.9) -> List[RestaurantEntity]:
+
+    def _deduplicate_by_name_similarity(
+        self, entities: List[RestaurantEntity], threshold: float = 0.9
+    ) -> List[RestaurantEntity]:
         """Deduplicate entities by name similarity.
-        
+
         Args:
             entities: List of entities to deduplicate
             threshold: Similarity threshold for deduplication
-            
+
         Returns:
             List of deduplicated entities
         """
         if len(entities) <= 1:
             return entities
-        
+
         result = []
         used = set()
-        
+
         for i, entity in enumerate(entities):
             if i in used:
                 continue
-            
+
             similar_entities = [entity]
             used.add(i)
-            
-            for j, other in enumerate(entities[i+1:], i+1):
+
+            for j, other in enumerate(entities[i + 1 :], i + 1):
                 if j in used:
                     continue
-                
+
                 # Calculate name similarity only
-                name_sim = SequenceMatcher(None, entity.name.lower(), other.name.lower()).ratio()
+                name_sim = SequenceMatcher(
+                    None, entity.name.lower(), other.name.lower()
+                ).ratio()
                 if name_sim >= threshold:
                     similar_entities.append(other)
                     used.add(j)
-            
+
             # Merge similar entities or keep single entity
             if len(similar_entities) == 1:
                 result.append(similar_entities[0])
             else:
                 merged = self._merge_entity_group(similar_entities)
                 result.append(merged)
-        
+
         return result
-    
+
     def _merge_data_priority(self, entities: List[RestaurantEntity]) -> Dict[str, Any]:
         """Merge entity data using priority rules.
-        
+
         Args:
             entities: List of entities to merge data from
-            
+
         Returns:
             Merged data dictionary
         """
         merged_data = {}
-        
+
         # Collect all unique keys
         all_keys = set()
         for entity in entities:
             all_keys.update(entity.data.keys())
-        
+
         # Merge each field
         for key in all_keys:
             values = []
             for entity in entities:
                 if key in entity.data and entity.data[key] is not None:
-                    values.append({
-                        "value": entity.data[key],
-                        "entity_type": entity.entity_type,
-                        "source": entity.source_info
-                    })
-            
+                    values.append(
+                        {
+                            "value": entity.data[key],
+                            "entity_type": entity.entity_type,
+                            "source": entity.source_info,
+                        }
+                    )
+
             if values:
                 # For numeric fields, use max value; for strings, use most detailed
                 if all(isinstance(v["value"], (int, float)) for v in values):
                     best_value = max(values, key=lambda v: v["value"])
                 else:
                     # Use most detailed value (longest string)
-                    best_value = max(values, key=lambda v: len(str(v["value"])) if v["value"] else 0)
+                    best_value = max(
+                        values, key=lambda v: len(str(v["value"])) if v["value"] else 0
+                    )
                 merged_data[key] = best_value["value"]
-        
+
         return merged_data
-    
+
     def _merge_data_max_value(self, entities: List[RestaurantEntity]) -> Dict[str, Any]:
         """Merge entity data by taking maximum values.
-        
+
         Args:
             entities: List of entities to merge data from
-            
+
         Returns:
             Merged data dictionary
         """
         merged_data = {}
-        
+
         # Collect all unique keys
         all_keys = set()
         for entity in entities:
             all_keys.update(entity.data.keys())
-        
+
         # For each key, take the maximum value
         for key in all_keys:
             values = []
             for entity in entities:
                 if key in entity.data and entity.data[key] is not None:
                     values.append(entity.data[key])
-            
+
             if values:
                 try:
                     # Try numeric comparison first
-                    numeric_values = [float(v) for v in values if isinstance(v, (int, float))]
+                    numeric_values = [
+                        float(v) for v in values if isinstance(v, (int, float))
+                    ]
                     if numeric_values:
                         merged_data[key] = max(numeric_values)
                     else:
                         # Fall back to string comparison by length
-                        merged_data[key] = max(values, key=lambda v: len(str(v)) if v else 0)
+                        merged_data[key] = max(
+                            values, key=lambda v: len(str(v)) if v else 0
+                        )
                 except (ValueError, TypeError):
                     # Fall back to first value if comparison fails
                     merged_data[key] = values[0]
-        
+
         return merged_data
-    
+
     def _merge_data_latest(self, entities: List[RestaurantEntity]) -> Dict[str, Any]:
         """Merge entity data by taking latest values.
-        
+
         Args:
             entities: List of entities to merge data from
-            
+
         Returns:
             Merged data dictionary
         """
         merged_data = {}
-        
+
         # Use last entity's data as base, then override with earlier entities' unique fields
         for entity in reversed(entities):
             for key, value in entity.data.items():
-                if value is not None and (key not in merged_data or not merged_data[key]):
+                if value is not None and (
+                    key not in merged_data or not merged_data[key]
+                ):
                     merged_data[key] = value
-        
+
         return merged_data

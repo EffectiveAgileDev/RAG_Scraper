@@ -58,11 +58,12 @@ When asked to implement any feature:
 1. **STOP** - Do not write implementation code first
 2. Ask for clarification on acceptance criteria if unclear
 3. Write acceptance test at user function level that FAILS
-4. Write unit tests for supporting components that FAIL
-5. Run tests to confirm they fail (RED phase)
-6. Write minimal implementation to make tests pass (GREEN phase)
-7. Refactor code while keeping tests green
-8. Commit only when all tests pass
+4. Make sure that you run the acceptance tests that FAILS
+5. Write unit tests for supporting components that FAIL
+6. Run tests to confirm they fail (RED phase)
+7. Write minimal implementation to make tests pass (GREEN phase)
+8. Refactor code while keeping tests green
+9. Commit only when all tests pass
 
 ### Test Structure
 - **tests/features/** - Gherkin BDD scenarios for user stories
