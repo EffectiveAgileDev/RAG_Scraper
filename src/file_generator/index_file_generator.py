@@ -22,6 +22,11 @@ class IndexFileConfig(BaseGeneratorConfig):
     include_relationships: bool = True
     include_search_metadata: bool = True
     schema_version: str = "1.0.0"
+    # Multi-page support options
+    include_provenance: bool = False
+    track_cross_page_relationships: bool = False
+    enable_temporal_awareness: bool = False
+    support_context_inheritance: bool = False
 
     def validate(self) -> None:
         """Validate configuration values."""
@@ -43,6 +48,10 @@ class IndexFileConfig(BaseGeneratorConfig):
             "include_relationships": self.include_relationships,
             "include_search_metadata": self.include_search_metadata,
             "schema_version": self.schema_version,
+            "include_provenance": self.include_provenance,
+            "track_cross_page_relationships": self.track_cross_page_relationships,
+            "enable_temporal_awareness": self.enable_temporal_awareness,
+            "support_context_inheritance": self.support_context_inheritance,
         }
 
 
@@ -511,6 +520,306 @@ class IndexFileGenerator(BaseFileGenerator):
                 lines.append(f"  {cuisine}: {count}")
 
         return lines
+
+    # Multi-page index generation methods
+
+    def generate_master_index_with_provenance(
+        self, restaurant_data: List[RestaurantData]
+    ) -> Dict[str, Any]:
+        """Generate master index with page provenance tracking."""
+        # Start with regular master index
+        master_index = self.generate_master_index(restaurant_data)
+
+        if not self.config.include_provenance:
+            return master_index
+
+        # Add provenance metadata
+        provenance_data = {"source_pages": [], "extraction_metadata": {}}
+
+        for restaurant in restaurant_data:
+            if hasattr(restaurant, "page_metadata") and restaurant.page_metadata:
+                page_meta = restaurant.page_metadata
+                source_page = {
+                    "entity_id": page_meta.get("entity_id"),
+                    "source_url": page_meta.get("source_url"),
+                    "page_type": page_meta.get("page_type"),
+                    "extraction_timestamp": page_meta.get("extraction_timestamp"),
+                    "parent_id": page_meta.get("parent_id"),
+                }
+                provenance_data["source_pages"].append(source_page)
+
+        # Add provenance to master index
+        if isinstance(master_index, dict):
+            master_index["provenance"] = provenance_data
+        else:
+            # Handle string format
+            result = json.loads(master_index) if isinstance(master_index, str) else {}
+            result["provenance"] = provenance_data
+            return result
+
+        return master_index
+
+    def generate_indices_with_cross_page_relationships(
+        self, restaurant_data: List[RestaurantData]
+    ) -> Dict[str, Any]:
+        """Generate indices with cross-page entity relationships."""
+        # Start with regular indices
+        indices = self.generate_indices_with_relationships(restaurant_data)
+
+        if not self.config.track_cross_page_relationships:
+            return indices
+
+        # Build cross-page relationship mappings
+        cross_page_relationships = {
+            "parent_child_mappings": {},
+            "page_type_relationships": {},
+            "cross_page_references": [],
+        }
+
+        # Group entities by page relationships
+        page_entities = {}
+        for restaurant in restaurant_data:
+            if hasattr(restaurant, "page_metadata") and restaurant.page_metadata:
+                page_meta = restaurant.page_metadata
+                entity_id = page_meta.get("entity_id")
+                parent_id = page_meta.get("parent_id")
+                page_type = page_meta.get("page_type")
+
+                if entity_id:
+                    page_entities[entity_id] = {
+                        "name": restaurant.name,
+                        "parent_id": parent_id,
+                        "page_type": page_type,
+                        "entity": restaurant,
+                    }
+
+        # Build parent-child mappings
+        for entity_id, entity_info in page_entities.items():
+            parent_id = entity_info.get("parent_id")
+            if parent_id and parent_id in page_entities:
+                if parent_id not in cross_page_relationships["parent_child_mappings"]:
+                    cross_page_relationships["parent_child_mappings"][parent_id] = []
+                cross_page_relationships["parent_child_mappings"][parent_id].append(
+                    entity_id
+                )
+
+        indices["cross_page_relationships"] = cross_page_relationships
+        return indices
+
+    def generate_unified_indices_from_multipage_data(
+        self, restaurant_data: List[RestaurantData]
+    ) -> Dict[str, Any]:
+        """Generate unified index entries from multi-page data aggregation."""
+        unified_entities = {}
+
+        # Group restaurants by entity ID from page metadata
+        for restaurant in restaurant_data:
+            if hasattr(restaurant, "page_metadata") and restaurant.page_metadata:
+                entity_id = restaurant.page_metadata.get("entity_id")
+                if entity_id:
+                    if entity_id not in unified_entities:
+                        unified_entities[entity_id] = {
+                            "name": restaurant.name,
+                            "aggregated_data": {},
+                            "data_sources": [],
+                            "data_aggregation_metadata": {
+                                "page_contributions": {},
+                                "conflict_resolutions": [],
+                                "aggregation_timestamp": datetime.now().isoformat(),
+                            },
+                        }
+
+                    # Aggregate data from this page
+                    entity = unified_entities[entity_id]
+                    page_type = restaurant.page_metadata.get("page_type", "unknown")
+
+                    # Add data contributions metadata
+                    entity["data_aggregation_metadata"]["page_contributions"][
+                        page_type
+                    ] = {
+                        "address": restaurant.address if restaurant.address else None,
+                        "phone": restaurant.phone if restaurant.phone else None,
+                        "menu_items": restaurant.menu_items
+                        if restaurant.menu_items
+                        else None,
+                        "price_range": restaurant.price_range
+                        if restaurant.price_range
+                        else None,
+                    }
+
+                    # Apply page hierarchy rules for conflict resolution
+                    # Detail pages override directory pages
+                    if page_type == "detail" or not entity["aggregated_data"]:
+                        entity["aggregated_data"].update(
+                            {
+                                "address": restaurant.address
+                                or entity["aggregated_data"].get("address", ""),
+                                "phone": restaurant.phone
+                                or entity["aggregated_data"].get("phone", ""),
+                                "cuisine": restaurant.cuisine
+                                or entity["aggregated_data"].get("cuisine", ""),
+                                "menu_items": restaurant.menu_items
+                                or entity["aggregated_data"].get("menu_items", {}),
+                                "price_range": restaurant.price_range
+                                or entity["aggregated_data"].get("price_range", ""),
+                            }
+                        )
+
+        return {
+            "unified_entities": list(unified_entities.values()),
+            "aggregation_summary": {
+                "total_unified_entities": len(unified_entities),
+                "aggregation_timestamp": datetime.now().isoformat(),
+            },
+        }
+
+    def generate_indices_with_temporal_awareness(
+        self, restaurant_data: List[RestaurantData]
+    ) -> Dict[str, Any]:
+        """Generate index files with temporal awareness of extraction times."""
+        # Start with regular indices
+        indices = self.generate_master_index(restaurant_data)
+
+        if not self.config.enable_temporal_awareness:
+            return indices
+
+        temporal_metadata = {
+            "extraction_timeline": {},
+            "most_recent_data": {},
+            "stale_data_flags": [],
+            "temporal_analysis_timestamp": datetime.now().isoformat(),
+        }
+
+        # Analyze extraction timestamps
+        entity_timestamps = {}
+        for restaurant in restaurant_data:
+            if hasattr(restaurant, "page_metadata") and restaurant.page_metadata:
+                entity_id = restaurant.page_metadata.get("entity_id")
+                timestamp = restaurant.page_metadata.get("extraction_timestamp")
+                if entity_id and timestamp:
+                    if entity_id not in entity_timestamps:
+                        entity_timestamps[entity_id] = []
+                    entity_timestamps[entity_id].append(
+                        {"timestamp": timestamp, "restaurant": restaurant}
+                    )
+
+        # Identify most recent data and stale data
+        current_time = datetime.now()
+        stale_threshold_hours = 48  # Data older than 48 hours is considered stale
+
+        for entity_id, timestamps in entity_timestamps.items():
+            # Sort by timestamp to find most recent
+            sorted_timestamps = sorted(
+                timestamps, key=lambda x: x["timestamp"], reverse=True
+            )
+            most_recent = sorted_timestamps[0]
+            temporal_metadata["most_recent_data"][entity_id] = {
+                "timestamp": most_recent["timestamp"],
+                "restaurant_name": most_recent["restaurant"].name,
+            }
+
+            # Check for stale data
+            try:
+                extraction_time = datetime.fromisoformat(
+                    most_recent["timestamp"].replace("Z", "+00:00")
+                )
+                hours_old = (
+                    current_time - extraction_time.replace(tzinfo=None)
+                ).total_seconds() / 3600
+                if hours_old > stale_threshold_hours:
+                    temporal_metadata["stale_data_flags"].append(
+                        {
+                            "entity_id": entity_id,
+                            "hours_old": hours_old,
+                            "last_extraction": most_recent["timestamp"],
+                        }
+                    )
+            except (ValueError, AttributeError):
+                # Handle timestamp parsing errors
+                temporal_metadata["stale_data_flags"].append(
+                    {
+                        "entity_id": entity_id,
+                        "error": "Unable to parse timestamp",
+                        "timestamp": most_recent["timestamp"],
+                    }
+                )
+
+        # Add temporal metadata to indices
+        if isinstance(indices, dict):
+            indices["temporal_metadata"] = temporal_metadata
+        else:
+            result = json.loads(indices) if isinstance(indices, str) else {}
+            result["temporal_metadata"] = temporal_metadata
+            return result
+
+        return indices
+
+    def generate_indices_with_context_inheritance(
+        self, restaurant_data: List[RestaurantData]
+    ) -> Dict[str, Any]:
+        """Generate indices with context inheritance tracking from parent pages."""
+        # Start with regular indices
+        indices = self.generate_master_index(restaurant_data)
+
+        context_inheritance = {
+            "inheritance_rules": {},
+            "child_overrides": {},
+            "context_provenance": {},
+        }
+
+        # Build context inheritance mappings
+        parent_contexts = {}
+        child_contexts = {}
+
+        for restaurant in restaurant_data:
+            if hasattr(restaurant, "page_metadata") and restaurant.page_metadata:
+                page_meta = restaurant.page_metadata
+                entity_id = page_meta.get("entity_id")
+                page_type = page_meta.get("page_type")
+                parent_id = page_meta.get("parent_id")
+
+                # Collect parent contexts
+                if page_type == "directory" and "common_context" in page_meta:
+                    parent_contexts[entity_id] = page_meta["common_context"]
+
+                # Collect child contexts and inheritance data
+                if parent_id:
+                    child_contexts[entity_id] = {
+                        "parent_id": parent_id,
+                        "inherited_context": page_meta.get("inherited_context", {}),
+                        "child_overrides": page_meta.get("child_overrides", {}),
+                        "restaurant_name": restaurant.name,
+                    }
+
+        # Build inheritance rules
+        context_inheritance["inheritance_rules"] = parent_contexts
+
+        # Map child overrides
+        for child_id, child_info in child_contexts.items():
+            parent_id = child_info["parent_id"]
+            if parent_id in parent_contexts:
+                context_inheritance["child_overrides"][child_id] = {
+                    "parent_context": parent_contexts[parent_id],
+                    "inherited_context": child_info["inherited_context"],
+                    "child_specific_overrides": child_info["child_overrides"],
+                    "restaurant_name": child_info["restaurant_name"],
+                }
+
+                # Track context provenance
+                context_inheritance["context_provenance"][child_id] = {
+                    "inherited_from": parent_id,
+                    "inheritance_timestamp": datetime.now().isoformat(),
+                }
+
+        # Add context inheritance to indices
+        if isinstance(indices, dict):
+            indices["context_inheritance"] = context_inheritance
+        else:
+            result = json.loads(indices) if isinstance(indices, str) else {}
+            result["context_inheritance"] = context_inheritance
+            return result
+
+        return indices
 
 
 class IndexSearchMetadataGenerator:

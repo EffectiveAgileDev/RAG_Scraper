@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generation_timestamp": "2025-06-23T12:05:12.027338",
+  "generation_timestamp": "2025-06-23T12:27:12.178049",
   "category": "Unknown",
   "entity_count": 2,
   "entities": [
@@ -29,10 +29,10 @@
         "json-ld"
       ],
       "search_metadata": [
-        "downtown",
         "tony's",
         "restaurant",
-        "italian"
+        "italian",
+        "downtown"
       ]
     }
   ],

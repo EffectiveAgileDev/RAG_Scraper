@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generation_timestamp": "2025-06-23T12:05:12.079080",
+  "generation_timestamp": "2025-06-23T12:27:12.271329",
   "total_entities": 3,
   "entities": [
     {
@@ -14,9 +14,9 @@
         "json-ld"
       ],
       "search_metadata": [
+        "restaurant",
         "italian",
-        "stats",
-        "restaurant"
+        "stats"
       ]
     },
     {
@@ -30,9 +30,9 @@
         "json-ld"
       ],
       "search_metadata": [
-        "stats",
         "mexican",
-        "restaurant"
+        "restaurant",
+        "stats"
       ]
     },
     {
@@ -46,9 +46,9 @@
         "json-ld"
       ],
       "search_metadata": [
+        "restaurant",
         "italian",
-        "stats",
-        "restaurant"
+        "stats"
       ]
     }
   ],

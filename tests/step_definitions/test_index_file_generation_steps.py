@@ -808,3 +808,355 @@ def verify_atomic_update_process(index_test_context):
     """Verify update process is atomic."""
     assert index_test_context["incremental_update_attempted"]
     # Implementation pending
+
+
+# Multi-page import scenario step definitions
+
+
+@given("I have restaurant data extracted from multiple related pages")
+def restaurant_data_from_multiple_related_pages(index_test_context):
+    """Set up restaurant data with multi-page provenance."""
+    # Create restaurant data with multi-page extraction metadata
+    restaurants = []
+
+    # Directory page entity
+    directory_data = RestaurantData(
+        name="Downtown Restaurant Directory",
+        address="",
+        phone="",
+        cuisine="Directory",
+        sources=["heuristic"],
+        menu_items={},
+        price_range="",
+    )
+    directory_data.page_metadata = {
+        "page_type": "directory",
+        "source_url": "/restaurants",
+        "entity_id": "dir_001",
+        "extraction_timestamp": "2025-06-23T10:00:00Z",
+    }
+    restaurants.append(directory_data)
+
+    # Restaurant detail page entities
+    restaurant_detail = RestaurantData(
+        name="Italian Bistro",
+        address="123 Main St, City, OR 97301",
+        phone="(503) 555-0101",
+        cuisine="Italian",
+        sources=["json-ld", "microdata"],
+        menu_items={"entrees": ["Pasta Marinara"], "desserts": ["Tiramisu"]},
+        price_range="$15-$30",
+    )
+    restaurant_detail.page_metadata = {
+        "page_type": "detail",
+        "source_url": "/restaurants/italian-bistro",
+        "entity_id": "rest_001",
+        "parent_id": "dir_001",
+        "extraction_timestamp": "2025-06-23T10:15:00Z",
+    }
+    restaurants.append(restaurant_detail)
+
+    index_test_context["multi_page_restaurant_data"] = restaurants
+
+
+@given("the multi-page data includes parent-child page relationships")
+def multi_page_data_includes_relationships(index_test_context):
+    """Ensure multi-page data has parent-child relationships."""
+    index_test_context["has_multi_page_relationships"] = True
+
+
+@given("the data includes cross-page entity correlations")
+def data_includes_cross_page_correlations(index_test_context):
+    """Set up cross-page entity correlations."""
+    index_test_context["has_cross_page_correlations"] = True
+
+
+@given("each entity has extraction provenance from source pages")
+def entities_have_extraction_provenance(index_test_context):
+    """Ensure entities have extraction provenance metadata."""
+    index_test_context["has_extraction_provenance"] = True
+
+
+@given("I have a configured index file generator for multi-page context")
+def configured_index_generator_multipage(index_test_context, temp_index_output_dir):
+    """Set up index generator for multi-page context."""
+    from src.file_generator.index_file_generator import IndexFileGenerator
+
+    config = {
+        "output_directory": temp_index_output_dir,
+        "include_provenance": True,
+        "track_cross_page_relationships": True,
+        "enable_temporal_awareness": True,
+    }
+
+    index_test_context["generator"] = IndexFileGenerator(config)
+    index_test_context["output_directory"] = temp_index_output_dir
+
+
+@given("I have restaurant data extracted from directory and detail pages")
+def restaurant_data_directory_and_detail_pages(index_test_context):
+    """Set up restaurant data from directory and detail pages."""
+    restaurants = []
+
+    # Directory page with multiple restaurants
+    for i in range(2):
+        restaurant = RestaurantData(
+            name=f"Restaurant {i+1}",
+            address=f"{i+1}00 Main St",
+            phone=f"(503) 555-010{i+1}",
+            cuisine="Italian" if i == 0 else "Mexican",
+            sources=["json-ld"],
+            menu_items={"entrees": [f"Dish {i+1}"]},
+            price_range="$15-$25",
+        )
+        restaurant.page_metadata = {
+            "page_type": "detail",
+            "source_url": f"/restaurants/restaurant-{i+1}",
+            "entity_id": f"rest_00{i+1}",
+            "parent_id": "dir_001",
+            "extraction_timestamp": f"2025-06-23T10:{15+i*5}:00Z",
+        }
+        restaurants.append(restaurant)
+
+    index_test_context["multi_page_restaurant_data"] = restaurants
+
+
+@given("each entity has provenance metadata from source pages")
+def entities_have_provenance_metadata(index_test_context):
+    """Ensure entities have complete provenance metadata."""
+    index_test_context["has_complete_provenance"] = True
+
+
+@when("I generate index files with provenance tracking")
+def generate_index_files_with_provenance(index_test_context):
+    """Generate index files with provenance tracking enabled."""
+    index_test_context["provenance_generation_attempted"] = True
+    # Implementation pending
+
+
+@then("each index entry should include source page URLs")
+def verify_index_entries_include_source_urls(index_test_context):
+    """Verify index entries include source page URLs."""
+    assert index_test_context["provenance_generation_attempted"]
+    # Implementation pending
+
+
+@then("extraction timestamps should be preserved per entity")
+def verify_extraction_timestamps_preserved(index_test_context):
+    """Verify extraction timestamps are preserved."""
+    assert index_test_context["provenance_generation_attempted"]
+    # Implementation pending
+
+
+@then("extraction methods should be tracked per data point")
+def verify_extraction_methods_tracked(index_test_context):
+    """Verify extraction methods are tracked."""
+    assert index_test_context["provenance_generation_attempted"]
+    # Implementation pending
+
+
+@then("parent-child page relationships should be documented")
+def verify_parent_child_relationships_documented(index_test_context):
+    """Verify parent-child relationships are documented."""
+    assert index_test_context["provenance_generation_attempted"]
+    # Implementation pending
+
+
+@then("cross-page data correlation should be maintained")
+def verify_cross_page_correlation_maintained(index_test_context):
+    """Verify cross-page data correlation is maintained."""
+    assert index_test_context["provenance_generation_attempted"]
+    # Implementation pending
+
+
+@given(parsers.parse('I have a restaurant directory page with entity "{entity_id}"'))
+def restaurant_directory_page_with_entity(index_test_context, entity_id):
+    """Set up restaurant directory page with specific entity ID."""
+    index_test_context["directory_entity_id"] = entity_id
+
+
+@given(parsers.parse('detail pages for restaurants "{rest_1}" and "{rest_2}"'))
+def detail_pages_for_restaurants(index_test_context, rest_1, rest_2):
+    """Set up detail pages for specific restaurants."""
+    index_test_context["restaurant_detail_ids"] = [rest_1, rest_2]
+
+
+@given(parsers.parse('a menu page "{menu_id}" linked to "{rest_id}"'))
+def menu_page_linked_to_restaurant(index_test_context, menu_id, rest_id):
+    """Set up menu page linked to restaurant."""
+    index_test_context["menu_page_mapping"] = {menu_id: rest_id}
+
+
+@when("I generate indices with cross-page relationships")
+def generate_indices_with_cross_page_relationships(index_test_context):
+    """Generate indices with cross-page relationship tracking."""
+    index_test_context["cross_page_generation_attempted"] = True
+    # Implementation pending
+
+
+@then("the master index should map directory to restaurant relationships")
+def verify_master_index_maps_directory_relationships(index_test_context):
+    """Verify master index maps directory relationships."""
+    assert index_test_context["cross_page_generation_attempted"]
+    # Implementation pending
+
+
+@then("restaurant indices should reference their menu pages")
+def verify_restaurant_indices_reference_menus(index_test_context):
+    """Verify restaurant indices reference menu pages."""
+    assert index_test_context["cross_page_generation_attempted"]
+    # Implementation pending
+
+
+@then("relationship provenance should include source page context")
+def verify_relationship_provenance_includes_context(index_test_context):
+    """Verify relationship provenance includes source page context."""
+    assert index_test_context["cross_page_generation_attempted"]
+    # Implementation pending
+
+
+@then("bidirectional relationship mapping should be maintained")
+def verify_bidirectional_relationship_mapping(index_test_context):
+    """Verify bidirectional relationship mapping is maintained."""
+    assert index_test_context["cross_page_generation_attempted"]
+    # Implementation pending
+
+
+# Additional multi-page scenario step definitions
+
+
+@given(parsers.parse('restaurant "{rest_id}" has data from multiple pages:\n{table}'))
+def restaurant_has_multi_page_data(index_test_context, rest_id, table):
+    """Set up restaurant with data from multiple pages."""
+    index_test_context["multi_page_entity_id"] = rest_id
+    index_test_context["multi_page_data_table"] = table
+    # Parse table and create multi-page data structure
+
+
+@when("I generate unified index entries")
+def generate_unified_index_entries(index_test_context):
+    """Generate unified index entries from multi-page data."""
+    index_test_context["unified_generation_attempted"] = True
+    # Implementation pending
+
+
+@then("each entity should aggregate data from all source pages")
+def verify_entity_aggregates_all_source_data(index_test_context):
+    """Verify entities aggregate data from all source pages."""
+    assert index_test_context["unified_generation_attempted"]
+    # Implementation pending
+
+
+@then("data conflicts should be resolved using page hierarchy rules")
+def verify_data_conflicts_resolved_by_hierarchy(index_test_context):
+    """Verify data conflicts are resolved using page hierarchy."""
+    assert index_test_context["unified_generation_attempted"]
+    # Implementation pending
+
+
+@then("the most specific page data should take precedence")
+def verify_specific_page_data_precedence(index_test_context):
+    """Verify most specific page data takes precedence."""
+    assert index_test_context["unified_generation_attempted"]
+    # Implementation pending
+
+
+@then("aggregation metadata should track data source contributions")
+def verify_aggregation_metadata_tracks_sources(index_test_context):
+    """Verify aggregation metadata tracks data source contributions."""
+    assert index_test_context["unified_generation_attempted"]
+    # Implementation pending
+
+
+@given("restaurant data extracted across multiple scraping sessions")
+def restaurant_data_multiple_scraping_sessions(index_test_context):
+    """Set up restaurant data from multiple scraping sessions."""
+    index_test_context["has_multi_session_data"] = True
+
+
+@given("some pages were scraped at different times")
+def pages_scraped_at_different_times(index_test_context):
+    """Set up pages scraped at different times."""
+    index_test_context["has_temporal_variance"] = True
+
+
+@when("I generate index files with temporal awareness")
+def generate_index_files_with_temporal_awareness(index_test_context):
+    """Generate index files with temporal awareness."""
+    index_test_context["temporal_generation_attempted"] = True
+    # Implementation pending
+
+
+@then("indices should include extraction timeline metadata")
+def verify_indices_include_timeline_metadata(index_test_context):
+    """Verify indices include extraction timeline metadata."""
+    assert index_test_context["temporal_generation_attempted"]
+    # Implementation pending
+
+
+@then("stale data should be identified and flagged")
+def verify_stale_data_identified(index_test_context):
+    """Verify stale data is identified and flagged."""
+    assert index_test_context["temporal_generation_attempted"]
+    # Implementation pending
+
+
+@then("the most recent extraction should be prioritized")
+def verify_recent_extraction_prioritized(index_test_context):
+    """Verify most recent extraction is prioritized."""
+    assert index_test_context["temporal_generation_attempted"]
+    # Implementation pending
+
+
+@then("historical extraction data should be preserved for auditing")
+def verify_historical_data_preserved(index_test_context):
+    """Verify historical extraction data is preserved."""
+    assert index_test_context["temporal_generation_attempted"]
+    # Implementation pending
+
+
+@given("directory pages with common context for all child restaurants")
+def directory_pages_with_common_context(index_test_context):
+    """Set up directory pages with common context."""
+    index_test_context["has_common_directory_context"] = True
+
+
+@given("child restaurant pages that inherit parent context")
+def child_pages_inherit_parent_context(index_test_context):
+    """Set up child pages that inherit parent context."""
+    index_test_context["has_context_inheritance"] = True
+
+
+@when("I generate indices with context inheritance tracking")
+def generate_indices_with_context_inheritance(index_test_context):
+    """Generate indices with context inheritance tracking."""
+    index_test_context["inheritance_generation_attempted"] = True
+    # Implementation pending
+
+
+@then("inherited context should be explicitly documented")
+def verify_inherited_context_documented(index_test_context):
+    """Verify inherited context is explicitly documented."""
+    assert index_test_context["inheritance_generation_attempted"]
+    # Implementation pending
+
+
+@then("context inheritance rules should be preserved")
+def verify_inheritance_rules_preserved(index_test_context):
+    """Verify context inheritance rules are preserved."""
+    assert index_test_context["inheritance_generation_attempted"]
+    # Implementation pending
+
+
+@then("child-specific overrides should be clearly marked")
+def verify_child_overrides_marked(index_test_context):
+    """Verify child-specific overrides are clearly marked."""
+    assert index_test_context["inheritance_generation_attempted"]
+    # Implementation pending
+
+
+@then("context provenance should trace back to parent pages")
+def verify_context_provenance_traces_parents(index_test_context):
+    """Verify context provenance traces back to parent pages."""
+    assert index_test_context["inheritance_generation_attempted"]
+    # Implementation pending

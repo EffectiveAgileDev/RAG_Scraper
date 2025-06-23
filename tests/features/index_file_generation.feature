@@ -1,12 +1,14 @@
-Feature: Index File Generation for Enhanced Text Files
+Feature: Index File Generation for Multi-Page Import Systems
   As a RAG system developer
-  I want to generate comprehensive index files
-  So that I can efficiently search and navigate generated text files
+  I want to generate comprehensive index files from multi-page scraped data
+  So that I can efficiently search and navigate generated text files with full provenance tracking
 
   Background:
-    Given I have restaurant data from multiple pages
-    And the data includes entity relationships
-    And I have a configured index file generator
+    Given I have restaurant data extracted from multiple related pages
+    And the multi-page data includes parent-child page relationships
+    And the data includes cross-page entity correlations
+    And each entity has extraction provenance from source pages
+    And I have a configured index file generator for multi-page context
 
   Scenario: Generate master index.json for all entities
     Given I have generated entity-based text files
@@ -97,3 +99,53 @@ Feature: Index File Generation for Enhanced Text Files
     And statistics should be updated accurately
     And index consistency should be maintained
     And the update process should be atomic
+
+  Scenario: Generate indices with multi-page provenance tracking
+    Given I have restaurant data extracted from directory and detail pages
+    And each entity has provenance metadata from source pages
+    When I generate index files with provenance tracking
+    Then each index entry should include source page URLs
+    And extraction timestamps should be preserved per entity
+    And extraction methods should be tracked per data point
+    And parent-child page relationships should be documented
+    And cross-page data correlation should be maintained
+
+  Scenario: Index generation from cross-page entity relationships
+    Given I have a restaurant directory page with entity "dir_001"
+    And detail pages for restaurants "rest_001" and "rest_002" 
+    And a menu page "menu_001" linked to "rest_001"
+    When I generate indices with cross-page relationships
+    Then the master index should map directory to restaurant relationships
+    Then restaurant indices should reference their menu pages
+    And relationship provenance should include source page context
+    And bidirectional relationship mapping should be maintained
+
+  Scenario: Aggregate multi-page data into unified indices
+    Given restaurant "rest_001" has data from multiple pages:
+      | page_type | url                    | data_extracted           |
+      | directory | /restaurants           | name, cuisine, basic_info |
+      | detail    | /restaurants/bistro    | full_details, hours       |
+      | menu      | /restaurants/bistro/menu | menu_items, prices      |
+    When I generate unified index entries
+    Then each entity should aggregate data from all source pages
+    And data conflicts should be resolved using page hierarchy rules
+    And the most specific page data should take precedence
+    And aggregation metadata should track data source contributions
+
+  Scenario: Handle multi-page extraction timeline in indices
+    Given restaurant data extracted across multiple scraping sessions
+    And some pages were scraped at different times
+    When I generate index files with temporal awareness
+    Then indices should include extraction timeline metadata
+    And stale data should be identified and flagged
+    And the most recent extraction should be prioritized
+    And historical extraction data should be preserved for auditing
+
+  Scenario: Index multi-page context inheritance patterns
+    Given directory pages with common context for all child restaurants
+    And child restaurant pages that inherit parent context
+    When I generate indices with context inheritance tracking
+    Then inherited context should be explicitly documented
+    And context inheritance rules should be preserved
+    And child-specific overrides should be clearly marked
+    And context provenance should trace back to parent pages

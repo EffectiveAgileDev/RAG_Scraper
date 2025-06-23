@@ -687,3 +687,266 @@ class TestIndexIntegrityValidator:
 
         assert isinstance(orphaned_refs, list)
         # Should detect restaurant_999 as orphaned reference
+
+
+class TestMultiPageIndexFileGenerator:
+    """Test cases for multi-page index file generation functionality."""
+
+    def test_generate_index_with_page_provenance(self):
+        """Test index generation includes page provenance metadata."""
+        from src.file_generator.index_file_generator import IndexFileGenerator
+
+        # Create restaurant data with page metadata
+        restaurant_data = [
+            RestaurantData(
+                name="Multi-Page Restaurant",
+                address="123 Main St",
+                phone="(503) 555-0123",
+                cuisine="Italian",
+                sources=["json-ld"],
+                menu_items={"entrees": ["Pasta"]},
+                price_range="$15-$25",
+            )
+        ]
+
+        # Add page metadata to simulate multi-page extraction
+        restaurant_data[0].page_metadata = {
+            "page_type": "detail",
+            "source_url": "/restaurants/italian-bistro",
+            "entity_id": "rest_001",
+            "parent_id": "dir_001",
+            "extraction_timestamp": "2025-06-23T10:15:00Z",
+        }
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            from src.file_generator.index_file_generator import IndexFileConfig
+
+            config = IndexFileConfig(output_directory=temp_dir, include_provenance=True)
+            generator = IndexFileGenerator(config)
+
+            result = generator.generate_master_index_with_provenance(restaurant_data)
+
+            assert "provenance" in result
+            assert "source_pages" in result["provenance"]
+            assert any(
+                "source_url" in page for page in result["provenance"]["source_pages"]
+            )
+
+    def test_generate_index_with_cross_page_relationships(self):
+        """Test index generation with cross-page entity relationships."""
+        from src.file_generator.index_file_generator import IndexFileGenerator
+
+        # Create directory and restaurant entities
+        restaurants = []
+
+        # Directory entity
+        directory = RestaurantData(
+            name="Restaurant Directory",
+            address="",
+            phone="",
+            cuisine="Directory",
+            sources=["heuristic"],
+            menu_items={},
+            price_range="",
+        )
+        directory.page_metadata = {"page_type": "directory", "entity_id": "dir_001"}
+        restaurants.append(directory)
+
+        # Restaurant entity
+        restaurant = RestaurantData(
+            name="Child Restaurant",
+            address="123 Main St",
+            phone="(503) 555-0123",
+            cuisine="Italian",
+            sources=["json-ld"],
+            menu_items={"entrees": ["Pasta"]},
+            price_range="$15-$25",
+        )
+        restaurant.page_metadata = {
+            "page_type": "detail",
+            "entity_id": "rest_001",
+            "parent_id": "dir_001",
+        }
+        restaurants.append(restaurant)
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            from src.file_generator.index_file_generator import IndexFileConfig
+
+            config = IndexFileConfig(
+                output_directory=temp_dir, track_cross_page_relationships=True
+            )
+            generator = IndexFileGenerator(config)
+
+            result = generator.generate_indices_with_cross_page_relationships(
+                restaurants
+            )
+
+            assert "cross_page_relationships" in result
+            assert "parent_child_mappings" in result["cross_page_relationships"]
+
+    def test_generate_unified_index_from_multi_page_data(self):
+        """Test unified index generation from multi-page data aggregation."""
+        from src.file_generator.index_file_generator import IndexFileGenerator
+
+        # Create restaurant with data from multiple pages
+        restaurants = []
+
+        # Basic info from directory page
+        restaurant_basic = RestaurantData(
+            name="Multi-Source Restaurant",
+            address="",
+            phone="",
+            cuisine="Italian",
+            sources=["heuristic"],
+            menu_items={},
+            price_range="",
+        )
+        restaurant_basic.page_metadata = {
+            "page_type": "directory",
+            "entity_id": "rest_001",
+            "data_contributed": ["name", "cuisine"],
+        }
+        restaurants.append(restaurant_basic)
+
+        # Detailed info from detail page
+        restaurant_detail = RestaurantData(
+            name="Multi-Source Restaurant",
+            address="123 Main St",
+            phone="(503) 555-0123",
+            cuisine="Italian",
+            sources=["json-ld"],
+            menu_items={"entrees": ["Pasta Marinara"]},
+            price_range="$15-$30",
+        )
+        restaurant_detail.page_metadata = {
+            "page_type": "detail",
+            "entity_id": "rest_001",
+            "data_contributed": ["address", "phone", "menu_items", "price_range"],
+        }
+        restaurants.append(restaurant_detail)
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            from src.file_generator.index_file_generator import IndexFileConfig
+
+            config = IndexFileConfig(output_directory=temp_dir)
+            generator = IndexFileGenerator(config)
+
+            result = generator.generate_unified_indices_from_multipage_data(restaurants)
+
+            assert "unified_entities" in result
+            assert len(result["unified_entities"]) == 1
+            unified_entity = result["unified_entities"][0]
+            assert unified_entity["name"] == "Multi-Source Restaurant"
+            assert "data_aggregation_metadata" in unified_entity
+
+    def test_generate_index_with_temporal_awareness(self):
+        """Test index generation with temporal awareness of extraction times."""
+        from src.file_generator.index_file_generator import IndexFileGenerator
+
+        restaurants = []
+
+        # Old extraction
+        old_restaurant = RestaurantData(
+            name="Restaurant With Old Data",
+            address="Old Address",
+            phone="(503) 555-0000",
+            cuisine="Italian",
+            sources=["json-ld"],
+            menu_items={"entrees": ["Old Menu"]},
+            price_range="$10-$20",
+        )
+        old_restaurant.page_metadata = {
+            "extraction_timestamp": "2025-06-20T10:00:00Z",
+            "entity_id": "rest_001",
+        }
+        restaurants.append(old_restaurant)
+
+        # Recent extraction
+        new_restaurant = RestaurantData(
+            name="Restaurant With New Data",
+            address="New Address",
+            phone="(503) 555-0123",
+            cuisine="Italian",
+            sources=["json-ld"],
+            menu_items={"entrees": ["New Menu"]},
+            price_range="$15-$25",
+        )
+        new_restaurant.page_metadata = {
+            "extraction_timestamp": "2025-06-23T10:00:00Z",
+            "entity_id": "rest_001",
+        }
+        restaurants.append(new_restaurant)
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            from src.file_generator.index_file_generator import IndexFileConfig
+
+            config = IndexFileConfig(
+                output_directory=temp_dir, enable_temporal_awareness=True
+            )
+            generator = IndexFileGenerator(config)
+
+            result = generator.generate_indices_with_temporal_awareness(restaurants)
+
+            assert "temporal_metadata" in result
+            assert "most_recent_data" in result["temporal_metadata"]
+            assert "stale_data_flags" in result["temporal_metadata"]
+
+    def test_generate_index_with_context_inheritance(self):
+        """Test index generation with context inheritance from parent pages."""
+        from src.file_generator.index_file_generator import IndexFileGenerator
+
+        restaurants = []
+
+        # Parent directory with common context
+        directory = RestaurantData(
+            name="Downtown Dining District",
+            address="Downtown Area",
+            phone="",
+            cuisine="Directory",
+            sources=["heuristic"],
+            menu_items={},
+            price_range="",
+        )
+        directory.page_metadata = {
+            "page_type": "directory",
+            "entity_id": "dir_001",
+            "common_context": {
+                "location_area": "Downtown dining district",
+                "price_category": "Mid-range dining",
+            },
+        }
+        restaurants.append(directory)
+
+        # Child restaurant that inherits context
+        restaurant = RestaurantData(
+            name="Child Restaurant",
+            address="123 Main St",
+            phone="(503) 555-0123",
+            cuisine="Italian",
+            sources=["json-ld"],
+            menu_items={"entrees": ["Pasta"]},
+            price_range="$15-$25",
+        )
+        restaurant.page_metadata = {
+            "page_type": "detail",
+            "entity_id": "rest_001",
+            "parent_id": "dir_001",
+            "inherited_context": {
+                "location_area": "Downtown dining district",
+                "price_category": "Mid-range dining",
+            },
+            "child_overrides": {"specific_cuisine": "Authentic Italian"},
+        }
+        restaurants.append(restaurant)
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            from src.file_generator.index_file_generator import IndexFileConfig
+
+            config = IndexFileConfig(output_directory=temp_dir)
+            generator = IndexFileGenerator(config)
+
+            result = generator.generate_indices_with_context_inheritance(restaurants)
+
+            assert "context_inheritance" in result
+            assert "inheritance_rules" in result["context_inheritance"]
+            assert "child_overrides" in result["context_inheritance"]
