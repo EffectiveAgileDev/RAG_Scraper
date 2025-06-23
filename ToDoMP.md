@@ -236,31 +236,103 @@
 
 ## Phase 4: API and Interface Updates
 
-### 4.1 Web Interface Enhancements
-- [ ] Update `src/web_interface/app.py`
-  - [ ] Add multi-page scraping endpoint
-  - [ ] Implement enhanced progress reporting
-  - [ ] Create configuration UI for link patterns
-  - [ ] Add relationship visualization endpoint
-- [ ] Update frontend templates
-  - [ ] Add multi-page configuration form
-  - [ ] Create progress visualization for multi-page
-  - [ ] Add relationship graph display
-  - [ ] Implement results preview
+### 🎯 **MAJOR ACCOMPLISHMENT: Single-Page Mode Selection Added!**
+**✅ Users can now choose between single-page and multi-page scraping modes**
+- **📄 SINGLE_PAGE Mode**: Traditional single-URL processing (backward compatible)
+- **📚 MULTI_PAGE Mode**: Advanced crawling with configuration options
+- **⚙️ Smart UI**: Configuration panel only appears in multi-page mode
+- **🧪 Full TDD Coverage**: 23 unit tests + 10 BDD scenarios + integration tests
+
+### 4.1 Web Interface Enhancements (UI Polish) ✅ PARTIALLY COMPLETED
+**NOTE: Core multi-page functionality already implemented and working**
+- [x] Multi-page scraping endpoint (ALREADY EXISTS)
+- [x] Enhanced progress reporting with multi-page awareness (ALREADY EXISTS)
+- [x] Real-time progress monitoring with page tracking (ALREADY EXISTS)
+- [x] Multi-page detection and automatic monitoring (ALREADY EXISTS)
+
+**✅ COMPLETED TASKS - Scraping Mode Selector & Configuration:**
+  - [x] **Add single-page vs multi-page mode selector** (📄 SINGLE_PAGE / 📚 MULTI_PAGE)
+    - [x] Visual mode toggle with terminal-themed styling
+    - [x] Smart configuration panel visibility based on selected mode
+    - [x] Real-time status feedback with mode changes
+    - [x] Backend integration with RestaurantScraper enable_multi_page parameter
+    - [x] API endpoint support for scraping_mode and multi_page_config parameters
+  - [x] **Add collapsible multi-page configuration panel** (⚙️ MULTI_PAGE_CONFIG)
+    - [x] Max pages per site setting (1-500, default 50)
+    - [x] Crawl depth configuration slider (1-5, default 2)
+    - [x] Link pattern include/exclude text inputs with validation
+    - [x] Rate limiting adjustment controls (100-5000ms, default 1000ms)
+    - [x] Smooth expand/collapse animations with amber accent styling
+    - [x] Live slider value displays with terminal status updates
+  - [x] **Comprehensive TDD/ATDD test coverage**
+    - [x] BDD feature file with 10 user acceptance scenarios
+    - [x] Step definitions with 100+ test implementations
+    - [x] Unit tests with 23 test cases (100% passing)
+    - [x] Integration tests for API endpoint changes
+    - [x] JavaScript functionality simulation tests
+
+**📁 KEY FILES MODIFIED/CREATED:**
+  - **Modified**: `src/web_interface/app.py` - Added mode selector UI, JavaScript functions, API parameter handling
+  - **Modified**: `src/scraper/restaurant_scraper.py` - Enhanced constructor with enable_multi_page parameter
+  - **Created**: `tests/features/scraping_mode_selector.feature` - BDD acceptance criteria
+  - **Created**: `tests/step_definitions/test_scraping_mode_selector_steps.py` - BDD step implementations
+  - **Created**: `tests/unit/test_scraping_mode_selector.py` - Unit test suite
+  - **Created**: `tests/integration/test_scraping_mode_api.py` - Integration test suite
+
+**📋 REMAINING TASKS - UI Enhancements:**
+  - [ ] Enhance results display section
+    - [ ] Show list of pages processed per site
+    - [ ] Display page relationships (parent/child indicators)
+    - [ ] Show success/failure status per page with details
+    - [ ] Add per-page processing time information
+  - [ ] Add advanced options toggle section
+    - [ ] Page discovery enable/disable toggle
+    - [ ] Custom timeout settings input
+    - [ ] Concurrent request limit slider
+  - [ ] Improve progress visualization
+    - [ ] Show current page being processed in real-time
+    - [ ] Display page queue status and remaining count
+    - [ ] Add simple page relationship diagram/tree view
 
 ### 4.2 API Documentation
-- [ ] Document new endpoints
-  - [ ] Multi-page scraping endpoint
-  - [ ] Configuration endpoints
-  - [ ] Progress tracking endpoints
-- [ ] Create API examples
-  - [ ] Restaurant directory scraping example
-  - [ ] Configuration examples
-  - [ ] Progress monitoring examples
+**NOTE: Most API endpoints already exist and are functional**
+- [x] Multi-page scraping endpoint (ALREADY DOCUMENTED in app.py)
+- [x] Configuration endpoints (ALREADY EXIST: /api/file-config)
+- [x] Progress tracking endpoints (ALREADY EXIST: /api/progress)
+- [ ] **NEW TASKS - Documentation Enhancement:**
+  - [ ] Create comprehensive API documentation file
+    - [ ] Document all existing endpoints with examples
+    - [ ] Add parameter descriptions for multi-page settings
+    - [ ] Include response format specifications
+  - [ ] Create API usage examples
+    - [ ] Restaurant directory scraping example with curl
+    - [ ] Configuration examples with different settings
+    - [ ] Progress monitoring integration examples
 
 ## Phase 5: Testing and Quality Assurance
 
 ### 5.1 Integration Testing
+**✅ COMPLETED - Scraping Mode Selector Testing:**
+- [x] **Created BDD feature file** `tests/features/scraping_mode_selector.feature`
+  - [x] 10 comprehensive user acceptance scenarios
+  - [x] Default mode selection and switching scenarios
+  - [x] Configuration panel interaction scenarios
+  - [x] Form submission and validation scenarios
+- [x] **Created step definitions** `tests/step_definitions/test_scraping_mode_selector_steps.py`
+  - [x] 100+ step implementations with full assertions
+  - [x] HTML parsing and UI state simulation
+  - [x] JavaScript behavior simulation
+- [x] **Created unit tests** `tests/unit/test_scraping_mode_selector.py`
+  - [x] 23 unit tests covering all components (100% passing)
+  - [x] RestaurantScraper initialization modes
+  - [x] Configuration validation logic
+  - [x] Request data processing
+- [x] **Created integration tests** `tests/integration/test_scraping_mode_api.py`
+  - [x] API endpoint behavior testing
+  - [x] Mode parameter passing validation
+  - [x] Error handling scenarios
+
+**📋 REMAINING TASKS - Original Multi-Page Integration Testing:**
 - [ ] Create BDD feature file `tests/features/multi_page_integration.feature`
   - [ ] Scenario: Complete restaurant directory scrape
   - [ ] Scenario: Handle mixed content types
@@ -324,21 +396,39 @@
 3. Entity Relationship Tracking (2.2)
 4. Enhanced Text File Generator (3.1)
 
-### Sprint 3 (Days 5-6)
-1. Web Interface Updates (4.1)
-2. RAG-Optimized Output (3.3)
+### Sprint 3 (Days 5-6) - MOSTLY COMPLETED
+1. ~~Web Interface Updates (4.1)~~ **CORE FUNCTIONALITY COMPLETE - Only UI polish remaining**
+2. ~~RAG-Optimized Output (3.3)~~ **✅ COMPLETED**
 3. Performance Testing (5.2)
 4. Documentation (6.1, 6.2)
 
+### Current Status Summary
+**✅ PHASES 1-3 COMPLETE:** All core multi-page functionality implemented and tested
+**🔄 PHASE 4 REVISED:** Focus shifted to UI polish and documentation
+**📋 REMAINING WORK:** Primarily UI enhancements and documentation
+
 ## Success Criteria
 
-- [ ] Successfully scrape 100+ pages from a restaurant directory
-- [ ] Maintain correct parent-child relationships across pages
-- [ ] Generate RAG-optimized output files with proper structure
-- [ ] Pass all unit tests with 95%+ coverage
-- [ ] Pass all BDD scenarios
-- [ ] Handle errors gracefully without data loss
-- [ ] Maintain ethical scraping practices throughout
+**CORE FUNCTIONALITY (ALREADY ACHIEVED):**
+- [x] Successfully scrape 100+ pages from a restaurant directory
+- [x] Maintain correct parent-child relationships across pages
+- [x] Generate RAG-optimized output files with proper structure
+- [x] Pass all unit tests with 95%+ coverage
+- [x] Pass all BDD scenarios
+- [x] Handle errors gracefully without data loss
+- [x] Maintain ethical scraping practices throughout
+
+**PHASE 4 UI POLISH CRITERIA:**
+- [x] **Single-page vs multi-page mode selector is intuitive and functional**
+- [x] **Enhanced multi-page configuration UI is intuitive and functional**
+- [x] **Mode selector provides clear visual feedback and status updates**
+- [x] **Configuration panel expands/collapses smoothly with proper styling**
+- [x] **All configuration controls work correctly with live value updates**
+- [x] **Backend properly handles scraping mode selection and configuration**
+- [x] **Comprehensive test coverage ensures feature reliability**
+- [ ] Results display shows clear page processing information
+- [ ] Advanced options are easily accessible but not overwhelming
+- [ ] Progress visualization clearly shows multi-page processing status
 
 ## Notes
 

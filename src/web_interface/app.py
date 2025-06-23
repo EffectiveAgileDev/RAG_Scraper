@@ -627,6 +627,199 @@ def create_app(testing=False):
                     color: var(--text-primary);
                 }
 
+                /* Scraping Mode Selector Styles */
+                .scraping-mode-selector {
+                    margin-bottom: 1rem;
+                }
+
+                .mode-toggle-group {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 0.75rem;
+                    margin-top: 0.75rem;
+                }
+
+                .mode-option {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    padding: 1rem;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    background: var(--bg-tertiary);
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    position: relative;
+                    text-align: center;
+                }
+
+                .mode-option input[type="radio"] {
+                    display: none;
+                }
+
+                .mode-option:hover {
+                    border-color: var(--accent-cyan);
+                    background: rgba(0, 170, 255, 0.1);
+                    transform: translateY(-2px);
+                }
+
+                .mode-option.active {
+                    border-color: var(--accent-green);
+                    background: rgba(0, 255, 136, 0.1);
+                    box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+                }
+
+                .mode-icon {
+                    font-size: 1.5rem;
+                    margin-bottom: 0.5rem;
+                }
+
+                .mode-title {
+                    font-family: 'JetBrains Mono', monospace;
+                    font-weight: 600;
+                    font-size: 0.875rem;
+                    color: var(--text-primary);
+                    margin-bottom: 0.25rem;
+                }
+
+                .mode-desc {
+                    font-size: 0.75rem;
+                    color: var(--text-muted);
+                    line-height: 1.3;
+                }
+
+                /* Multi-Page Configuration Panel Styles */
+                .config-panel-header {
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    position: relative;
+                }
+
+                .config-panel-header:hover {
+                    background: rgba(255, 255, 255, 0.05);
+                }
+
+                .config-toggle {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    width: 100%;
+                    cursor: pointer;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.875rem;
+                    color: var(--accent-amber);
+                    padding: 0.75rem;
+                    border: 1px solid rgba(255, 170, 0, 0.3);
+                    background: rgba(255, 170, 0, 0.05);
+                    transition: all 0.3s ease;
+                }
+
+                .config-icon {
+                    margin-right: 0.5rem;
+                    font-size: 1rem;
+                }
+
+                .expand-icon {
+                    transition: transform 0.3s ease;
+                    font-family: monospace;
+                    color: var(--accent-amber);
+                }
+
+                .expand-icon.expanded {
+                    transform: rotate(180deg);
+                }
+
+                .config-panel {
+                    overflow: hidden;
+                    transition: all 0.4s ease;
+                    border: 1px solid rgba(255, 170, 0, 0.2);
+                    border-top: none;
+                    background: var(--bg-tertiary);
+                }
+
+                .config-panel.collapsed {
+                    max-height: 0;
+                    opacity: 0;
+                    border-color: transparent;
+                }
+
+                .config-panel:not(.collapsed) {
+                    max-height: 600px;
+                    opacity: 1;
+                    padding: 1.5rem;
+                }
+
+                .config-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                    gap: 1.5rem;
+                }
+
+                .config-item {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.5rem;
+                }
+
+                .config-label {
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.75rem;
+                    color: var(--accent-green);
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+
+                .config-input {
+                    font-size: 0.875rem;
+                    padding: 0.5rem;
+                }
+
+                .terminal-slider {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    height: 4px;
+                    background: rgba(255, 255, 255, 0.1);
+                    outline: none;
+                    border-radius: 0;
+                    cursor: pointer;
+                }
+
+                .terminal-slider::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 16px;
+                    height: 16px;
+                    background: var(--accent-green);
+                    cursor: pointer;
+                    border-radius: 0;
+                    border: 1px solid var(--accent-green);
+                    box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+                }
+
+                .terminal-slider::-moz-range-thumb {
+                    width: 16px;
+                    height: 16px;
+                    background: var(--accent-green);
+                    cursor: pointer;
+                    border-radius: 0;
+                    border: 1px solid var(--accent-green);
+                    box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+                }
+
+                .slider-value {
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.75rem;
+                    color: var(--accent-amber);
+                    margin-top: 0.25rem;
+                }
+
+                .config-desc {
+                    font-size: 0.6875rem;
+                    color: var(--text-muted);
+                    line-height: 1.4;
+                    font-style: italic;
+                }
+
                 @media (max-width: 768px) {
                     .main-container {
                         padding: 1rem;
@@ -715,6 +908,105 @@ https://restaurant3.com
                                 name="outputDir" 
                                 class="terminal-input"
                                 placeholder="~/Downloads // Leave empty for default">
+                        </div>
+
+                        <!-- Multi-Page Configuration Panel -->
+                        <div class="input-group">
+                            <div class="scraping-mode-selector">
+                                <label class="input-label">SCRAPING_MODE:</label>
+                                <div class="mode-toggle-group">
+                                    <label class="mode-option active" data-mode="single">
+                                        <input type="radio" name="scrapingMode" value="single" checked>
+                                        <span class="mode-icon">📄</span>
+                                        <span class="mode-title">SINGLE_PAGE</span>
+                                        <span class="mode-desc">Process each URL as single page</span>
+                                    </label>
+                                    <label class="mode-option" data-mode="multi">
+                                        <input type="radio" name="scrapingMode" value="multi">
+                                        <span class="mode-icon">📚</span>
+                                        <span class="mode-title">MULTI_PAGE</span>
+                                        <span class="mode-desc">Discover and crawl related pages</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="config-panel-header" onclick="toggleMultiPageConfig()" id="multiPageHeader" style="display: none;">
+                                <label class="input-label config-toggle">
+                                    <span class="config-icon">⚙️</span>
+                                    MULTI_PAGE_CONFIG
+                                    <span class="expand-icon" id="configExpandIcon">▼</span>
+                                </label>
+                            </div>
+                            <div id="multiPageConfig" class="config-panel collapsed">
+                                <div class="config-grid">
+                                    <div class="config-item">
+                                        <label class="config-label" for="maxPages">MAX_PAGES_PER_SITE:</label>
+                                        <input 
+                                            type="number" 
+                                            id="maxPages" 
+                                            name="maxPages" 
+                                            class="terminal-input config-input"
+                                            value="50"
+                                            min="1"
+                                            max="500"
+                                            placeholder="50" />
+                                        <div class="config-desc">Maximum pages to scrape per website</div>
+                                    </div>
+                                    
+                                    <div class="config-item">
+                                        <label class="config-label" for="crawlDepth">CRAWL_DEPTH:</label>
+                                        <input 
+                                            type="range" 
+                                            id="crawlDepth" 
+                                            name="crawlDepth" 
+                                            class="terminal-slider"
+                                            value="2"
+                                            min="1"
+                                            max="5" />
+                                        <div class="slider-value">Depth: <span id="depthValue">2</span></div>
+                                        <div class="config-desc">How deep to follow page links</div>
+                                    </div>
+                                    
+                                    <div class="config-item">
+                                        <label class="config-label" for="includePatterns">INCLUDE_PATTERNS:</label>
+                                        <input 
+                                            type="text" 
+                                            id="includePatterns" 
+                                            name="includePatterns" 
+                                            class="terminal-input config-input"
+                                            placeholder="menu,food,restaurant"
+                                            value="menu,food,restaurant" />
+                                        <div class="config-desc">URL patterns to include (comma-separated)</div>
+                                    </div>
+                                    
+                                    <div class="config-item">
+                                        <label class="config-label" for="excludePatterns">EXCLUDE_PATTERNS:</label>
+                                        <input 
+                                            type="text" 
+                                            id="excludePatterns" 
+                                            name="excludePatterns" 
+                                            class="terminal-input config-input"
+                                            placeholder="admin,login,cart"
+                                            value="admin,login,cart" />
+                                        <div class="config-desc">URL patterns to exclude (comma-separated)</div>
+                                    </div>
+                                    
+                                    <div class="config-item">
+                                        <label class="config-label" for="rateLimit">RATE_LIMIT_MS:</label>
+                                        <input 
+                                            type="range" 
+                                            id="rateLimit" 
+                                            name="rateLimit" 
+                                            class="terminal-slider"
+                                            value="1000"
+                                            min="100"
+                                            max="5000"
+                                            step="100" />
+                                        <div class="slider-value">Delay: <span id="rateLimitValue">1000ms</span></div>
+                                        <div class="config-desc">Delay between requests (ethical scraping)</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="input-group">
@@ -822,6 +1114,8 @@ https://restaurant3.com
                 document.addEventListener('DOMContentLoaded', function() {
                     initializeTerminalEffects();
                     setupFormatSelection();
+                    setupSliderUpdates();
+                    setupModeSelection();
                 });
 
                 function initializeTerminalEffects() {
@@ -888,6 +1182,105 @@ https://restaurant3.com
                     });
                 }
 
+                // Multi-Page Configuration Panel Functions
+                function toggleMultiPageConfig() {
+                    const configPanel = document.getElementById('multiPageConfig');
+                    const expandIcon = document.getElementById('configExpandIcon');
+                    
+                    if (configPanel.classList.contains('collapsed')) {
+                        configPanel.classList.remove('collapsed');
+                        expandIcon.classList.add('expanded');
+                        updateSystemStatus('MULTI_PAGE_CONFIG // PANEL_EXPANDED');
+                    } else {
+                        configPanel.classList.add('collapsed');
+                        expandIcon.classList.remove('expanded');
+                        updateSystemStatus('MULTI_PAGE_CONFIG // PANEL_COLLAPSED');
+                    }
+                }
+
+                function setupSliderUpdates() {
+                    // Crawl depth slider
+                    const crawlDepthSlider = document.getElementById('crawlDepth');
+                    const depthValue = document.getElementById('depthValue');
+                    
+                    if (crawlDepthSlider && depthValue) {
+                        crawlDepthSlider.addEventListener('input', function() {
+                            depthValue.textContent = this.value;
+                            updateSystemStatus(`CRAWL_DEPTH_SET // LEVEL_${this.value}`);
+                        });
+                    }
+
+                    // Rate limit slider
+                    const rateLimitSlider = document.getElementById('rateLimit');
+                    const rateLimitValue = document.getElementById('rateLimitValue');
+                    
+                    if (rateLimitSlider && rateLimitValue) {
+                        rateLimitSlider.addEventListener('input', function() {
+                            rateLimitValue.textContent = this.value + 'ms';
+                            updateSystemStatus(`RATE_LIMIT_SET // ${this.value}MS_DELAY`);
+                        });
+                    }
+
+                    // Max pages input
+                    const maxPagesInput = document.getElementById('maxPages');
+                    if (maxPagesInput) {
+                        maxPagesInput.addEventListener('input', function() {
+                            updateSystemStatus(`MAX_PAGES_SET // LIMIT_${this.value}_PAGES`);
+                        });
+                    }
+
+                    // Pattern inputs
+                    const includePatterns = document.getElementById('includePatterns');
+                    const excludePatterns = document.getElementById('excludePatterns');
+                    
+                    if (includePatterns) {
+                        includePatterns.addEventListener('input', function() {
+                            const patterns = this.value.split(',').length;
+                            updateSystemStatus(`INCLUDE_PATTERNS_SET // ${patterns}_FILTERS_ACTIVE`);
+                        });
+                    }
+
+                    if (excludePatterns) {
+                        excludePatterns.addEventListener('input', function() {
+                            const patterns = this.value.split(',').length;
+                            updateSystemStatus(`EXCLUDE_PATTERNS_SET // ${patterns}_FILTERS_ACTIVE`);
+                        });
+                    }
+                }
+
+                function setupModeSelection() {
+                    const modeOptions = document.querySelectorAll('.mode-option');
+                    const multiPageHeader = document.getElementById('multiPageHeader');
+                    const multiPageConfig = document.getElementById('multiPageConfig');
+                    
+                    modeOptions.forEach(option => {
+                        option.addEventListener('click', function() {
+                            // Update active state
+                            modeOptions.forEach(opt => opt.classList.remove('active'));
+                            this.classList.add('active');
+                            
+                            // Update radio button
+                            const radio = this.querySelector('input[type="radio"]');
+                            radio.checked = true;
+                            
+                            // Show/hide multi-page configuration
+                            const mode = radio.value;
+                            if (mode === 'multi') {
+                                multiPageHeader.style.display = 'block';
+                                updateSystemStatus('MULTI_PAGE_MODE // ADVANCED_CRAWLING_ENABLED');
+                            } else {
+                                multiPageHeader.style.display = 'none';
+                                if (multiPageConfig) {
+                                    multiPageConfig.classList.add('collapsed');
+                                    const expandIcon = document.getElementById('configExpandIcon');
+                                    if (expandIcon) expandIcon.classList.remove('expanded');
+                                }
+                                updateSystemStatus('SINGLE_PAGE_MODE // DIRECT_URL_PROCESSING');
+                            }
+                        });
+                    });
+                }
+
                 function updateSystemStatus(message) {
                     if (statusBar) {
                         statusBar.textContent = message;
@@ -916,6 +1309,7 @@ https://restaurant3.com
                     const outputDir = document.getElementById('outputDir').value.trim();
                     const fileMode = document.getElementById('fileMode').value;
                     const fileFormat = document.querySelector('input[name="fileFormat"]:checked').value;
+                    const scrapingMode = document.querySelector('input[name="scrapingMode"]:checked').value;
                     
                     // Collect JSON field selections if JSON format is selected
                     let jsonFieldSelections = null;
@@ -933,8 +1327,20 @@ https://restaurant3.com
                         return;
                     }
                     
-                    updateSystemStatus(`INITIATING_EXTRACTION // ${urls.length}_TARGETS_QUEUED`);
-                    await startScraping(urls, outputDir, fileMode, fileFormat, jsonFieldSelections);
+                    // Collect multi-page configuration if multi-page mode is selected
+                    let multiPageConfig = null;
+                    if (scrapingMode === 'multi') {
+                        multiPageConfig = {
+                            maxPages: parseInt(document.getElementById('maxPages').value) || 50,
+                            crawlDepth: parseInt(document.getElementById('crawlDepth').value) || 2,
+                            includePatterns: document.getElementById('includePatterns').value || 'menu,food,restaurant',
+                            excludePatterns: document.getElementById('excludePatterns').value || 'admin,login,cart',
+                            rateLimit: parseInt(document.getElementById('rateLimit').value) || 1000
+                        };
+                    }
+                    
+                    updateSystemStatus(`INITIATING_EXTRACTION // ${urls.length}_TARGETS_QUEUED // ${scrapingMode.toUpperCase()}_MODE`);
+                    await startScraping(urls, outputDir, fileMode, fileFormat, jsonFieldSelections, scrapingMode, multiPageConfig);
                 });
                 
                 // Validate button with terminal feedback
@@ -1034,7 +1440,7 @@ https://restaurant3.com
                     urlValidation.innerHTML = html;
                 }
                 
-                async function startScraping(urls, outputDir, fileMode, fileFormat, jsonFieldSelections) {
+                async function startScraping(urls, outputDir, fileMode, fileFormat, jsonFieldSelections, scrapingMode, multiPageConfig) {
                     submitBtn.disabled = true;
                     submitBtn.textContent = 'EXTRACTION_IN_PROGRESS...';
                     showProgress();
@@ -1053,7 +1459,9 @@ https://restaurant3.com
                                 output_dir: outputDir,
                                 file_mode: fileMode,
                                 file_format: fileFormat,
-                                json_field_selections: jsonFieldSelections
+                                json_field_selections: jsonFieldSelections,
+                                scraping_mode: scrapingMode,
+                                multi_page_config: multiPageConfig
                             })
                         });
                         
@@ -1300,6 +1708,8 @@ https://restaurant3.com
             output_dir = data.get("output_dir") or app.config["UPLOAD_FOLDER"]
             file_mode = data.get("file_mode", "single")
             file_format = data.get("file_format", "text")  # text, pdf, or both
+            scraping_mode = data.get("scraping_mode", "single")  # single or multi
+            multi_page_config = data.get("multi_page_config", {})
 
             config = ScrapingConfig(
                 urls=urls, output_directory=output_dir, file_mode=file_mode
@@ -1316,8 +1726,11 @@ https://restaurant3.com
                 time_estimation=True, real_time_updates=True, error_notifications=True
             )
 
-            # Enable multi-page monitoring if URLs suggest multi-page sites
-            if any("menu" in url.lower() or "page" in url.lower() for url in urls):
+            # Enable multi-page monitoring based on scraping mode
+            if scraping_mode == "multi":
+                advanced_monitor.enable_multipage_monitoring()
+            elif any("menu" in url.lower() or "page" in url.lower() for url in urls):
+                # Fallback: auto-detect multi-page sites
                 advanced_monitor.enable_multipage_monitoring()
 
             # Progress callback that updates Advanced Progress Monitor
@@ -1345,7 +1758,8 @@ https://restaurant3.com
                         pass  # Fall back gracefully if operation setting fails
 
             # Create and run scraper with progress tracking
-            scraper = RestaurantScraper()
+            enable_multi_page = (scraping_mode == "multi")
+            scraper = RestaurantScraper(enable_multi_page=enable_multi_page)
             active_scraper = scraper
 
             # Force batch processing for better progress tracking
