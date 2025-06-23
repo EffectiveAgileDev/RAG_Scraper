@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0.0",
+  "generation_timestamp": "2025-06-23T12:05:12.095116",
+  "category": "Italian",
+  "entity_count": 2,
+  "entities": [
+    {
+      "id": "italian_0",
+      "name": "Stats Restaurant 1",
+      "address": "",
+      "phone": "",
+      "file_path": "Italian/Stats_Restaurant_1.txt",
+      "sources": [
+        "json-ld"
+      ],
+      "search_metadata": [
+        "italian",
+        "stats",
+        "restaurant"
+      ]
+    },
+    {
+      "id": "italian_1",
+      "name": "Stats Restaurant 3",
+      "address": "",
+      "phone": "",
+      "file_path": "Italian/Stats_Restaurant_3.txt",
+      "sources": [
+        "json-ld"
+      ],
+      "search_metadata": [
+        "italian",
+        "stats",
+        "restaurant"
+      ]
+    }
+  ],
+  "statistics": {
+    "total_entities": 2,
+    "cuisine_breakdown": {
+      "Italian": 2
+    },
+    "source_breakdown": {
+      "json-ld": 2
+    },
+    "completeness_metrics": {}
+  }
+}

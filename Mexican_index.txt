@@ -1,41 +1,12 @@
 Mexican Category Index
 ======================
 
-1. Restaurant 1
+Generated: 2025-06-23T12:05:12.161206
+Category: Mexican
+Entity Count: 1
 
-2. Restaurant 4
+Mexican Restaurants:
+--------------------
 
-3. Restaurant 7
-
-4. Restaurant 10
-
-5. Restaurant 13
-
-6. Restaurant 16
-
-7. Restaurant 19
-
-8. Restaurant 22
-
-9. Restaurant 25
-
-10. Restaurant 28
-
-11. Restaurant 31
-
-12. Restaurant 34
-
-13. Restaurant 37
-
-14. Restaurant 40
-
-15. Restaurant 43
-
-16. Restaurant 46
-
-17. Restaurant 49
-
-18. Restaurant 52
-
-Total Mexican Restaurants: 18
-Generated: 2025-06-23 11:37:23
+1. Stats Restaurant 2
+   File: Mexican/Stats_Restaurant_2.txt

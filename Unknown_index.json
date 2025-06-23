@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0.0",
+  "generation_timestamp": "2025-06-23T12:05:12.027338",
+  "category": "Unknown",
+  "entity_count": 2,
+  "entities": [
+    {
+      "id": "unknown_0",
+      "name": "Tony's Italian Restaurant",
+      "address": "",
+      "phone": "",
+      "file_path": "Unknown/Tony's_Italian_Restaurant.txt",
+      "sources": [
+        "json-ld"
+      ],
+      "search_metadata": [
+        "tony's",
+        "restaurant",
+        "italian"
+      ]
+    },
+    {
+      "id": "unknown_1",
+      "name": "Tony's Italian Restaurant - Downtown",
+      "address": "",
+      "phone": "",
+      "file_path": "Unknown/Tony's_Italian_Restaurant_-_Downtown.txt",
+      "sources": [
+        "json-ld"
+      ],
+      "search_metadata": [
+        "downtown",
+        "tony's",
+        "restaurant",
+        "italian"
+      ]
+    }
+  ],
+  "statistics": {
+    "total_entities": 2,
+    "cuisine_breakdown": {
+      "Unknown": 2
+    },
+    "source_breakdown": {
+      "json-ld": 2
+    },
+    "completeness_metrics": {}
+  }
+}

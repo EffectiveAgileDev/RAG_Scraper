@@ -1,9 +1,15 @@
 Unknown Category Index
 ======================
 
-1. Restaurant 1
+Generated: 2025-06-23T12:05:12.027338
+Category: Unknown
+Entity Count: 2
 
-2. Restaurant 2
+Unknown Restaurants:
+--------------------
 
-Total Unknown Restaurants: 2
-Generated: 2025-06-23 11:37:23
+1. Tony's Italian Restaurant
+   File: Unknown/Tony's_Italian_Restaurant.txt
+
+2. Tony's Italian Restaurant - Downtown
+   File: Unknown/Tony's_Italian_Restaurant_-_Downtown.txt

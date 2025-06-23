@@ -1,9 +1,30 @@
 Master Index - All Restaurant Entities
 ========================================
 
-1. Restaurant 1
+Generated: 2025-06-23T12:05:12.079080
+Total Entities: 3
+Schema Version: 1.0.0
 
-2. Restaurant 2
+Restaurant Listings:
+--------------------
 
-Total Entities: 2
-Generated: 2025-06-23 11:37:23
+1. Stats Restaurant 1
+   Cuisine: Italian
+   File: Italian/Stats_Restaurant_1.txt
+
+2. Stats Restaurant 2
+   Cuisine: Mexican
+   File: Mexican/Stats_Restaurant_2.txt
+
+3. Stats Restaurant 3
+   Cuisine: Italian
+   File: Italian/Stats_Restaurant_3.txt
+
+
+Statistics:
+------------
+Total Restaurants: 3
+
+Cuisine Breakdown:
+  Italian: 2
+  Mexican: 1

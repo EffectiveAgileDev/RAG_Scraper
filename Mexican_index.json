@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0.0",
+  "generation_timestamp": "2025-06-23T12:05:12.161206",
+  "category": "Mexican",
+  "entity_count": 1,
+  "entities": [
+    {
+      "id": "mexican_0",
+      "name": "Stats Restaurant 2",
+      "address": "",
+      "phone": "",
+      "file_path": "Mexican/Stats_Restaurant_2.txt",
+      "sources": [
+        "json-ld"
+      ],
+      "search_metadata": [
+        "stats",
+        "mexican",
+        "restaurant"
+      ]
+    }
+  ],
+  "statistics": {
+    "total_entities": 1,
+    "cuisine_breakdown": {
+      "Mexican": 1
+    },
+    "source_breakdown": {
+      "json-ld": 1
+    },
+    "completeness_metrics": {}
+  }
+}

@@ -1,43 +1,15 @@
 Italian Category Index
 ======================
 
-1. Restaurant 0
+Generated: 2025-06-23T12:05:12.095116
+Category: Italian
+Entity Count: 2
 
-2. Restaurant 3
+Italian Restaurants:
+--------------------
 
-3. Restaurant 6
+1. Stats Restaurant 1
+   File: Italian/Stats_Restaurant_1.txt
 
-4. Restaurant 9
-
-5. Restaurant 12
-
-6. Restaurant 15
-
-7. Restaurant 18
-
-8. Restaurant 21
-
-9. Restaurant 24
-
-10. Restaurant 27
-
-11. Restaurant 30
-
-12. Restaurant 33
-
-13. Restaurant 36
-
-14. Restaurant 39
-
-15. Restaurant 42
-
-16. Restaurant 45
-
-17. Restaurant 48
-
-18. Restaurant 51
-
-19. Restaurant 54
-
-Total Italian Restaurants: 19
-Generated: 2025-06-23 11:37:23
+2. Stats Restaurant 3
+   File: Italian/Stats_Restaurant_3.txt

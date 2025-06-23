@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0.0",
+  "generation_timestamp": "2025-06-23T12:05:12.079080",
+  "total_entities": 3,
+  "entities": [
+    {
+      "id": "restaurant_0",
+      "name": "Stats Restaurant 1",
+      "cuisine": "Italian",
+      "address": "",
+      "phone": "",
+      "file_path": "Italian/Stats_Restaurant_1.txt",
+      "sources": [
+        "json-ld"
+      ],
+      "search_metadata": [
+        "italian",
+        "stats",
+        "restaurant"
+      ]
+    },
+    {
+      "id": "restaurant_1",
+      "name": "Stats Restaurant 2",
+      "cuisine": "Mexican",
+      "address": "",
+      "phone": "",
+      "file_path": "Mexican/Stats_Restaurant_2.txt",
+      "sources": [
+        "json-ld"
+      ],
+      "search_metadata": [
+        "stats",
+        "mexican",
+        "restaurant"
+      ]
+    },
+    {
+      "id": "restaurant_2",
+      "name": "Stats Restaurant 3",
+      "cuisine": "Italian",
+      "address": "",
+      "phone": "",
+      "file_path": "Italian/Stats_Restaurant_3.txt",
+      "sources": [
+        "json-ld"
+      ],
+      "search_metadata": [
+        "italian",
+        "stats",
+        "restaurant"
+      ]
+    }
+  ],
+  "statistics": {
+    "total_entities": 3,
+    "cuisine_breakdown": {
+      "Italian": 2,
+      "Mexican": 1
+    },
+    "source_breakdown": {
+      "json-ld": 3
+    },
+    "completeness_metrics": {}
+  },
+  "relationships": [
+    {
+      "source": "Stats Restaurant 1",
+      "target": "Stats Restaurant 3",
+      "type": "related"
+    }
+  ]
+}
