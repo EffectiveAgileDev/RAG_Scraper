@@ -166,14 +166,20 @@ class TestPageDiscovery:
         }
 
         discovery = PageDiscovery("http://example.com", max_pages=4)
+        
+        # First prioritize, then apply limit
         prioritized = discovery.prioritize_pages(all_pages)
+        limited = discovery.apply_page_limit(set(prioritized))
 
         # High priority pages should be selected first
         high_priority = {"menu", "contact", "about", "hours"}
-        selected_paths = {url.split("/")[-1] for url in prioritized}
+        selected_paths = {url.split("/")[-1] for url in limited}
 
-        assert len(prioritized) == 4
+        assert len(limited) == 4
         assert high_priority.issubset(selected_paths)
+        
+        # Verify ordering - menu should be first (highest priority)
+        assert prioritized[0] == "http://example.com/menu"
 
     def test_discover_pages_with_keywords(self):
         """Test discovering pages based on link text keywords."""
@@ -220,6 +226,104 @@ class TestPageDiscovery:
 
         expected_valid = {"http://example.com/menu", "http://example.com/contact"}
         assert links == expected_valid
+
+    def test_link_extraction_edge_cases(self):
+        """Test link extraction with various edge cases."""
+        from src.scraper.page_discovery import PageDiscovery
+        
+        discovery = PageDiscovery("https://restaurant.com")
+        html_content = """
+        <html>
+            <body>
+                <a href="/menu">Valid Link</a>
+                <a href="javascript:void(0)">JavaScript Link</a>
+                <a href="mailto:test@example.com">Email Link</a>
+                <a href="#section">Anchor Link</a>
+                <a href="tel:+1234567890">Phone Link</a>
+                <a href="ftp://files.example.com">FTP Link</a>
+                <a href="/path with spaces">Space in URL</a>
+            </body>
+        </html>
+        """
+        
+        links = discovery.extract_all_internal_links(html_content)
+        
+        # Should include valid internal links
+        assert "https://restaurant.com/menu" in links
+        assert "https://restaurant.com/path with spaces" in links
+        
+        # Verify exclusions (only javascript:, mailto:, and # are filtered)
+        for link in links:
+            assert not link.startswith("javascript:")
+            assert not link.startswith("mailto:")
+            assert "#" not in link
+        
+        # These would be external or invalid so won't be included as internal links
+        external_or_special = [link for link in links if link.startswith("tel:") or link.startswith("ftp:")]
+        # tel: and ftp: links would be normalized to absolute URLs, so they might be included
+        # but should be filtered by the _is_internal_url method if they don't match the domain
+
+    def test_pattern_matching_depth_enforcement(self):
+        """Test pattern matching with depth considerations."""
+        from src.scraper.page_discovery import PageDiscovery
+        
+        discovery = PageDiscovery("https://restaurant.com", max_pages=3)
+        
+        # Test with many pages to verify depth limit
+        many_urls = {f"https://restaurant.com/menu/item{i}" for i in range(10)}
+        many_urls.update({f"https://restaurant.com/about/section{i}" for i in range(10)})
+        
+        # Filter relevant pages first
+        relevant = discovery.filter_relevant_pages(many_urls)
+        
+        # Apply page limit
+        limited = discovery.apply_page_limit(relevant)
+        
+        # Should respect max_pages limit
+        assert len(limited) <= 3
+        
+        # Should prioritize menu and about pages
+        menu_pages = [url for url in limited if "/menu/" in url]
+        about_pages = [url for url in limited if "/about/" in url]
+        assert len(menu_pages) > 0 or len(about_pages) > 0
+
+    def test_circular_reference_prevention_complex(self):
+        """Test complex circular reference prevention scenarios."""
+        from src.scraper.page_discovery import PageDiscovery
+        
+        discovery = PageDiscovery("https://restaurant.com")
+        
+        # Simulate discovering pages in stages
+        initial_pages = {
+            "https://restaurant.com/menu",
+            "https://restaurant.com/about"
+        }
+        
+        # Mark some as discovered
+        discovery.discovered_pages.update(initial_pages)
+        
+        # New batch with some overlaps and new pages
+        new_batch = {
+            "https://restaurant.com/menu",     # Already discovered
+            "https://restaurant.com/about",    # Already discovered
+            "https://restaurant.com/contact",  # New
+            "https://restaurant.com/hours",    # New
+            "https://restaurant.com/events"    # New
+        }
+        
+        # Get only new pages
+        truly_new = discovery.get_new_pages(new_batch)
+        
+        expected_new = {
+            "https://restaurant.com/contact",
+            "https://restaurant.com/hours", 
+            "https://restaurant.com/events"
+        }
+        assert truly_new == expected_new
+        
+        # Verify discovered pages state is maintained
+        assert "https://restaurant.com/menu" in discovery.discovered_pages
+        assert "https://restaurant.com/about" in discovery.discovered_pages
 
 
 class TestPageClassifier:

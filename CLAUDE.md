@@ -53,6 +53,17 @@ This project follows strict **Test-Driven Development (TDD)** with:
 - **Unit TDD**: 95%+ coverage target using pytest with extensive mocking
 - **Red-Green-Refactor cycles**: Write failing tests first, implement minimal code, then refactor
 
+### TDD Process Requirements
+When asked to implement any feature:
+1. **STOP** - Do not write implementation code first
+2. Ask for clarification on acceptance criteria if unclear
+3. Write acceptance test at user function level that FAILS
+4. Write unit tests for supporting components that FAIL
+5. Run tests to confirm they fail (RED phase)
+6. Write minimal implementation to make tests pass (GREEN phase)
+7. Refactor code while keeping tests green
+8. Commit only when all tests pass
+
 ### Test Structure
 - **tests/features/** - Gherkin BDD scenarios for user stories
 - **tests/step_definitions/** - pytest-bdd step implementations

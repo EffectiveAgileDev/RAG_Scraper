@@ -1,101 +1,123 @@
 # Multi-Page Scraping Implementation Roadmap
 
+## Misc Changes Not in Phases
+
+- [x] Change the port to other than 8080 which the Single Page version uses.
+
 ## Phase 1: Core Infrastructure (Foundation)
 
 ### 1.1 Page Discovery System
-- [ ] Create `src/scraper/page_discovery.py`
-  - [ ] Implement `PageDiscovery` class with link extraction methods
-  - [ ] Add URL pattern matching for valid links
-  - [ ] Create link filtering based on domain and patterns
-  - [ ] Implement crawl depth tracking
-  - [ ] Add circular reference detection
-- [ ] Create BDD feature file `tests/features/page_discovery.feature`
-  - [ ] Scenario: Discover links from restaurant directory page
-  - [ ] Scenario: Filter links by pattern
-  - [ ] Scenario: Respect crawl depth limits
-- [ ] Write unit tests for page discovery
-  - [ ] Test link extraction from HTML
-  - [ ] Test pattern matching logic
-  - [ ] Test depth limit enforcement
-  - [ ] Test circular reference prevention
+- [x] Create BDD feature file `tests/features/page_discovery.feature`
+  - [x] Scenario: Discover links from restaurant directory page
+  - [x] Scenario: Filter links by pattern
+  - [x] Scenario: Respect crawl depth limits
+- [x] Write unit tests for page discovery
+  - [x] Test link extraction from HTML
+  - [x] Test pattern matching logic
+  - [x] Test depth limit enforcement
+  - [x] Test circular reference prevention
+- [x] Create `src/scraper/page_discovery.py`
+  - [x] Implement `PageDiscovery` class with link extraction methods
+  - [x] Add URL pattern matching for valid links
+  - [x] Create link filtering based on domain and patterns
+  - [x] Implement crawl depth tracking
+  - [x] Add circular reference detection
 
 ### 1.2 Multi-Page Scraper Orchestrator
-- [ ] Create `src/scraper/multi_page_scraper.py`
-  - [ ] Implement `MultiPageScraper` class
-  - [ ] Add page queue management (BFS/DFS options)
-  - [ ] Create visited page tracking
-  - [ ] Implement concurrent page fetching with throttling
-  - [ ] Add progress tracking for multi-page operations
-- [ ] Create BDD feature file `tests/features/multi_page_navigation.feature`
-  - [ ] Scenario: Scrape restaurant directory with detail pages
-  - [ ] Scenario: Handle failed page gracefully
-  - [ ] Scenario: Track progress across multiple pages
-- [ ] Write unit tests for multi-page scraper
-  - [ ] Test queue management
-  - [ ] Test traversal strategies
-  - [ ] Test concurrent fetching
-  - [ ] Test error handling for failed pages
+- [x] Create BDD feature file `tests/features/multi_page_navigation.feature`
+  - [x] Scenario: Scrape restaurant directory with detail pages
+  - [x] Scenario: Handle failed page gracefully
+  - [x] Scenario: Track progress across multiple pages
+- [x] Write unit tests for multi-page scraper
+  - [x] Test queue management
+  - [x] Test traversal strategies
+  - [x] Test concurrent fetching
+  - [x] Test error handling for failed pages
+- [x] Create `src/scraper/multi_page_scraper.py`
+  - [x] Implement `MultiPageScraper` class
+  - [x] Add page queue management (BFS/DFS options)
+  - [x] Create visited page tracking
+  - [x] Implement concurrent page fetching with throttling
+  - [x] Add progress tracking for multi-page operations
 
 ### 1.3 Enhanced Rate Limiter
-- [ ] Update `src/scraper/rate_limiter.py`
-  - [ ] Add per-domain rate limiting
-  - [ ] Implement exponential backoff
-  - [ ] Add support for retry-after headers
-  - [ ] Create domain-specific throttling rules
-- [ ] Update rate limiter unit tests
-  - [ ] Test per-domain limits
-  - [ ] Test exponential backoff behavior
-  - [ ] Test concurrent request handling
+- [x] Update BDD feature file `tests/features/rate_limiting.feature`
+  - [x] Scenario: Per-domain rate limiting for multi-page scraping
+  - [x] Scenario: Exponential backoff for failed requests
+  - [x] Scenario: Respect retry-after headers from servers
+  - [x] Scenario: Domain-specific throttling rules configuration
+  - [x] Scenario: Concurrent request rate limiting across domains
+  - [x] Scenario: Rate limit recovery after temporary blocks
+  - [x] Scenario: Adaptive rate limiting based on server response times
+  - [x] Scenario: Rate limiting integration with multi-page navigation
+- [x] Update `src/scraper/rate_limiter.py`
+  - [x] Add per-domain rate limiting
+  - [x] Implement exponential backoff
+  - [x] Add support for retry-after headers
+  - [x] Create domain-specific throttling rules
+- [x] Update rate limiter unit tests
+  - [x] Test per-domain limits
+  - [x] Test exponential backoff behavior
+  - [x] Test concurrent request handling
 
 ### 1.4 Configuration Updates
-- [ ] Enhance `src/config/scraping_config.py`
-  - [ ] Add multi-page configuration properties
-  - [ ] Create link pattern configuration structure
-  - [ ] Add crawl depth and page limit settings
-  - [ ] Implement configuration validation
-- [ ] Write configuration unit tests
-  - [ ] Test configuration loading
-  - [ ] Test validation rules
-  - [ ] Test default values
+- [x] Update BDD feature file `tests/features/configuration_updates.feature`
+  - [x] Scenario: Configure multi-page scraping parameters
+  - [x] Scenario: Validate link pattern configuration
+  - [x] Scenario: Set crawl depth and page limits
+  - [x] Scenario: Load configuration from file
+  - [x] Scenario: Save configuration to file
+  - [x] Scenario: Handle invalid configuration values
+  - [x] Scenario: Apply default configuration values
+  - [x] Scenario: Configure per-domain settings
+- [x] Enhance `src/config/scraping_config.py`
+  - [x] Add multi-page configuration properties
+  - [x] Create link pattern configuration structure
+  - [x] Add crawl depth and page limit settings
+  - [x] Implement configuration validation
+- [x] Write configuration unit tests
+  - [x] Test configuration loading
+  - [x] Test validation rules
+  - [x] Test default values
 
 ## Phase 2: Data Management
 
 ### 2.1 Data Aggregator
-- [ ] Create `src/scraper/data_aggregator.py`
-  - [ ] Implement `DataAggregator` class
-  - [ ] Create entity relationship mapping
-  - [ ] Add data merging strategies
-  - [ ] Implement deduplication logic
-  - [ ] Create hierarchical data structures
-- [ ] Create BDD feature file `tests/features/data_aggregation.feature`
-  - [ ] Scenario: Aggregate restaurant data from multiple pages
-  - [ ] Scenario: Maintain parent-child relationships
-  - [ ] Scenario: Handle duplicate data
-- [ ] Write unit tests for data aggregator
-  - [ ] Test entity relationship creation
-  - [ ] Test data merging
-  - [ ] Test deduplication
-  - [ ] Test hierarchical structure generation
+- [x] Create `src/scraper/data_aggregator.py`
+  - [x] Implement `DataAggregator` class
+  - [x] Create entity relationship mapping
+  - [x] Add data merging strategies
+  - [x] Implement deduplication logic
+  - [x] Create hierarchical data structures
+- [x] Create BDD feature file `tests/features/data_aggregation.feature`
+  - [x] Scenario: Aggregate restaurant data from multiple pages
+  - [x] Scenario: Maintain parent-child relationships
+  - [x] Scenario: Handle duplicate data
+- [x] Write unit tests for data aggregator
+  - [x] Test entity relationship creation
+  - [x] Test data merging
+  - [x] Test deduplication
+  - [x] Test hierarchical structure generation
 
 ### 2.2 Entity Relationship Tracking
-- [ ] Create relationship metadata structures
-  - [ ] Define relationship types (parent-child, sibling, reference)
-  - [ ] Implement unique identifier generation
-  - [ ] Create cross-reference mapping
-- [ ] Implement relationship persistence
-  - [ ] Save relationship metadata
-  - [ ] Create index files
-  - [ ] Implement relationship queries
+- [x] Create relationship metadata structures
+  - [x] Define relationship types (parent-child, sibling, reference)
+  - [x] Implement unique identifier generation
+  - [x] Create cross-reference mapping
+- [x] Implement relationship persistence
+  - [x] Save relationship metadata
+  - [x] Create index files
+  - [x] Implement relationship queries
 
 ### 2.3 Enhanced Data Extraction
-- [ ] Update existing extractors for multi-page context
-  - [ ] Modify `json_ld_extractor.py` for relationship awareness
-  - [ ] Update `microdata_extractor.py` for entity correlation
-  - [ ] Enhance `heuristic_extractor.py` for cross-page patterns
-- [ ] Add extraction context tracking
-  - [ ] Track source page for each data point
-  - [ ] Maintain extraction timestamp
-  - [ ] Record extraction method used
+- [x] Update existing extractors for multi-page context
+  - [x] Modify `json_ld_extractor.py` for relationship awareness
+  - [x] Update `microdata_extractor.py` for entity correlation
+  - [x] Enhance `heuristic_extractor.py` for cross-page patterns
+- [x] Add extraction context tracking
+  - [x] Track source page for each data point
+  - [x] Maintain extraction timestamp
+  - [x] Record extraction method used
 
 ## Phase 3: Output Generation
 

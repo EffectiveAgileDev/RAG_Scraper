@@ -1759,5 +1759,10 @@ def get_current_progress():
 
 
 if __name__ == "__main__":
+    from src.config.app_config import get_app_config
+    
     app = create_app()
-    app.run(host="0.0.0.0", port=8080, debug=False)
+    config = get_app_config()
+    config.host = "0.0.0.0"  # Override default for direct app.py execution
+    
+    app.run(host=config.host, port=config.port, debug=config.debug)

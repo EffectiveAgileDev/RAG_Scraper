@@ -6,6 +6,42 @@ Feature: Multi-Page Website Navigation and Data Aggregation
   Background:
     Given I have access to the RAG_Scraper web interface
     And the multi-page scraping functionality is enabled
+    And I have a multi-page scraper configured with max 5 pages
+    And I have mock HTML content for restaurant pages
+
+  @multi_page @orchestrator
+  Scenario: Scrape restaurant directory with detail pages
+    Given I have a restaurant website with multiple relevant pages
+    And the website has a home page with navigation to menu, about, and contact pages
+    And each page contains restaurant-specific information
+    When I initiate multi-page scraping on the restaurant website
+    Then I should discover all relevant pages from the navigation
+    And I should successfully scrape data from each discovered page
+    And I should aggregate the data from all pages into a unified result
+    And the result should contain information from all successfully processed pages
+
+  @multi_page @orchestrator @error_handling
+  Scenario: Handle failed page gracefully
+    Given I have a restaurant website with multiple pages
+    And one of the discovered pages will fail to load
+    And other pages are accessible and contain valid data
+    When I initiate multi-page scraping on the restaurant website
+    Then I should attempt to process all discovered pages
+    And I should handle the failed page without stopping the entire process
+    And I should successfully process the remaining accessible pages
+    And the result should include both successful and failed page lists
+    And the aggregated data should contain information from successful pages only
+
+  @multi_page @orchestrator @progress_tracking
+  Scenario: Track progress across multiple pages
+    Given I have a restaurant website with 4 discoverable pages
+    And I provide a progress callback function to track scraping progress
+    When I initiate multi-page scraping on the restaurant website
+    Then I should receive progress notifications for page discovery
+    And I should receive progress updates for each page being processed
+    And I should receive completion notifications with success/failure counts
+    And the progress should include restaurant name and page type information
+    And the final result should contain accurate processing statistics
 
   @multi_page @discovery
   Scenario: Discover relevant pages on a restaurant website

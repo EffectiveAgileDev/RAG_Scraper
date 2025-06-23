@@ -1,5 +1,6 @@
 """Scraping configuration management for RAG_Scraper."""
 import os
+import re
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from dataclasses import dataclass, field
@@ -26,6 +27,27 @@ class ScrapingConfig:
     timeout_per_site: int = 300  # 5 minutes
     rate_limit_delay: float = 2.0  # seconds between requests
     user_agent: str = "RAG_Scraper/1.0 (Restaurant Data Collection)"
+    
+    # Multi-page scraping configuration
+    max_crawl_depth: int = 2
+    follow_pagination: bool = False
+    max_total_pages: Optional[int] = None
+    crawl_timeout: Optional[int] = None
+    concurrent_requests: int = 3
+    respect_robots_txt: bool = True
+    page_timeout: Optional[int] = None  # Override for timeout_per_page
+    
+    # Link patterns configuration
+    link_patterns: Dict[str, List[str]] = field(default_factory=lambda: {
+        "include": [],
+        "exclude": []
+    })
+    
+    # Crawl settings
+    crawl_settings: Dict[str, Any] = field(default_factory=dict)
+    
+    # Per-domain settings
+    per_domain_settings: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
     # Default fields that are always extracted
     default_fields: List[str] = field(
@@ -96,6 +118,39 @@ class ScrapingConfig:
         # Validate rate limit
         if self.rate_limit_delay < 0:
             raise ValueError("rate_limit_delay cannot be negative")
+            
+        # Validate multi-page configuration
+        if self.max_pages_per_site <= 0:
+            raise ValueError("max_pages_per_site must be positive")
+            
+        if self.max_crawl_depth < 1:
+            raise ValueError("max_crawl_depth must be at least 1")
+            
+        if self.concurrent_requests < 1:
+            raise ValueError("concurrent_requests must be at least 1")
+            
+        if self.page_timeout is not None and self.page_timeout <= 0:
+            raise ValueError("page_timeout must be positive")
+            
+        if self.max_total_pages is not None and self.max_total_pages <= 0:
+            raise ValueError("max_total_pages must be positive")
+            
+        if self.crawl_timeout is not None and self.crawl_timeout <= 0:
+            raise ValueError("crawl_timeout must be positive")
+            
+        # Validate link patterns
+        self._validate_link_patterns()
+        
+        # Validate per-domain settings
+        self._validate_per_domain_settings()
+        
+        # Process crawl_settings if provided
+        if self.crawl_settings:
+            self._process_crawl_settings()
+            
+        # Use page_timeout if specified, otherwise use timeout_per_page
+        if self.page_timeout is not None:
+            self.timeout_per_page = self.page_timeout
 
     def get_all_selected_fields(self) -> List[str]:
         """Get all fields to extract (default + selected optional)."""
@@ -119,7 +174,7 @@ class ScrapingConfig:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert configuration to dictionary."""
-        return {
+        data = {
             "urls": self.urls,
             "output_directory": self.output_directory,
             "file_mode": self.file_mode,
@@ -133,7 +188,26 @@ class ScrapingConfig:
             "timeout_per_site": self.timeout_per_site,
             "rate_limit_delay": self.rate_limit_delay,
             "user_agent": self.user_agent,
+            "max_crawl_depth": self.max_crawl_depth,
+            "follow_pagination": self.follow_pagination,
+            "concurrent_requests": self.concurrent_requests,
+            "respect_robots_txt": self.respect_robots_txt,
+            "link_patterns": self.link_patterns,
         }
+        
+        # Add optional fields if set
+        if self.max_total_pages is not None:
+            data["max_total_pages"] = self.max_total_pages
+        if self.crawl_timeout is not None:
+            data["crawl_timeout"] = self.crawl_timeout
+        if self.page_timeout is not None:
+            data["page_timeout"] = self.page_timeout
+        if self.crawl_settings:
+            data["crawl_settings"] = self.crawl_settings
+        if self.per_domain_settings:
+            data["per_domain_settings"] = self.per_domain_settings
+            
+        return data
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "ScrapingConfig":
@@ -218,3 +292,88 @@ class ScrapingConfig:
         )
 
         return total_time
+    
+    def _validate_link_patterns(self) -> None:
+        """Validate link patterns are valid regex patterns."""
+        for pattern_type, patterns in self.link_patterns.items():
+            if pattern_type not in ["include", "exclude"]:
+                raise ValueError(f"Invalid link pattern type: {pattern_type}")
+            
+            for pattern in patterns:
+                try:
+                    re.compile(pattern)
+                except re.error as e:
+                    raise ValueError(f"Invalid regex pattern '{pattern}': {e}")
+    
+    def _validate_per_domain_settings(self) -> None:
+        """Validate per-domain settings."""
+        for domain, settings in self.per_domain_settings.items():
+            if "rate_limit" in settings:
+                if settings["rate_limit"] <= 0:
+                    raise ValueError(f"Rate limit must be positive for domain {domain}")
+            
+            if "max_pages" in settings:
+                if settings["max_pages"] <= 0:
+                    raise ValueError(f"Max pages must be positive for domain {domain}")
+    
+    def _process_crawl_settings(self) -> None:
+        """Process crawl_settings and apply to instance attributes."""
+        # Map crawl_settings to instance attributes
+        if "max_crawl_depth" in self.crawl_settings:
+            self.max_crawl_depth = self.crawl_settings["max_crawl_depth"]
+        
+        if "follow_pagination" in self.crawl_settings:
+            self.follow_pagination = self.crawl_settings["follow_pagination"]
+        
+        if "respect_robots_txt" in self.crawl_settings:
+            self.respect_robots_txt = self.crawl_settings["respect_robots_txt"]
+    
+    def should_follow_link(self, link: str) -> bool:
+        """Check if a link should be followed based on link patterns.
+        
+        Args:
+            link: URL or path to check
+            
+        Returns:
+            bool: True if link should be followed, False otherwise
+        """
+        # First check if it matches any include patterns
+        include_patterns = self.link_patterns.get("include", [])
+        exclude_patterns = self.link_patterns.get("exclude", [])
+        
+        # If no include patterns, default to False unless no patterns at all
+        if not include_patterns and not exclude_patterns:
+            return True
+        
+        # Check exclude patterns first (they take precedence)
+        for pattern in exclude_patterns:
+            if re.search(pattern, link):
+                return False
+        
+        # Check include patterns
+        if include_patterns:
+            for pattern in include_patterns:
+                if re.search(pattern, link):
+                    return True
+            return False  # Didn't match any include pattern
+        
+        return True  # No include patterns, and didn't match exclude
+    
+    def get_domain_settings(self, domain: str) -> Dict[str, Any]:
+        """Get settings for a specific domain, falling back to defaults.
+        
+        Args:
+            domain: Domain name to get settings for
+            
+        Returns:
+            Dict[str, Any]: Domain-specific settings or defaults
+        """
+        if domain in self.per_domain_settings:
+            return self.per_domain_settings[domain]
+        
+        # Return default settings
+        return self.per_domain_settings.get("default", {
+            "rate_limit": self.rate_limit_delay,
+            "max_pages": self.max_pages_per_site,
+            "user_agent": self.user_agent
+        })
