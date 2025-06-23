@@ -1,0 +1,9 @@
+Master Index - All Restaurant Entities
+========================================
+
+1. Restaurant 1
+
+2. Restaurant 2
+
+Total Entities: 2
+Generated: 2025-06-23 11:37:23

@@ -1,0 +1,7 @@
+Restaurant 18
+
+CUISINE: Italian
+
+Entity Type: Restaurant
+Entity Category: Italian
+Extraction Sources: json-ld

@@ -1,0 +1,41 @@
+American Category Index
+=======================
+
+1. Restaurant 2
+
+2. Restaurant 5
+
+3. Restaurant 8
+
+4. Restaurant 11
+
+5. Restaurant 14
+
+6. Restaurant 17
+
+7. Restaurant 20
+
+8. Restaurant 23
+
+9. Restaurant 26
+
+10. Restaurant 29
+
+11. Restaurant 32
+
+12. Restaurant 35
+
+13. Restaurant 38
+
+14. Restaurant 41
+
+15. Restaurant 44
+
+16. Restaurant 47
+
+17. Restaurant 50
+
+18. Restaurant 53
+
+Total American Restaurants: 18
+Generated: 2025-06-23 11:37:23

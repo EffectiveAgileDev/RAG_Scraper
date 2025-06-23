@@ -1,0 +1,7 @@
+Restaurant 25
+
+CUISINE: Mexican
+
+Entity Type: Restaurant
+Entity Category: Mexican
+Extraction Sources: json-ld

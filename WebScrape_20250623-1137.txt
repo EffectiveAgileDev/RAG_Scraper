@@ -1,0 +1,14 @@
+---
+entity_type: restaurant
+name: Restaurant 2
+cuisine: Unknown
+extraction_sources:
+  - json-ld
+generation_timestamp: 2025-06-23T11:37:23.797511
+embedding_optimized: True
+---
+
+Restaurant 2
+
+Entity Hierarchy:
+Entity ID: Restaurant 2

@@ -1,0 +1,7 @@
+Restaurant 8
+
+CUISINE: American
+
+Entity Type: Restaurant
+Entity Category: American
+Extraction Sources: json-ld

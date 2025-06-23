@@ -1,0 +1,7 @@
+Restaurant 14
+
+CUISINE: American
+
+Entity Type: Restaurant
+Entity Category: American
+Extraction Sources: json-ld

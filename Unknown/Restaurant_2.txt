@@ -1,0 +1,5 @@
+Restaurant 2
+
+Entity Type: Restaurant
+Entity Category: Unknown
+Extraction Sources: json-ld

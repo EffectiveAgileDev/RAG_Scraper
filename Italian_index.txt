@@ -1,0 +1,43 @@
+Italian Category Index
+======================
+
+1. Restaurant 0
+
+2. Restaurant 3
+
+3. Restaurant 6
+
+4. Restaurant 9
+
+5. Restaurant 12
+
+6. Restaurant 15
+
+7. Restaurant 18
+
+8. Restaurant 21
+
+9. Restaurant 24
+
+10. Restaurant 27
+
+11. Restaurant 30
+
+12. Restaurant 33
+
+13. Restaurant 36
+
+14. Restaurant 39
+
+15. Restaurant 42
+
+16. Restaurant 45
+
+17. Restaurant 48
+
+18. Restaurant 51
+
+19. Restaurant 54
+
+Total Italian Restaurants: 19
+Generated: 2025-06-23 11:37:23

@@ -121,20 +121,33 @@
 
 ## Phase 3: Output Generation
 
-### 3.1 Enhanced Text File Generator
-- [ ] Update `src/file_generator/text_file_generator.py`
-  - [ ] Add support for hierarchical document structure
-  - [ ] Implement entity-based file generation
-  - [ ] Create cross-reference sections
-  - [ ] Add metadata headers for RAG optimization
-- [ ] Create output directory structure
-  - [ ] Implement category-based organization
-  - [ ] Generate index files
-  - [ ] Create metadata directories
-- [ ] Write unit tests for enhanced generator
-  - [ ] Test hierarchical file generation
-  - [ ] Test cross-reference creation
-  - [ ] Test metadata embedding
+### 3.1 Enhanced Text File Generator ✅ COMPLETED
+- [x] Create `src/file_generator/enhanced_text_file_generator.py`
+  - [x] Add support for hierarchical document structure
+  - [x] Implement entity-based file generation  
+  - [x] Create cross-reference sections
+  - [x] Add metadata headers for RAG optimization
+  - [x] Implement semantic chunking for RAG systems
+  - [x] Add context preservation with extraction timestamps
+  - [x] Create entity relationship detection and management
+  - [x] Add comprehensive validation and integrity checking
+- [x] Create output directory structure
+  - [x] Implement category-based organization (by cuisine)
+  - [x] Generate comprehensive index files (master + category)
+  - [x] Create entity-based file organization
+  - [x] Support large-scale data processing (50+ restaurants)
+- [x] Write comprehensive test suite
+  - [x] Create BDD feature file `tests/features/enhanced_text_file_generation.feature` (10 scenarios)
+  - [x] Write step definitions `tests/step_definitions/test_enhanced_text_file_generation_steps.py`
+  - [x] Create unit tests `tests/unit/test_enhanced_text_file_generator.py` (25 test cases)
+  - [x] Test hierarchical file generation with parent-child relationships
+  - [x] Test cross-reference creation with circular reference handling
+  - [x] Test RAG-optimized metadata embedding with YAML front matter
+  - [x] Test semantic chunking with context preservation
+  - [x] Test entity organization and category-based directories
+  - [x] Test comprehensive index generation
+  - [x] Test output file integrity validation
+  - [x] All tests passing: 35/35 (100% success rate)
 
 ### 3.2 Index File Generation
 - [ ] Create index file generator
@@ -157,6 +170,15 @@
   - [ ] Verify file structure integrity
   - [ ] Check cross-reference validity
   - [ ] Validate metadata completeness
+
+### 3.4 RAG System Integration Support
+- [ ] Export structure definitions for consumer applications
+  - [ ] Create JSON schema for enhanced text file format
+  - [ ] Generate TypeScript/Python type definitions for metadata structures
+  - [ ] Document entity relationship schema for RAG consumers
+  - [ ] Export configuration schema for RAG optimization settings
+  - [ ] Create sample integration code for common RAG frameworks
+  - [ ] Generate API documentation for programmatic access to generated structures
 
 ## Phase 4: API and Interface Updates
 
