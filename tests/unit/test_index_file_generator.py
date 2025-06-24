@@ -379,7 +379,7 @@ class TestIndexSearchMetadataGenerator:
 
     def test_generate_search_keywords(self):
         """Test generation of search keywords."""
-        from src.file_generator.index_file_generator import IndexSearchMetadataGenerator
+        from src.file_generator.index_search_metadata_generator import IndexSearchMetadataGenerator
 
         generator = IndexSearchMetadataGenerator()
 
@@ -398,7 +398,7 @@ class TestIndexSearchMetadataGenerator:
 
     def test_generate_location_search_data(self):
         """Test generation of location search data."""
-        from src.file_generator.index_file_generator import IndexSearchMetadataGenerator
+        from src.file_generator.index_search_metadata_generator import IndexSearchMetadataGenerator
 
         generator = IndexSearchMetadataGenerator()
 
@@ -419,7 +419,7 @@ class TestIndexSearchMetadataGenerator:
 
     def test_generate_fuzzy_match_data(self):
         """Test generation of fuzzy matching data."""
-        from src.file_generator.index_file_generator import IndexSearchMetadataGenerator
+        from src.file_generator.index_search_metadata_generator import IndexSearchMetadataGenerator
 
         generator = IndexSearchMetadataGenerator()
 
@@ -438,7 +438,7 @@ class TestIndexStatisticsGenerator:
 
     def test_calculate_entity_statistics(self):
         """Test calculation of entity statistics."""
-        from src.file_generator.index_file_generator import IndexStatisticsGenerator
+        from src.file_generator.index_statistics_generator import IndexStatisticsGenerator
 
         generator = IndexStatisticsGenerator()
 
@@ -459,7 +459,7 @@ class TestIndexStatisticsGenerator:
     def test_calculate_file_size_statistics(self):
         """Test calculation of file size statistics."""
         import tempfile
-        from src.file_generator.index_file_generator import IndexStatisticsGenerator
+        from src.file_generator.index_statistics_generator import IndexStatisticsGenerator
 
         generator = IndexStatisticsGenerator()
 
@@ -484,7 +484,7 @@ class TestIndexStatisticsGenerator:
 
     def test_calculate_data_quality_metrics(self):
         """Test calculation of data quality metrics."""
-        from src.file_generator.index_file_generator import IndexStatisticsGenerator
+        from src.file_generator.index_statistics_generator import IndexStatisticsGenerator
 
         generator = IndexStatisticsGenerator()
 
@@ -508,11 +508,11 @@ class TestIndexStatisticsGenerator:
 
     def test_generate_generation_metadata(self):
         """Test generation of generation metadata."""
-        from src.file_generator.index_file_generator import IndexStatisticsGenerator
+        from src.file_generator.index_statistics_generator import IndexStatisticsGenerator
 
         generator = IndexStatisticsGenerator()
 
-        with patch("src.file_generator.index_file_generator.datetime") as mock_datetime:
+        with patch("src.file_generator.index_statistics_generator.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2024, 3, 15, 14, 30)
 
             metadata = generator.generate_generation_metadata()
@@ -527,7 +527,7 @@ class TestIndexRelationshipMapper:
 
     def test_map_entity_relationships(self):
         """Test mapping of entity relationships."""
-        from src.file_generator.index_file_generator import IndexRelationshipMapper
+        from src.file_generator.index_relationship_mapper import IndexRelationshipMapper
 
         mapper = IndexRelationshipMapper()
 
@@ -550,7 +550,7 @@ class TestIndexRelationshipMapper:
 
     def test_create_bidirectional_mappings(self):
         """Test creation of bidirectional relationship mappings."""
-        from src.file_generator.index_file_generator import IndexRelationshipMapper
+        from src.file_generator.index_relationship_mapper import IndexRelationshipMapper
 
         mapper = IndexRelationshipMapper()
 
@@ -566,7 +566,7 @@ class TestIndexRelationshipMapper:
 
     def test_handle_circular_references_in_mapping(self):
         """Test handling of circular references in relationship mapping."""
-        from src.file_generator.index_file_generator import IndexRelationshipMapper
+        from src.file_generator.index_relationship_mapper import IndexRelationshipMapper
 
         mapper = IndexRelationshipMapper()
 
@@ -593,7 +593,7 @@ class TestIndexIntegrityValidator:
     def test_validate_file_references(self):
         """Test validation of file references in indices."""
         import tempfile
-        from src.file_generator.index_file_generator import IndexIntegrityValidator
+        from src.file_generator.index_integrity_validator import IndexIntegrityValidator
 
         validator = IndexIntegrityValidator()
 
@@ -617,7 +617,7 @@ class TestIndexIntegrityValidator:
 
     def test_validate_entity_id_consistency(self):
         """Test validation of entity ID consistency across indices."""
-        from src.file_generator.index_file_generator import IndexIntegrityValidator
+        from src.file_generator.index_integrity_validator import IndexIntegrityValidator
 
         validator = IndexIntegrityValidator()
 
@@ -642,7 +642,7 @@ class TestIndexIntegrityValidator:
 
     def test_validate_category_assignments(self):
         """Test validation of category assignments."""
-        from src.file_generator.index_file_generator import IndexIntegrityValidator
+        from src.file_generator.index_integrity_validator import IndexIntegrityValidator
 
         validator = IndexIntegrityValidator()
 
@@ -670,7 +670,7 @@ class TestIndexIntegrityValidator:
 
     def test_detect_orphaned_references(self):
         """Test detection of orphaned references."""
-        from src.file_generator.index_file_generator import IndexIntegrityValidator
+        from src.file_generator.index_integrity_validator import IndexIntegrityValidator
 
         validator = IndexIntegrityValidator()
 
