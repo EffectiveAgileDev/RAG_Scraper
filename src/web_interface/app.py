@@ -2673,7 +2673,7 @@ https://restaurant3.com
                         )
 
             # Generate enhanced results data for UI display
-            sites_data = generate_sites_data(result, scraping_mode)
+            sites_data = generate_sites_data(result, scraping_mode, urls)
             
             # Return results with actual file paths
             response_data = {
@@ -3024,7 +3024,7 @@ https://restaurant3.com
             500,
         )
 
-    def generate_sites_data(result, scraping_mode):
+    def generate_sites_data(result, scraping_mode, urls):
         """Generate enhanced sites data for results display."""
         from urllib.parse import urlparse
         
@@ -3032,9 +3032,10 @@ https://restaurant3.com
         
         if scraping_mode == 'single':
             # In single-page mode, each URL is treated as a separate site
-            for extraction in result.successful_extractions:
-                url = extraction.get('url', 'Unknown URL')
-                processing_time = extraction.get('processing_time', 0.0)
+            for i, extraction in enumerate(result.successful_extractions):
+                # RestaurantData doesn't have URL, so we use the corresponding URL from input
+                url = urls[i] if i < len(urls) else 'Unknown URL'
+                processing_time = 0.0  # Default processing time
                 
                 sites_data.append({
                     'site_url': url,
@@ -3047,7 +3048,8 @@ https://restaurant3.com
                 })
             
             for failed_url in result.failed_urls:
-                url = failed_url.get('url', 'Unknown URL')
+                # failed_urls is a list of URL strings
+                url = failed_url if isinstance(failed_url, str) else 'Unknown URL'
                 
                 sites_data.append({
                     'site_url': url,
@@ -3064,9 +3066,10 @@ https://restaurant3.com
             sites = {}
             
             # Process successful extractions
-            for extraction in result.successful_extractions:
-                url = extraction.get('url', 'Unknown URL')
-                processing_time = extraction.get('processing_time', 0.0)
+            for i, extraction in enumerate(result.successful_extractions):
+                # RestaurantData doesn't have URL, so we use the corresponding URL from input
+                url = urls[i] if i < len(urls) else 'Unknown URL'
+                processing_time = 0.0  # Default processing time
                 
                 # Extract base site URL
                 site_url = extract_site_url(url)
@@ -3091,7 +3094,8 @@ https://restaurant3.com
             
             # Process failed URLs
             for failed_url in result.failed_urls:
-                url = failed_url.get('url', 'Unknown URL')
+                # failed_urls is a list of URL strings
+                url = failed_url if isinstance(failed_url, str) else 'Unknown URL'
                 
                 # Extract base site URL
                 site_url = extract_site_url(url)

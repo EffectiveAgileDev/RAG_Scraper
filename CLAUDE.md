@@ -87,6 +87,7 @@ RAG_Scraper is a localhost web application that scrapes restaurant websites and 
 - JSON-LD, microdata, and heuristic pattern extraction
 - Dual output: text files for RAG systems, PDF for documentation
 - Rate limiting and ethical scraping compliance
+- **Phase 4.1A**: JavaScript rendering and restaurant popup handling
 
 ### Development Status
 - **Current**: Initial setup complete, ready for development

@@ -309,6 +309,69 @@
     - [x] Relationship statistics showing totals, depths, and counts
     - [x] 18 unit tests + 8 BDD scenarios (100% passing)
 
+### 4.1A JavaScript Rendering & Popup Handling ✅ COMPLETED (Test Framework)
+**📋 NEW PHASE: Restaurant Website Popup Support**
+- [x] **Create Phase 4.1A feature file for JavaScript rendering** 
+  - [x] BDD feature file `tests/features/phase_4_1a_javascript_rendering.feature` (8 scenarios)
+  - [x] Age verification, newsletter signup, cookie consent scenarios
+  - [x] Location selector, JavaScript menu rendering scenarios
+  - [x] Static content detection and timeout handling scenarios
+  - [x] Multi-page JavaScript support scenarios
+- [x] **Write ATDD tests for restaurant popup scenarios**
+  - [x] Step definitions `tests/step_definitions/test_javascript_rendering_steps.py`
+  - [x] Complete test implementations with comprehensive mocking
+  - [x] Restaurant-specific popup handling validation
+  - [x] Multi-page JavaScript session management testing
+- [x] **Create unit tests for JavaScript components**
+  - [x] JavaScript handler unit tests `tests/unit/test_javascript_handler.py` (15+ tests)
+  - [x] Popup detector unit tests `tests/unit/test_popup_detector.py` (12+ tests)
+  - [x] Restaurant-specific popup pattern matching
+  - [x] Confidence scoring and priority handling
+  - [x] Extensible architecture for future industries
+
+**🎯 RESTAURANT-SPECIFIC POPUP PATTERNS:**
+- **Age Verification**: 21+ alcohol service popups (Priority 1)
+- **Location Selector**: Multi-location restaurant chains (Priority 2)
+- **Reservation Prompts**: Table booking modals (Priority 3)
+- **Newsletter Signup**: Email capture overlays (Priority 4)
+- **COVID Notices**: Health & safety guidelines (Priority 5)
+
+**🏗️ EXTENSIBLE ARCHITECTURE:**
+- Popup pattern detection system ready for multi-industry expansion
+- Confidence scoring for accurate popup identification
+- Priority-based handling strategies
+- Fallback mechanisms for complex scenarios
+- Future-ready for dental, medical, hotel industries
+
+**📋 IMPLEMENTATION TASKS (TDD Pattern):**
+- [x] **Step 1**: Implement JavaScriptHandler base class ✅ COMPLETED
+  - [x] Create `src/scraper/javascript_handler.py` with popup detection methods
+  - [x] Run unit tests to verify basic functionality (RED → GREEN) - 12/12 tests passing
+  - [x] Refactor for code quality while keeping tests green
+- [x] **Step 2**: Implement RestaurantPopupDetector class ✅ COMPLETED
+  - [x] Create `src/scraper/restaurant_popup_detector.py` with pattern matching
+  - [x] Run popup detector unit tests to verify detection logic (RED → GREEN) - 12/12 tests passing
+  - [x] Refactor pattern matching algorithms for efficiency
+- [ ] **Step 3**: Integrate with existing scraper architecture
+  - [ ] Update MultiStrategyScraper to support JavaScript rendering
+  - [ ] Modify EthicalScraper to handle popup scenarios
+  - [ ] Run integration tests to verify scraper compatibility (RED → GREEN)
+- [ ] **Step 4**: Add browser automation support
+  - [ ] Install and configure Playwright/Selenium dependencies
+  - [ ] Implement actual JavaScript rendering in production
+  - [ ] Run BDD scenarios to verify end-to-end functionality (RED → GREEN)
+- [ ] **Step 5**: Performance optimization and error handling
+  - [ ] Add timeout and fallback mechanisms
+  - [ ] Implement caching for popup detection patterns
+  - [ ] Run full test suite to ensure all scenarios pass (GREEN → REFACTOR)
+
+**🎯 TDD PROGRESS SUMMARY:**
+- **Foundation Complete**: Core popup detection classes implemented with 24/24 unit tests passing
+- **Restaurant Patterns**: Age verification (Priority 1), Location selector (Priority 2), Reservation prompts (Priority 3), Newsletter signup (Priority 4), COVID notices (Priority 5)
+- **Smart Detection**: Intelligent keyword matching distinguishes between class names and content text
+- **Extensible Architecture**: Pattern-based system ready for multi-industry expansion
+- **Next Phase**: Integration with existing scraper components and browser automation
+
 **📋 REMAINING TASKS - UI Enhancements:**
   - [ ] Enhance results display section (PARTIALLY COMPLETED - 2/4 sub-tasks done)
     - [ ] Show success/failure status per page with details
