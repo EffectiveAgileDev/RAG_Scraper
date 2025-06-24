@@ -98,8 +98,9 @@ class MultiPageScraper:
                 result.failed_pages.append(url)
                 return result
 
-            # Discover all relevant pages
-            discovered_pages = self.page_discovery.discover_all_pages(url, initial_html)
+            # Discover all relevant pages with configurable depth
+            max_depth = getattr(self, 'max_crawl_depth', 2)  # Default to 2 if not set
+            discovered_pages = self.page_discovery.discover_all_pages(url, initial_html, max_depth)
 
             # Extract restaurant name from initial page for progress tracking
             restaurant_name = self._extract_restaurant_name(initial_html)

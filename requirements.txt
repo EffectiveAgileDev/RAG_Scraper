@@ -10,12 +10,16 @@ html5lib==1.1
 requests-html==0.10.0
 html-parser
 
+# Browser Automation (optional - install manually: playwright install)
+playwright==1.40.0
+
 # Testing Framework
 pytest==7.4.2
 pytest-bdd==6.1.1
 pytest-cov==4.1.0
 pytest-html==3.2.0
 pytest-mock==3.11.1
+pytest-asyncio==0.20.3
 responses==0.23.3
 
 # Development Tools

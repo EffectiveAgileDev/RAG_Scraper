@@ -16,14 +16,18 @@ class ScrapingResult:
     errors: List[str]
     output_files: Dict[str, List[str]] = None
     processing_time: float = 0.0
+    # Multi-page specific data
+    multi_page_results: List[MultiPageScrapingResult] = None
 
     def __post_init__(self):
         if self.output_files is None:
             self.output_files = {"text": [], "pdf": []}
+        if self.multi_page_results is None:
+            self.multi_page_results = []
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
-        return {
+        result_dict = {
             "successful_extractions": [
                 data.to_dict() for data in self.successful_extractions
             ],
@@ -33,6 +37,21 @@ class ScrapingResult:
             "output_files": self.output_files,
             "processing_time": self.processing_time,
         }
+        
+        # Include multi-page results if available (for backwards compatibility)
+        if hasattr(self, 'multi_page_results') and self.multi_page_results:
+            # Convert MultiPageScrapingResult objects to dictionaries
+            result_dict["multi_page_results"] = [
+                {
+                    "restaurant_name": mp.restaurant_name,
+                    "pages_processed": mp.pages_processed,
+                    "successful_pages": mp.successful_pages,
+                    "failed_pages": mp.failed_pages,
+                    "processing_time": mp.processing_time,
+                } for mp in self.multi_page_results
+            ]
+        
+        return result_dict
 
 
 class RestaurantScraper:
@@ -99,6 +118,7 @@ class RestaurantScraper:
         successful_extractions = []
         failed_urls = []
         errors = []
+        multi_page_results = []
 
         if progress_callback:
             progress_callback("Starting restaurant data extraction...", 0)
@@ -126,6 +146,9 @@ class RestaurantScraper:
                         url, progress_callback
                     )
 
+                    # Store multi-page result for detailed reporting
+                    multi_page_results.append(multi_page_result)
+                    
                     if multi_page_result.aggregated_data:
                         successful_extractions.append(multi_page_result.aggregated_data)
                         if progress_callback:
@@ -174,6 +197,7 @@ class RestaurantScraper:
             total_processed=len(urls),
             errors=errors,
             processing_time=processing_time,
+            multi_page_results=multi_page_results,
         )
 
         return result

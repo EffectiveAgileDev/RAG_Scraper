@@ -212,12 +212,13 @@ class PageDiscovery:
         # Sort by priority (descending)
         return sorted(urls, key=get_priority, reverse=True)
 
-    def discover_all_pages(self, initial_url: str, html_content: str) -> List[str]:
-        """Discover all relevant pages from a website starting point.
+    def discover_all_pages(self, initial_url: str, html_content: str, max_depth: int = 2) -> List[str]:
+        """Discover all relevant pages from a website starting point with recursive crawling.
 
         Args:
             initial_url: Starting URL
             html_content: HTML content of the initial page
+            max_depth: Maximum crawl depth (default 2)
 
         Returns:
             List of discovered page URLs
@@ -226,21 +227,56 @@ class PageDiscovery:
         all_pages = {initial_url}
         self.discovered_pages.add(initial_url)
 
-        # Discover navigation links
-        nav_links = self.discover_navigation_links(html_content)
-
-        # Filter and limit pages
-        relevant_links = self.filter_relevant_pages(nav_links)
-        new_links = self.get_new_pages(relevant_links)
-
-        # Add new links to discovered pages
-        all_pages.update(new_links)
-        self.discovered_pages.update(new_links)
+        # For recursive crawling, we need to track depth
+        if max_depth <= 1:
+            # Just do single-level discovery (original behavior)
+            nav_links = self.discover_navigation_links(html_content)
+            relevant_links = self.filter_relevant_pages(nav_links)
+            new_links = self.get_new_pages(relevant_links)
+            all_pages.update(new_links)
+            self.discovered_pages.update(new_links)
+        else:
+            # Do recursive discovery
+            all_pages = self._discover_pages_recursive(initial_url, html_content, max_depth)
 
         # Apply page limit and prioritize
         limited_pages = self.apply_page_limit(all_pages)
-
         return self.prioritize_pages(limited_pages)
+
+    def _discover_pages_recursive(self, initial_url: str, initial_html: str, max_depth: int) -> Set[str]:
+        """Recursively discover pages up to max_depth."""
+        import requests
+        from collections import deque
+        
+        discovered = {initial_url}
+        to_process = deque([(initial_url, initial_html, 0)])  # (url, html, depth)
+        
+        while to_process and len(discovered) < self.max_pages:
+            current_url, current_html, current_depth = to_process.popleft()
+            
+            if current_depth >= max_depth:
+                continue
+                
+            # Find links on current page
+            nav_links = self.discover_navigation_links(current_html)
+            relevant_links = self.filter_relevant_pages(nav_links)
+            
+            for link in relevant_links:
+                if link not in discovered and len(discovered) < self.max_pages:
+                    discovered.add(link)
+                    
+                    # If we haven't reached max depth, fetch this page for further discovery
+                    if current_depth + 1 < max_depth:
+                        try:
+                            # Fetch the child page to discover its links
+                            response = requests.get(link, timeout=10)
+                            if response.status_code == 200:
+                                to_process.append((link, response.text, current_depth + 1))
+                        except Exception:
+                            # If we can't fetch the page, still include it in discovered pages
+                            pass
+        
+        return discovered
 
     def _normalize_url(self, href: str) -> Optional[str]:
         """Normalize a URL href to absolute URL.

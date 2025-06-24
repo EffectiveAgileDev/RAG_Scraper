@@ -48,6 +48,15 @@ class ScrapingConfig:
     # Per-domain settings
     per_domain_settings: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
+    # JavaScript rendering configuration
+    enable_javascript_rendering: bool = False
+    javascript_timeout: int = 30
+    enable_popup_detection: bool = True
+    popup_handling_strategy: str = "auto"  # 'auto', 'skip', 'manual'
+    enable_browser_automation: bool = False  # Enable Playwright browser automation
+    browser_type: str = "chromium"  # 'chromium', 'firefox', 'webkit'
+    headless_browser: bool = True
+
     # Default fields that are always extracted
     default_fields: List[str] = field(
         default_factory=lambda: [
@@ -151,6 +160,9 @@ class ScrapingConfig:
         if self.page_timeout is not None:
             self.timeout_per_page = self.page_timeout
 
+        # Validate JavaScript configuration
+        self._validate_javascript_config()
+
     def get_all_selected_fields(self) -> List[str]:
         """Get all fields to extract (default + selected optional)."""
         return self.default_fields + self.selected_optional_fields
@@ -192,6 +204,13 @@ class ScrapingConfig:
             "concurrent_requests": self.concurrent_requests,
             "respect_robots_txt": self.respect_robots_txt,
             "link_patterns": self.link_patterns,
+            "enable_javascript_rendering": self.enable_javascript_rendering,
+            "javascript_timeout": self.javascript_timeout,
+            "enable_popup_detection": self.enable_popup_detection,
+            "popup_handling_strategy": self.popup_handling_strategy,
+            "enable_browser_automation": self.enable_browser_automation,
+            "browser_type": self.browser_type,
+            "headless_browser": self.headless_browser,
         }
 
         # Add optional fields if set
@@ -379,3 +398,14 @@ class ScrapingConfig:
                 "user_agent": self.user_agent,
             },
         )
+
+    def _validate_javascript_config(self) -> None:
+        """Validate JavaScript configuration options."""
+        if self.javascript_timeout <= 0:
+            raise ValueError("javascript_timeout must be positive")
+
+        if self.popup_handling_strategy not in ['auto', 'skip', 'manual']:
+            raise ValueError("popup_handling_strategy must be 'auto', 'skip', or 'manual'")
+
+        if self.browser_type not in ['chromium', 'firefox', 'webkit']:
+            raise ValueError("browser_type must be 'chromium', 'firefox', or 'webkit'")
