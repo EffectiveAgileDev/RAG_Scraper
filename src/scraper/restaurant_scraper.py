@@ -3,7 +3,8 @@ from typing import List, Dict, Any, Optional, Callable
 from dataclasses import dataclass
 from .multi_strategy_scraper import MultiStrategyScraper, RestaurantData
 from .batch_processor import BatchProcessor, BatchConfig
-from .multi_page_scraper import MultiPageScraper, MultiPageScrapingResult
+from .multi_page_scraper import MultiPageScraper
+from .multi_page_result_handler import MultiPageScrapingResult
 
 
 @dataclass

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generation_timestamp": "2025-06-23T12:27:12.306421",
+  "generation_timestamp": "2025-06-24T14:26:10.654755",
   "category": "Mexican",
   "entity_count": 1,
   "entities": [
@@ -14,9 +14,9 @@
         "json-ld"
       ],
       "search_metadata": [
-        "mexican",
         "restaurant",
-        "stats"
+        "stats",
+        "mexican"
       ]
     }
   ],

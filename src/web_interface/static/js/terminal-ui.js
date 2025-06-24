@@ -1,0 +1,1152 @@
+/**
+ * Terminal UI - JavaScript functionality for the RAG Scraper web interface
+ * Provides terminal-style user interface with matrix effects, progress monitoring,
+ * form handling, API calls, and real-time UI interactions.
+ */
+
+// =============================================================================
+// Global Variables and UI Element References
+// =============================================================================
+
+// Terminal UI Elements
+const form = document.getElementById('scrapeForm');
+const urlsInput = document.getElementById('urls');
+const submitBtn = document.getElementById('submitBtn');
+const validateBtn = document.getElementById('validateBtn');
+const clearBtn = document.getElementById('clearBtn');
+const progressContainer = document.getElementById('progressContainer');
+const progressFill = document.getElementById('progressFill');
+const progressText = document.getElementById('progressText');
+const currentUrl = document.getElementById('currentUrl');
+const timeEstimate = document.getElementById('timeEstimate');
+const memoryUsage = document.getElementById('memoryUsage');
+const resultsContainer = document.getElementById('resultsContainer');
+const resultsContent = document.getElementById('resultsContent');
+const noResults = document.getElementById('noResults');
+const sitesResults = document.getElementById('sitesResults');
+const urlValidation = document.getElementById('urlValidation');
+const statusBar = document.querySelector('.status-bar');
+const formatOptions = document.querySelectorAll('.format-option');
+const dataFlow = document.querySelector('.data-flow');
+
+let progressInterval;
+let terminalEffects = true;
+
+// =============================================================================
+// Initialization and Setup Functions
+// =============================================================================
+
+/**
+ * Initialize the terminal interface on DOM content load
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    initializeTerminalEffects();
+    setupFormatSelection();
+    setupSliderUpdates();
+    setupModeSelection();
+});
+
+/**
+ * Initialize all terminal visual effects
+ */
+function initializeTerminalEffects() {
+    // Create matrix background effect
+    createMatrixEffect();
+    
+    // Add terminal cursor effect to inputs
+    addTerminalCursorEffect();
+    
+    // Initialize status updates
+    updateSystemStatus('SYSTEM_READY // AWAITING_TARGET_URLs');
+}
+
+/**
+ * Create animated matrix-style background effect
+ */
+function createMatrixEffect() {
+    const matrixBg = document.querySelector('.matrix-bg');
+    const chars = '01';
+    const columns = Math.floor(window.innerWidth / 20);
+    
+    for (let i = 0; i < 50; i++) {
+        const char = document.createElement('div');
+        char.textContent = chars[Math.floor(Math.random() * chars.length)];
+        char.style.position = 'absolute';
+        char.style.left = Math.random() * 100 + '%';
+        char.style.top = Math.random() * 100 + '%';
+        char.style.color = 'rgba(0, 255, 136, 0.1)';
+        char.style.fontSize = '12px';
+        char.style.fontFamily = 'JetBrains Mono, monospace';
+        char.style.animation = `float ${3 + Math.random() * 4}s ease-in-out infinite`;
+        matrixBg.appendChild(char);
+    }
+}
+
+/**
+ * Add terminal cursor animation to input fields
+ */
+function addTerminalCursorEffect() {
+    const inputs = document.querySelectorAll('.terminal-input');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.style.animation = 'terminal-cursor 1s ease-in-out infinite';
+        });
+        input.addEventListener('blur', function() {
+            this.style.animation = 'none';
+        });
+    });
+}
+
+// =============================================================================
+// Format and Mode Selection Handlers
+// =============================================================================
+
+/**
+ * Setup format selection radio buttons and JSON field visibility
+ */
+function setupFormatSelection() {
+    const jsonFieldSelection = document.getElementById('jsonFieldSelection');
+    
+    formatOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            formatOptions.forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            const radio = this.querySelector('input[type="radio"]');
+            radio.checked = true;
+            
+            // Show/hide JSON field selection based on format choice
+            if (radio.value === 'json') {
+                jsonFieldSelection.style.display = 'block';
+                updateSystemStatus(`JSON_FORMAT_SELECTED // FIELD_CUSTOMIZATION_AVAILABLE`);
+            } else {
+                jsonFieldSelection.style.display = 'none';
+                updateSystemStatus(`FORMAT_SELECTED // ${radio.value.toUpperCase()}_MODE_ACTIVE`);
+            }
+        });
+    });
+}
+
+/**
+ * Setup scraping mode selection (single vs multi-page)
+ */
+function setupModeSelection() {
+    const modeOptions = document.querySelectorAll('.mode-option');
+    const multiPageHeader = document.getElementById('multiPageHeader');
+    const multiPageConfig = document.getElementById('multiPageConfig');
+    
+    modeOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Update active state
+            modeOptions.forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update radio button
+            const radio = this.querySelector('input[type="radio"]');
+            radio.checked = true;
+            
+            // Show/hide multi-page configuration
+            const mode = radio.value;
+            if (mode === 'multi') {
+                multiPageHeader.style.display = 'block';
+                updateSystemStatus('MULTI_PAGE_MODE // ADVANCED_CRAWLING_ENABLED');
+            } else {
+                multiPageHeader.style.display = 'none';
+                if (multiPageConfig) {
+                    multiPageConfig.classList.add('collapsed');
+                    const expandIcon = document.getElementById('configExpandIcon');
+                    if (expandIcon) expandIcon.classList.remove('expanded');
+                }
+                updateSystemStatus('SINGLE_PAGE_MODE // DIRECT_URL_PROCESSING');
+            }
+        });
+    });
+}
+
+// =============================================================================
+// Multi-Page Configuration Panel Functions
+// =============================================================================
+
+/**
+ * Toggle multi-page configuration panel expansion
+ */
+function toggleMultiPageConfig() {
+    const configPanel = document.getElementById('multiPageConfig');
+    const expandIcon = document.getElementById('configExpandIcon');
+    
+    if (configPanel.classList.contains('collapsed')) {
+        configPanel.classList.remove('collapsed');
+        expandIcon.classList.add('expanded');
+        updateSystemStatus('MULTI_PAGE_CONFIG // PANEL_EXPANDED');
+    } else {
+        configPanel.classList.add('collapsed');
+        expandIcon.classList.remove('expanded');
+        updateSystemStatus('MULTI_PAGE_CONFIG // PANEL_COLLAPSED');
+    }
+}
+
+/**
+ * Setup all slider inputs and their value displays
+ */
+function setupSliderUpdates() {
+    // Crawl depth slider
+    const crawlDepthSlider = document.getElementById('crawlDepth');
+    const depthValue = document.getElementById('depthValue');
+    
+    if (crawlDepthSlider && depthValue) {
+        crawlDepthSlider.addEventListener('input', function() {
+            depthValue.textContent = this.value;
+            updateSystemStatus(`CRAWL_DEPTH_SET // LEVEL_${this.value}`);
+        });
+    }
+
+    // Rate limit slider
+    const rateLimitSlider = document.getElementById('rateLimit');
+    const rateLimitValue = document.getElementById('rateLimitValue');
+    
+    if (rateLimitSlider && rateLimitValue) {
+        rateLimitSlider.addEventListener('input', function() {
+            rateLimitValue.textContent = this.value + 'ms';
+            updateSystemStatus(`RATE_LIMIT_SET // ${this.value}MS_DELAY`);
+        });
+    }
+
+    // JavaScript timeout slider
+    const jsTimeoutSlider = document.getElementById('jsTimeout');
+    const jsTimeoutValue = document.getElementById('jsTimeoutValue');
+    
+    if (jsTimeoutSlider && jsTimeoutValue) {
+        jsTimeoutSlider.addEventListener('input', function() {
+            jsTimeoutValue.textContent = this.value + 's';
+            updateSystemStatus(`JS_TIMEOUT_SET // ${this.value}S_LIMIT`);
+        });
+    }
+
+    // JavaScript rendering checkbox
+    const enableJavaScript = document.getElementById('enableJavaScript');
+    if (enableJavaScript) {
+        enableJavaScript.addEventListener('change', function() {
+            const status = this.checked ? 'ENABLED' : 'DISABLED';
+            updateSystemStatus(`JAVASCRIPT_RENDERING // ${status}`);
+        });
+    }
+
+    // Popup handling checkbox
+    const enablePopupHandling = document.getElementById('enablePopupHandling');
+    if (enablePopupHandling) {
+        enablePopupHandling.addEventListener('change', function() {
+            const status = this.checked ? 'ENABLED' : 'DISABLED';
+            updateSystemStatus(`POPUP_HANDLING // ${status}`);
+        });
+    }
+
+    // Max pages input
+    const maxPagesInput = document.getElementById('maxPages');
+    if (maxPagesInput) {
+        maxPagesInput.addEventListener('input', function() {
+            updateSystemStatus(`MAX_PAGES_SET // LIMIT_${this.value}_PAGES`);
+        });
+    }
+
+    // Pattern inputs
+    const includePatterns = document.getElementById('includePatterns');
+    const excludePatterns = document.getElementById('excludePatterns');
+    
+    if (includePatterns) {
+        includePatterns.addEventListener('input', function() {
+            const patterns = this.value.split(',').length;
+            updateSystemStatus(`INCLUDE_PATTERNS_SET // ${patterns}_FILTERS_ACTIVE`);
+        });
+    }
+
+    if (excludePatterns) {
+        excludePatterns.addEventListener('input', function() {
+            const patterns = this.value.split(',').length;
+            updateSystemStatus(`EXCLUDE_PATTERNS_SET // ${patterns}_FILTERS_ACTIVE`);
+        });
+    }
+}
+
+// =============================================================================
+// System Status and Terminal UI Functions
+// =============================================================================
+
+/**
+ * Update system status bar with terminal-style message
+ */
+function updateSystemStatus(message) {
+    if (statusBar) {
+        statusBar.textContent = message;
+        statusBar.style.animation = 'pulse 0.5s ease-in-out';
+        setTimeout(() => {
+            if (statusBar) statusBar.style.animation = '';
+        }, 500);
+    }
+}
+
+/**
+ * Format terminal log message with timestamp and prefix
+ */
+function terminalLog(message, type = 'info') {
+    const timestamp = new Date().toISOString().substr(11, 8);
+    const prefix = type === 'error' ? '[ERROR]' : 
+                 type === 'success' ? '[SUCCESS]' : '[INFO]';
+    return `[${timestamp}] ${prefix} ${message}`;
+}
+
+/**
+ * Show terminal-style alert notification
+ */
+function showTerminalAlert(message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'terminal-alert';
+    alertDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 85, 85, 0.9);
+        border: 1px solid #ff5555;
+        color: white;
+        padding: 1rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.875rem;
+        z-index: 1000;
+        max-width: 400px;
+        animation: slideInRight 0.3s ease-out;
+    `;
+    alertDiv.textContent = message;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 4000);
+}
+
+// =============================================================================
+// Form Event Handlers
+// =============================================================================
+
+// Validate URLs on input with debounced validation
+urlsInput.addEventListener('input', debounce(validateURLsInput, 500));
+
+// Form submission with terminal aesthetics
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const urls = urlsInput.value.trim().split('\\n').filter(url => url.trim());
+    const outputDir = document.getElementById('outputDir').value.trim();
+    const fileMode = document.getElementById('fileMode').value;
+    const fileFormat = document.querySelector('input[name="fileFormat"]:checked').value;
+    const scrapingMode = document.querySelector('input[name="scrapingMode"]:checked').value;
+    
+    // Collect JSON field selections if JSON format is selected
+    let jsonFieldSelections = null;
+    if (fileFormat === 'json') {
+        const selectedFields = Array.from(document.querySelectorAll('input[name="jsonFields"]:checked'))
+            .map(input => input.value);
+        if (selectedFields.length > 0) {
+            jsonFieldSelections = selectedFields;
+        }
+    }
+    
+    if (urls.length === 0) {
+        updateSystemStatus('ERROR // NO_TARGET_URLs_DETECTED');
+        showTerminalAlert('CRITICAL ERROR: No target URLs detected. Please input valid restaurant URLs.');
+        return;
+    }
+    
+    // Collect multi-page configuration if multi-page mode is selected
+    let multiPageConfig = null;
+    if (scrapingMode === 'multi') {
+        multiPageConfig = {
+            maxPages: parseInt(document.getElementById('maxPages').value) || 50,
+            crawlDepth: parseInt(document.getElementById('crawlDepth').value) || 2,
+            includePatterns: document.getElementById('includePatterns').value || 'menu,food,restaurant',
+            excludePatterns: document.getElementById('excludePatterns').value || 'admin,login,cart',
+            rateLimit: parseInt(document.getElementById('rateLimit').value) || 1000
+        };
+    }
+    
+    updateSystemStatus(`INITIATING_EXTRACTION // ${urls.length}_TARGETS_QUEUED // ${scrapingMode.toUpperCase()}_MODE`);
+    await startScraping(urls, outputDir, fileMode, fileFormat, jsonFieldSelections, scrapingMode, multiPageConfig);
+});
+
+// Validate button with terminal feedback
+validateBtn.addEventListener('click', () => {
+    updateSystemStatus('VALIDATING_TARGETS // SCANNING_URLs...');
+    validateURLsInput();
+});
+
+// Clear button with terminal reset
+clearBtn.addEventListener('click', () => {
+    form.reset();
+    urlValidation.innerHTML = '';
+    hideResults();
+    hideProgress();
+    // Reset format selection
+    formatOptions.forEach(opt => opt.classList.remove('selected'));
+    formatOptions[0].classList.add('selected');
+    updateSystemStatus('TERMINAL_RESET // AWAITING_NEW_TARGETS');
+});
+
+// =============================================================================
+// URL Validation Functions
+// =============================================================================
+
+/**
+ * Validate URLs input field and display results
+ */
+async function validateURLsInput() {
+    const urls = urlsInput.value.trim().split('\\n').filter(url => url.trim());
+    
+    if (urls.length === 0) {
+        urlValidation.innerHTML = '';
+        updateSystemStatus('SYSTEM_READY // AWAITING_TARGET_URLs');
+        return;
+    }
+    
+    updateSystemStatus(`VALIDATING // ${urls.length}_TARGETS_SCANNING...`);
+    
+    try {
+        const response = await fetch('/api/validate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ urls: urls })
+        });
+        
+        const data = await response.json();
+        
+        if (data.results) {
+            displayValidationResults(data.results);
+        }
+    } catch (error) {
+        console.error('Validation error:', error);
+        urlValidation.innerHTML = terminalLog('VALIDATION_FAILED // Network error', 'error');
+        updateSystemStatus('ERROR // VALIDATION_SYSTEM_OFFLINE');
+    }
+}
+
+/**
+ * Display URL validation results in terminal format
+ */
+function displayValidationResults(results) {
+    const validCount = results.filter(r => r.is_valid).length;
+    const totalCount = results.length;
+    const status = validCount === totalCount ? 'ALL_VALID' : `${validCount}/${totalCount}_VALID`;
+    
+    updateSystemStatus(`VALIDATION_COMPLETE // ${status}`);
+    
+    let html = `<div style="margin-bottom: 0.5rem;">${terminalLog(`Target analysis: ${validCount}/${totalCount} URLs validated`, 'info')}</div>`;
+    
+    results.forEach((result, index) => {
+        const cssClass = result.is_valid ? 'valid-url' : 'invalid-url';
+        const status = result.is_valid ? '[VALID]' : '[INVALID]';
+        const error = result.error ? ` // ${result.error}` : '';
+        
+        html += `<div class="${cssClass}">${status} TARGET_${index + 1}${error}</div>`;
+    });
+    
+    urlValidation.innerHTML = html;
+}
+
+// =============================================================================
+// Scraping and API Functions
+// =============================================================================
+
+/**
+ * Start the scraping process with all configured options
+ */
+async function startScraping(urls, outputDir, fileMode, fileFormat, jsonFieldSelections, scrapingMode, multiPageConfig) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'EXTRACTION_IN_PROGRESS...';
+    showProgress();
+    hideResults();
+    
+    updateSystemStatus(`EXTRACTION_INITIATED // ${urls.length}_TARGETS_PROCESSING`);
+    
+    try {
+        // Create AbortController for longer timeout (10 minutes for multi-page scraping)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutes
+        
+        const response = await fetch('/api/scrape', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            signal: controller.signal,
+            body: JSON.stringify({
+                urls: urls,
+                output_dir: outputDir,
+                file_mode: fileMode,
+                file_format: fileFormat,
+                json_field_selections: jsonFieldSelections,
+                scraping_mode: scrapingMode,
+                multi_page_config: multiPageConfig,
+                enableJavaScript: document.getElementById('enableJavaScript')?.checked || false,
+                jsTimeout: parseInt(document.getElementById('jsTimeout')?.value || '30'),
+                enablePopupHandling: document.getElementById('enablePopupHandling')?.checked || true
+            })
+        });
+        
+        clearTimeout(timeoutId);
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            updateSystemStatus(`EXTRACTION_COMPLETE // ${data.processed_count || 0}_TARGETS_PROCESSED`);
+            showResults(data, true);
+            // Clear the URLs input field after successful scraping
+            urlsInput.value = '';
+        } else {
+            updateSystemStatus('EXTRACTION_FAILED // SYSTEM_ERROR');
+            showResults(data, false);
+        }
+    } catch (error) {
+        console.error('Scraping error:', error);
+        
+        let errorMessage = 'Unknown error during extraction';
+        let statusMessage = 'CRITICAL_ERROR // UNKNOWN_FAILURE';
+        
+        if (error.name === 'AbortError') {
+            errorMessage = 'Request timeout - multi-page scraping took longer than 10 minutes';
+            statusMessage = 'TIMEOUT_ERROR // PROCESSING_TIMEOUT';
+        } else if (error.message && error.message.includes('fetch')) {
+            errorMessage = 'Network connection failure during extraction';
+            statusMessage = 'NETWORK_ERROR // CONNECTION_FAILURE';
+        } else if (error.message) {
+            errorMessage = error.message;
+            statusMessage = 'REQUEST_ERROR // ' + error.name;
+        }
+        
+        updateSystemStatus(statusMessage);
+        showResults({ error: errorMessage }, false);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'EXECUTE_EXTRACTION';
+        hideProgress();
+    }
+}
+
+// =============================================================================
+// Progress Monitoring Functions
+// =============================================================================
+
+/**
+ * Show progress container and start monitoring
+ */
+function showProgress() {
+    progressContainer.style.display = 'block';
+    progressFill.style.width = '0%';
+    progressText.textContent = terminalLog('Initializing extraction sequence...', 'info');
+    currentUrl.textContent = '';
+    timeEstimate.textContent = '';
+    memoryUsage.textContent = '';
+    
+    // Activate the data flow pipeline
+    if (dataFlow) {
+        dataFlow.classList.add('active');
+    }
+    
+    // Start progress polling
+    progressInterval = setInterval(updateProgress, 1000);
+}
+
+/**
+ * Hide progress container and stop monitoring
+ */
+function hideProgress() {
+    progressContainer.style.display = 'none';
+    
+    // Deactivate the data flow pipeline
+    if (dataFlow) {
+        dataFlow.classList.remove('active');
+    }
+    
+    if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+    }
+}
+
+/**
+ * Update progress display with data from API
+ */
+async function updateProgress() {
+    try {
+        const response = await fetch('/api/progress');
+        const data = await response.json();
+        
+        if (data.progress_percentage !== undefined) {
+            progressFill.style.width = data.progress_percentage + '%';
+            progressText.textContent = terminalLog(`Extraction progress: ${data.progress_percentage}% (${data.urls_completed}/${data.urls_total})`, 'info');
+            
+            if (data.current_url) {
+                currentUrl.textContent = terminalLog(`Processing target: ${data.current_url}`, 'info');
+            }
+            
+            if (data.estimated_time_remaining > 0) {
+                const minutes = Math.floor(data.estimated_time_remaining / 60);
+                const seconds = Math.floor(data.estimated_time_remaining % 60);
+                timeEstimate.textContent = terminalLog(`ETA: ${minutes}m ${seconds}s`, 'info');
+            } else if (data.urls_completed > 0) {
+                timeEstimate.textContent = terminalLog('Calculating time estimate...', 'info');
+            }
+            
+            if (data.memory_usage_mb > 0) {
+                memoryUsage.textContent = terminalLog(`Memory usage: ${data.memory_usage_mb.toFixed(1)} MB`, 'info');
+            }
+            
+            if (data.current_operation) {
+                progressText.textContent = terminalLog(data.current_operation, 'info');
+            }
+        }
+    } catch (error) {
+        console.error('Progress update error:', error);
+    }
+}
+
+// =============================================================================
+// Results Display Functions
+// =============================================================================
+
+/**
+ * Show results container with appropriate display mode
+ */
+function showResults(data, success) {
+    resultsContainer.style.display = 'block';
+    
+    if (success && data.sites_data) {
+        // Show enhanced results display
+        showEnhancedResults(data);
+    } else if (success) {
+        // Show legacy results display for backward compatibility
+        showLegacyResults(data, success);
+    } else {
+        // Show error results
+        showErrorResults(data);
+    }
+}
+
+/**
+ * Show enhanced results with site-by-site breakdown
+ */
+function showEnhancedResults(data) {
+    noResults.style.display = 'none';
+    sitesResults.style.display = 'block';
+    
+    const scrapingMode = getSelectedScrapingMode();
+    const sitesData = data.sites_data || [];
+    
+    // Store sites data globally for "Show all pages" functionality
+    window.currentSitesData = sitesData;
+    
+    let html = '';
+    
+    sitesData.forEach((siteData, index) => {
+        html += generateSiteResultHTML(siteData, index, scrapingMode);
+    });
+    
+    sitesResults.innerHTML = html;
+    
+    // Set up event listeners for interactive elements
+    setupResultsInteractivity();
+}
+
+/**
+ * Show legacy results format for backward compatibility
+ */
+function showLegacyResults(data, success) {
+    // Keep existing functionality for backward compatibility
+    noResults.style.display = 'none';
+    sitesResults.style.display = 'none';
+    
+    let html = '';
+    
+    html += `<div style="margin-bottom: 1rem;">${terminalLog('EXTRACTION_COMPLETE // All targets processed successfully', 'success')}</div>`;
+    
+    if (data.processed_count) {
+        html += `<div>${terminalLog(`Targets processed: ${data.processed_count}`, 'info')}</div>`;
+    }
+    
+    if (data.output_files && data.output_files.length > 0) {
+        html += `<div style="margin: 1rem 0;">${terminalLog('Generated output files:', 'info')}</div>`;
+        html += '<div class="file-links">';
+        data.output_files.forEach(file => {
+            const fileName = file.split('/').pop();
+            const downloadUrl = `/api/download/${encodeURIComponent(fileName)}`;
+            html += `<a href="${downloadUrl}" target="_blank" class="file-link">${fileName}</a>`;
+        });
+        html += '</div>';
+    }
+    
+    if (data.failed_count && data.failed_count > 0) {
+        html += `<div style="margin-top: 1rem;">${terminalLog(`Failed targets: ${data.failed_count}`, 'error')}</div>`;
+    }
+    
+    if (data.processing_time) {
+        html += `<div>${terminalLog(`Processing time: ${data.processing_time.toFixed(2)}s`, 'info')}</div>`;
+    }
+    
+    resultsContent.innerHTML = html;
+}
+
+/**
+ * Show error results
+ */
+function showErrorResults(data) {
+    noResults.style.display = 'none';
+    sitesResults.style.display = 'none';
+    
+    let html = '';
+    html += `<div>${terminalLog('EXTRACTION_FAILED // System error detected', 'error')}</div>`;
+    html += `<div style="margin-top: 0.5rem;">${terminalLog(`Error details: ${data.error || 'Unknown system failure'}`, 'error')}</div>`;
+    
+    resultsContent.innerHTML = html;
+}
+
+/**
+ * Generate HTML for site result display
+ */
+function generateSiteResultHTML(siteData, index, scrapingMode) {
+    const { site_url, pages_processed, pages } = siteData;
+    const successCount = pages.filter(p => p.status === 'success').length;
+    const failedCount = pages.filter(p => p.status === 'failed').length;
+    
+    // Check if any pages have relationship data
+    const hasRelationships = pages.some(p => p.relationship);
+    const isMultiPageMode = scrapingMode === 'multi';
+    
+    let html = `
+        <div class="site-result ${hasRelationships && isMultiPageMode ? 'relationship-enabled' : ''}">
+            <div class="site-header" onclick="toggleSiteExpansion(${index})">
+                <div class="site-url">${site_url}</div>
+                <div class="pages-summary">
+                    <span>Pages Processed: ${pages_processed}</span>
+                    <div class="processing-stats">
+                        <div class="stat-item">
+                            <div class="stat-icon success"></div>
+                            <span>${successCount} success</span>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-icon failed"></div>
+                            <span>${failedCount} failed</span>
+                        </div>
+                    </div>
+                    <div class="expand-toggle" id="toggle-${index}">▼</div>
+                </div>
+            </div>
+            <div class="pages-list" id="pages-${index}">
+    `;
+    
+    if (hasRelationships && isMultiPageMode) {
+        // Generate relationship tree for multi-page mode
+        html += generateRelationshipTree(pages, index);
+    } else {
+        // Generate simple page list for single-page mode or no relationships
+        const pagesToShow = pages.slice(0, 5);
+        const hasMorePages = pages.length > 5;
+        
+        pagesToShow.forEach(page => {
+            html += generatePageItemHTML(page, isMultiPageMode);
+        });
+        
+        if (hasMorePages) {
+            html += `
+                <div class="show-all-link" onclick="showAllPages(${index})">
+                    Show all ${pages.length} pages
+                </div>
+            `;
+        }
+    }
+    
+    html += `
+            </div>
+        </div>
+    `;
+    
+    return html;
+}
+
+/**
+ * Generate HTML for individual page items
+ */
+function generatePageItemHTML(page, showRelationships = false) {
+    const statusClass = `status-${page.status}`;
+    const statusText = page.status === 'success' ? 'SUCCESS' : 'FAILED';
+    const statusClassName = page.status === 'success' ? 'success' : 'failed';
+    
+    let relationshipClasses = '';
+    let relationshipContent = '';
+    
+    if (page.relationship && showRelationships) {
+        const rel = page.relationship;
+        relationshipClasses = `relationship-${rel.type} depth-${rel.depth || 0}`;
+        
+        if (rel.error) {
+            relationshipClasses += ' broken-relationship';
+        }
+        
+        // Add relationship indicator
+        if (rel.type === 'root') {
+            relationshipContent += '<span class="relationship-indicator ROOT">ROOT</span>';
+            relationshipContent += '<span class="discovery-info">Entry point</span>';
+        } else if (rel.type === 'child') {
+            relationshipContent += '<span class="indentation"></span>';
+            relationshipContent += '<span class="relationship-indicator child">↳</span>';
+            if (rel.parent_url) {
+                relationshipContent += `<span class="parent-reference">from: ${rel.parent_url}</span>`;
+                relationshipContent += `<span class="discovery-info">Discovered from: ${rel.parent_url}</span>`;
+            }
+        } else if (rel.type === 'orphaned') {
+            relationshipContent += '<span class="relationship-indicator orphaned">⚠ ORPHANED</span>';
+        }
+        
+        // Add children count if applicable
+        if (rel.children_count > 0) {
+            relationshipContent += `<span class="children-count">Children discovered: ${rel.children_count}</span>`;
+        }
+        
+        // Add depth level
+        if (rel.depth !== undefined) {
+            relationshipContent += `<span class="depth-level">Depth level: ${rel.depth}</span>`;
+        }
+        
+        // Add discovery method
+        if (rel.discovery_method) {
+            relationshipContent += `<span class="discovery-info">${rel.discovery_method}</span>`;
+        }
+        
+        // Add error indicators
+        if (rel.error) {
+            relationshipContent += '<span class="relationship-warning">⚠ Relationship broken</span>';
+        }
+        
+        // Add tooltip
+        const tooltipText = `Type: ${rel.type}, Depth: ${rel.depth || 0}, Discovery: ${rel.discovery_method || 'unknown'}`;
+        relationshipContent += `<span class="relationship-tooltip" data-tooltip="${tooltipText}">ℹ</span>`;
+    }
+    
+    return `
+        <div class="page-item ${statusClass} ${relationshipClasses}" 
+             onmouseover="highlightRelationshipChain('${page.url}')"
+             onmouseout="clearRelationshipHighlight()">
+            ${relationshipContent}
+            <div class="page-url">${page.url}</div>
+            <div class="page-status ${statusClassName}">${statusText}</div>
+            <div class="page-time">${page.processing_time.toFixed(1)}s</div>
+        </div>
+    `;
+}
+
+/**
+ * Hide results container
+ */
+function hideResults() {
+    resultsContainer.style.display = 'none';
+}
+
+// =============================================================================
+// Results Interactivity Functions
+// =============================================================================
+
+/**
+ * Setup event listeners for interactive results elements
+ */
+function setupResultsInteractivity() {
+    // Event listeners are set up via onclick attributes in HTML
+    // This function can be extended for additional interactivity
+}
+
+/**
+ * Toggle site expansion in results display
+ */
+function toggleSiteExpansion(siteIndex) {
+    const pagesList = document.getElementById(`pages-${siteIndex}`);
+    const toggle = document.getElementById(`toggle-${siteIndex}`);
+    
+    if (pagesList.classList.contains('expanded')) {
+        pagesList.classList.remove('expanded');
+        toggle.classList.remove('expanded');
+    } else {
+        pagesList.classList.add('expanded');
+        toggle.classList.add('expanded');
+    }
+}
+
+/**
+ * Show all pages for a specific site
+ */
+function showAllPages(siteIndex) {
+    const pagesList = document.getElementById(`pages-${siteIndex}`);
+    
+    // Get the site's data from the global sites results
+    if (window.currentSitesData && window.currentSitesData[siteIndex]) {
+        const siteData = window.currentSitesData[siteIndex];
+        const isMultiPageMode = getSelectedScrapingMode() === 'multi';
+        
+        // Clear current content
+        pagesList.innerHTML = '';
+        
+        // Show all pages
+        siteData.pages.forEach(page => {
+            pagesList.innerHTML += generatePageItemHTML(page, isMultiPageMode);
+        });
+        
+        // Add a "Show less" link
+        pagesList.innerHTML += `
+            <div class="show-all-link" onclick="showLessPages(${siteIndex})">
+                Show less
+            </div>
+        `;
+    }
+}
+
+/**
+ * Show only first 5 pages again
+ */
+function showLessPages(siteIndex) {
+    const pagesList = document.getElementById(`pages-${siteIndex}`);
+    
+    if (window.currentSitesData && window.currentSitesData[siteIndex]) {
+        const siteData = window.currentSitesData[siteIndex];
+        const isMultiPageMode = getSelectedScrapingMode() === 'multi';
+        const pagesToShow = siteData.pages.slice(0, 5);
+        const hasMorePages = siteData.pages.length > 5;
+        
+        // Clear and regenerate limited view
+        pagesList.innerHTML = '';
+        
+        pagesToShow.forEach(page => {
+            pagesList.innerHTML += generatePageItemHTML(page, isMultiPageMode);
+        });
+        
+        if (hasMorePages) {
+            pagesList.innerHTML += `
+                <div class="show-all-link" onclick="showAllPages(${siteIndex})">
+                    Show all ${siteData.pages.length} pages
+                </div>
+            `;
+        }
+    }
+}
+
+/**
+ * Get currently selected scraping mode
+ */
+function getSelectedScrapingMode() {
+    const modeInput = document.querySelector('input[name="scrapingMode"]:checked');
+    return modeInput ? modeInput.value : 'single';
+}
+
+// =============================================================================
+// Page Relationship Functions
+// =============================================================================
+
+/**
+ * Generate relationship tree HTML for multi-page results
+ */
+function generateRelationshipTree(pages, siteIndex) {
+    let html = '<div class="relationship-tree">';
+    html += '<div class="relationship-tree-header">🌳 PAGE RELATIONSHIP TREE</div>';
+    
+    // Sort pages by depth for hierarchical display
+    const sortedPages = pages.slice().sort((a, b) => {
+        const depthA = a.relationship?.depth || 0;
+        const depthB = b.relationship?.depth || 0;
+        return depthA - depthB;
+    });
+    
+    // Group orphaned pages separately
+    const orphanedPages = pages.filter(p => p.relationship?.type === 'orphaned');
+    const hierarchicalPages = pages.filter(p => p.relationship?.type !== 'orphaned');
+    
+    // Generate hierarchical pages
+    hierarchicalPages.forEach((page, index) => {
+        html += generatePageItemHTML(page, true);
+    });
+    
+    // Generate orphaned pages section if any exist
+    if (orphanedPages.length > 0) {
+        html += '<div class="orphaned-section">';
+        html += '<div class="orphaned-section-header">⚠ ORPHANED PAGES</div>';
+        orphanedPages.forEach(page => {
+            html += generatePageItemHTML(page, true);
+        });
+        html += '</div>';
+    }
+    
+    // Add relationship statistics
+    html += generateRelationshipStats(pages);
+    
+    html += '</div>';
+    return html;
+}
+
+/**
+ * Generate relationship statistics display
+ */
+function generateRelationshipStats(pages) {
+    const stats = {
+        total: pages.length,
+        root: pages.filter(p => p.relationship?.type === 'root').length,
+        children: pages.filter(p => p.relationship?.type === 'child').length,
+        orphaned: pages.filter(p => p.relationship?.type === 'orphaned').length,
+        maxDepth: Math.max(...pages.map(p => p.relationship?.depth || 0)),
+        totalRelationships: pages.filter(p => p.relationship?.parent_url).length
+    };
+    
+    return `
+        <div class="relationship-stats">
+            <div class="relationship-stats-grid">
+                <div class="stat-row">
+                    <span class="stat-label">Total Pages:</span>
+                    <span class="stat-value">${stats.total}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Root Pages:</span>
+                    <span class="stat-value">${stats.root}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Child Pages:</span>
+                    <span class="stat-value">${stats.children}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Orphaned Pages:</span>
+                    <span class="stat-value">${stats.orphaned}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Max Depth:</span>
+                    <span class="stat-value">${stats.maxDepth}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Total Relationships:</span>
+                    <span class="stat-value">${stats.totalRelationships}</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Highlight relationship chain on hover
+ */
+function highlightRelationshipChain(targetUrl) {
+    // Get all page items in the current site
+    const pageItems = document.querySelectorAll('.page-item');
+    
+    // Clear existing highlights
+    pageItems.forEach(item => {
+        item.classList.remove('highlighted');
+    });
+    
+    // Find related pages and highlight them
+    const relatedUrls = findRelatedPages(targetUrl);
+    
+    pageItems.forEach(item => {
+        const urlElement = item.querySelector('.page-url');
+        if (urlElement && relatedUrls.includes(urlElement.textContent)) {
+            item.classList.add('highlighted');
+        }
+    });
+    
+    // Add highlighting effect to container
+    const container = document.querySelector('.relationship-enabled');
+    if (container) {
+        container.classList.add('highlight-relationship-chain');
+    }
+}
+
+/**
+ * Clear relationship highlighting
+ */
+function clearRelationshipHighlight() {
+    const pageItems = document.querySelectorAll('.page-item');
+    pageItems.forEach(item => {
+        item.classList.remove('highlighted');
+    });
+    
+    const container = document.querySelector('.relationship-enabled');
+    if (container) {
+        container.classList.remove('highlight-relationship-chain');
+    }
+}
+
+/**
+ * Find related pages for relationship highlighting
+ */
+function findRelatedPages(targetUrl) {
+    // This is a simplified version - in a real implementation,
+    // this would traverse the actual relationship data
+    const related = [targetUrl];
+    
+    // Find pages that mention this URL as parent
+    const pageItems = document.querySelectorAll('.page-item');
+    pageItems.forEach(item => {
+        const parentRef = item.querySelector('.parent-reference');
+        if (parentRef && parentRef.textContent.includes(targetUrl)) {
+            const urlElement = item.querySelector('.page-url');
+            if (urlElement) {
+                related.push(urlElement.textContent);
+            }
+        }
+    });
+    
+    return related;
+}
+
+/**
+ * Toggle relationship tree expansion
+ */
+function toggleRelationshipTreeExpansion(siteIndex) {
+    const tree = document.querySelector(`#pages-${siteIndex} .relationship-tree`);
+    if (tree) {
+        tree.classList.toggle('expanded');
+    }
+}
+
+// =============================================================================
+// Utility Functions
+// =============================================================================
+
+/**
+ * Debounce function to limit rapid function calls
+ */
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// =============================================================================
+// CSS Animations - Dynamically Added Styles
+// =============================================================================
+
+// Add CSS animations for terminal effects
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+    @keyframes float {
+        0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.1; }
+        50% { transform: translateY(-10px) rotate(180deg); opacity: 0.3; }
+    }
+    
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes terminal-cursor {
+        0%, 50% { box-shadow: inset 0 0 0 2px var(--accent-green); }
+        51%, 100% { box-shadow: inset 0 0 0 2px transparent; }
+    }
+`;
+document.head.appendChild(styleSheet);

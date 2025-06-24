@@ -19,9 +19,9 @@ from .type_generator import TypeScriptGenerator, PythonDataclassGenerator, Pydan
 from .documentation_generator import (
     EntityRelationshipDocGenerator, APIDocumentationGenerator, ReadmeGenerator
 )
-from .sample_generator import (
-    LangChainSampleGenerator, LlamaIndexSampleGenerator, ValidationScriptGenerator
-)
+from .validation_script_generator import ValidationScriptGenerator
+from .langchain_sample_generator import LangChainSampleGenerator
+from .llamaindex_sample_generator import LlamaIndexSampleGenerator
 
 
 # Configure logging

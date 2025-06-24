@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG_Scraper // Data Extraction Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="matrix-bg"></div>
+    
+    <div class="main-container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1 class="title">RAG_Scraper</h1>
+            <div class="subtitle">// Multi-Site Data Extraction Terminal v2.0</div>
+            <div class="status-bar" id="status-bar">
+                [SYSTEM_READY] // Awaiting target URLs
+            </div>
+        </div>
+
+        <!-- URL Input Panel -->
+        <div class="extraction-panel">
+            <div class="panel-header">[URL_INPUT_TERMINAL]</div>
+            
+            <form id="extraction-form">
+                <div class="input-group">
+                    <label for="target-urls" class="input-label">TARGET_URLS:</label>
+                    <textarea 
+                        id="target-urls" 
+                        name="target_urls"
+                        class="url-input"
+                        placeholder="https://example-restaurant.com&#10;https://another-restaurant.com/menu&#10;https://third-restaurant.com"
+                        rows="4"></textarea>
+                    <div class="input-hint">// Enter one URL per line (max 100 URLs)</div>
+                </div>
+
+                <!-- Scraping Mode Selector -->
+                <div class="mode-selector-section">
+                    <div class="mode-selector-header">[SCRAPING_MODE_SELECTOR]</div>
+                    <div class="mode-toggle-container">
+                        <div class="mode-option">
+                            <input type="radio" id="single-page-mode" name="scraping_mode" value="SINGLE_PAGE" checked>
+                            <label for="single-page-mode" class="mode-label">
+                                <span class="mode-icon">📄</span>
+                                <span class="mode-text">SINGLE_PAGE</span>
+                                <span class="mode-desc">Process each URL individually</span>
+                            </label>
+                        </div>
+                        <div class="mode-option">
+                            <input type="radio" id="multi-page-mode" name="scraping_mode" value="MULTI_PAGE">
+                            <label for="multi-page-mode" class="mode-label">
+                                <span class="mode-icon">📚</span>
+                                <span class="mode-text">MULTI_PAGE</span>
+                                <span class="mode-desc">Discover and crawl related pages</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mode-status" id="mode-status">
+                        [MODE_SELECTED] SINGLE_PAGE // Standard processing
+                    </div>
+                </div>
+
+                <!-- Multi-Page Configuration Panel -->
+                <div class="multi-page-config" id="multi-page-config" style="display: none;">
+                    <div class="config-header" onclick="toggleMultiPageConfig()">
+                        <span>[MULTI_PAGE_CONFIG]</span>
+                        <span class="config-toggle" id="config-toggle">▼</span>
+                    </div>
+                    
+                    <div class="config-content" id="config-content">
+                        <div class="config-row">
+                            <label for="max-pages" class="config-label">Max Pages per Site:</label>
+                            <div class="slider-container">
+                                <input type="range" id="max-pages" name="max_pages" min="1" max="500" value="50" class="config-slider">
+                                <span class="slider-value" id="max-pages-value">50</span>
+                            </div>
+                        </div>
+                        
+                        <div class="config-row">
+                            <label for="crawl-depth" class="config-label">Crawl Depth:</label>
+                            <div class="slider-container">
+                                <input type="range" id="crawl-depth" name="crawl_depth" min="1" max="5" value="2" class="config-slider">
+                                <span class="slider-value" id="crawl-depth-value">2</span>
+                            </div>
+                        </div>
+                        
+                        <div class="config-row">
+                            <label for="include-patterns" class="config-label">Include Patterns:</label>
+                            <input type="text" id="include-patterns" name="include_patterns" 
+                                   placeholder="menu,about,location" class="config-input">
+                        </div>
+                        
+                        <div class="config-row">
+                            <label for="exclude-patterns" class="config-label">Exclude Patterns:</label>
+                            <input type="text" id="exclude-patterns" name="exclude_patterns" 
+                                   placeholder="admin,login,cart" class="config-input">
+                        </div>
+                        
+                        <div class="config-row">
+                            <label for="rate-limit" class="config-label">Rate Limit (ms):</label>
+                            <div class="slider-container">
+                                <input type="range" id="rate-limit" name="rate_limit" min="100" max="5000" value="1000" step="100" class="config-slider">
+                                <span class="slider-value" id="rate-limit-value">1000</span>
+                            </div>
+                        </div>
+                        
+                        <!-- JavaScript Configuration Section -->
+                        <div class="js-config-section">
+                            <div class="config-section-header">[JAVASCRIPT_RENDERING]</div>
+                            
+                            <div class="config-row">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="enable-js" name="enable_javascript">
+                                    <span class="checkbox-custom"></span>
+                                    Enable JavaScript Rendering
+                                </label>
+                            </div>
+                            
+                            <div class="config-row">
+                                <label for="js-timeout" class="config-label">JavaScript Timeout (ms):</label>
+                                <div class="slider-container">
+                                    <input type="range" id="js-timeout" name="js_timeout" min="5000" max="30000" value="10000" step="1000" class="config-slider">
+                                    <span class="slider-value" id="js-timeout-value">10000</span>
+                                </div>
+                            </div>
+                            
+                            <div class="config-row">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="handle-popups" name="handle_popups" checked>
+                                    <span class="checkbox-custom"></span>
+                                    Handle Restaurant Popups
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File Format Selection -->
+                <div class="format-section">
+                    <div class="format-header">[OUTPUT_FORMAT]</div>
+                    <div class="format-options">
+                        <div class="format-option">
+                            <input type="radio" id="txt-format" name="file_format" value="txt" checked>
+                            <label for="txt-format" class="format-label">
+                                <span class="format-icon">📄</span>
+                                <span class="format-text">TXT</span>
+                                <span class="format-desc">Plain text for RAG systems</span>
+                            </label>
+                        </div>
+                        <div class="format-option">
+                            <input type="radio" id="pdf-format" name="file_format" value="pdf">
+                            <label for="pdf-format" class="format-label">
+                                <span class="format-icon">📋</span>
+                                <span class="format-text">PDF</span>
+                                <span class="format-desc">Formatted documentation</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="execute-btn" id="execute-btn">
+                    <span class="btn-text">EXECUTE_EXTRACTION</span>
+                    <span class="btn-icon">⚡</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Progress Panel -->
+        <div class="progress-panel" id="progress-panel" style="display: none;">
+            <div class="panel-header">[EXTRACTION_PROGRESS]</div>
+            <div class="progress-content">
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+                <div class="progress-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">PROGRESS:</span>
+                        <span class="stat-value" id="progress-percentage">0%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">ETA:</span>
+                        <span class="stat-value" id="progress-eta">Calculating...</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">CURRENT_SITE:</span>
+                        <span class="stat-value" id="current-site">Initializing...</span>
+                    </div>
+                </div>
+                <div class="progress-log" id="progress-log"></div>
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="results-panel" id="results-panel" style="display: none;">
+            <div class="panel-header">[SCRAPING_RESULTS]</div>
+            <div class="results-content" id="results-content"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

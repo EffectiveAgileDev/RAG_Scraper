@@ -3,7 +3,8 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 from pytest_bdd import scenarios, given, when, then, parsers
 
-from src.scraper.multi_page_scraper import MultiPageScraper, MultiPageScrapingResult
+from src.scraper.multi_page_scraper import MultiPageScraper
+from src.scraper.multi_page_result_handler import MultiPageScrapingResult
 from src.scraper.multi_strategy_scraper import RestaurantData
 from src.scraper.data_aggregator import PageData
 

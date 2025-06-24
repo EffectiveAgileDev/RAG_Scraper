@@ -4,7 +4,8 @@ from unittest.mock import Mock, patch, MagicMock
 import time
 import threading
 
-from src.scraper.multi_page_scraper import MultiPageScraper, MultiPageScrapingResult
+from src.scraper.multi_page_scraper import MultiPageScraper
+from src.scraper.multi_page_result_handler import MultiPageScrapingResult
 
 
 class TestMultiPageScraperErrorHandling:

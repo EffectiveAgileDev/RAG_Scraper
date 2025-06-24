@@ -1,70 +1,63 @@
 """Multi-page restaurant website scraper with intelligent navigation and data aggregation."""
-from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional, Callable, Tuple
 import time
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .page_discovery import PageDiscovery
-from .page_classifier import PageClassifier
-from .data_aggregator import DataAggregator, PageData
-from .multi_page_progress import MultiPageProgressNotifier
-from .multi_strategy_scraper import MultiStrategyScraper, RestaurantData
-from .page_queue_manager import PageQueueManager
-
-
-@dataclass
-class MultiPageScrapingResult:
-    """Result of multi-page scraping operation."""
-
-    restaurant_name: str = ""
-    pages_processed: List[str] = field(default_factory=list)
-    successful_pages: List[str] = field(default_factory=list)
-    failed_pages: List[str] = field(default_factory=list)
-    aggregated_data: Optional[RestaurantData] = None
-    processing_time: float = 0.0
-    data_sources_summary: Dict[str, Any] = field(default_factory=dict)
+from .multi_page_scraper_config import MultiPageScraperConfig
+from .multi_page_result_handler import (
+    MultiPageResultHandler,
+    MultiPageScrapingResult,
+    PageProcessingResult
+)
 
 
 class MultiPageScraper:
     """Orchestrates multi-page restaurant website scraping with intelligent navigation."""
 
-    def __init__(self, max_pages: int = 10, enable_ethical_scraping: bool = True):
+    def __init__(self, max_pages: int = 10, enable_ethical_scraping: bool = True, 
+                 config: Optional[MultiPageScraperConfig] = None, **kwargs):
         """Initialize multi-page scraper.
 
         Args:
             max_pages: Maximum number of pages to process per website
             enable_ethical_scraping: Whether to enable ethical scraping features
+            config: Optional MultiPageScraperConfig instance
+            **kwargs: Additional configuration parameters
         """
-        self.max_pages = max_pages
-        self.enable_ethical_scraping = enable_ethical_scraping
+        # Initialize configuration
+        if config is not None:
+            self.config = config
+        else:
+            # Create config from parameters
+            config_params = {
+                'max_pages': max_pages,
+                'enable_ethical_scraping': enable_ethical_scraping,
+                **kwargs
+            }
+            self.config = MultiPageScraperConfig(**config_params)
+        
+        # Maintain backward compatibility
+        self.max_pages = self.config.max_pages
+        self.enable_ethical_scraping = self.config.enable_ethical_scraping
 
-        # Initialize components
+        # Initialize components from config
+        components = self.config.initialize_components()
         self.page_discovery = None  # Will be created per website
-        self.page_classifier = PageClassifier()
-        self.data_aggregator = DataAggregator()
-        self.progress_notifier = MultiPageProgressNotifier()
-        self.multi_strategy_scraper = MultiStrategyScraper(enable_ethical_scraping)
+        self.page_classifier = components['page_classifier']
+        self.data_aggregator = components['data_aggregator']
+        self.progress_notifier = components['progress_notifier']
+        self.multi_strategy_scraper = components['multi_strategy_scraper']
+        self.page_processor = components['page_processor']
+        self.result_handler = components['result_handler']
+        self.page_queue_manager = components['page_queue_manager']
 
-        # Queue management using dedicated PageQueueManager
-        # Extracted queue management and traversal methods into separate class for better separation of concerns
-        self.page_queue_manager = PageQueueManager(max_pages, default_strategy="BFS")
-
-        # Concurrent fetching statistics
-        self._concurrent_stats = {
-            "successful_fetches": 0,
-            "failed_fetches": 0,
-            "total_time": 0.0,
-        }
-
-        # Error handling
-        self._error_log = []
-        self._error_stats = {
-            "total_errors": 0,
-            "error_types": {},
-            "retryable_errors": 0,
-            "non_retryable_errors": 0,
-        }
+        # Initialize statistics from config
+        stats = self.config.initialize_statistics()
+        self._concurrent_stats = stats['concurrent_stats']
+        self._error_stats = stats['error_stats']
+        self._error_log = stats['error_log']
 
     def scrape_website(
         self, url: str, progress_callback: Optional[Callable] = None
@@ -79,7 +72,7 @@ class MultiPageScraper:
             MultiPageScrapingResult with aggregated data
         """
         start_time = time.time()
-        result = MultiPageScrapingResult()
+        result = self.result_handler.create_scraping_result()
 
         try:
             # Initialize page discovery for this website
@@ -87,6 +80,9 @@ class MultiPageScraper:
 
             # Reset data aggregator for this website
             self.data_aggregator = DataAggregator()
+            
+            # Update result handler with fresh aggregator
+            self.result_handler.data_aggregator = self.data_aggregator
 
             # Fetch initial page to start discovery
             initial_html = self._fetch_page(url)
@@ -95,7 +91,7 @@ class MultiPageScraper:
                 return result
 
             # Discover all relevant pages with configurable depth
-            max_depth = getattr(self, 'max_crawl_depth', 2)  # Default to 2 if not set
+            max_depth = self.config.max_crawl_depth
             discovered_pages = self.page_discovery.discover_all_pages(url, initial_html, max_depth)
 
             # Extract restaurant name from initial page for progress tracking
@@ -108,8 +104,8 @@ class MultiPageScraper:
                     restaurant_name, discovered_pages, progress_callback
                 )
 
-            # Process all discovered pages
-            page_results = self.process_discovered_pages(
+            # Process all discovered pages using result handler
+            page_results = self.result_handler.process_discovered_pages(
                 discovered_pages, progress_callback
             )
 
@@ -118,103 +114,31 @@ class MultiPageScraper:
             result.successful_pages = page_results.successful_pages
             result.failed_pages = page_results.failed_pages
 
-            # Aggregate data from all successful pages
-            result.aggregated_data = self.data_aggregator.aggregate()
-            result.data_sources_summary = (
-                self.data_aggregator.get_data_sources_summary()
+            # Finalize result with aggregated data
+            result = self.result_handler.finalize_scraping_result(
+                result, start_time, time.time()
             )
 
             # Notify completion
-            if progress_callback:
-                self.progress_notifier.notify_restaurant_complete(
-                    len(result.successful_pages),
-                    len(result.failed_pages),
-                    progress_callback,
-                )
+            self.result_handler.notify_completion(
+                len(result.successful_pages),
+                len(result.failed_pages),
+                progress_callback
+            )
 
         except Exception as e:
             # Handle any unexpected errors
             result.failed_pages.append(url)
             if progress_callback:
                 progress_callback(f"Error processing {url}: {str(e)}")
-
-        finally:
-            result.processing_time = time.time() - start_time
-
-        return result
-
-    def process_discovered_pages(
-        self, pages: List[str], progress_callback: Optional[Callable] = None
-    ) -> "PageProcessingResult":
-        """Process a list of discovered pages.
-
-        Args:
-            pages: List of page URLs to process
-            progress_callback: Optional progress callback
-
-        Returns:
-            PageProcessingResult with success/failure lists
-        """
-        result = PageProcessingResult()
-
-        # Initialize progress tracking
-        restaurant_name = (
-            self.data_aggregator.page_data[0].restaurant_name
-            if self.data_aggregator.page_data
-            else "Restaurant"
-        )
-        self.progress_notifier.initialize_restaurant(restaurant_name, pages)
-
-        for i, page_url in enumerate(pages):
-            try:
-                # Process individual page
-                page_result = self._fetch_and_process_page(page_url)
-
-                if page_result:
-                    result.successful_pages.append(page_url)
-
-                    # Add page data to aggregator
-                    page_data = PageData(
-                        url=page_url,
-                        page_type=page_result["page_type"],
-                        source=page_result["data"].sources[0]
-                        if page_result["data"].sources
-                        else "unknown",
-                        restaurant_name=page_result["data"].name,
-                        address=page_result["data"].address,
-                        phone=page_result["data"].phone,
-                        hours=page_result["data"].hours,
-                        price_range=page_result["data"].price_range,
-                        cuisine=page_result["data"].cuisine,
-                        menu_items=page_result["data"].menu_items,
-                        social_media=page_result["data"].social_media,
-                        confidence=page_result["data"].confidence,
-                    )
-
-                    self.data_aggregator.add_page_data(page_data)
-
-                    # Notify success
-                    if progress_callback:
-                        self.progress_notifier.notify_page_complete(
-                            page_url, page_result["page_type"], True, progress_callback
-                        )
-                else:
-                    result.failed_pages.append(page_url)
-
-                    # Notify failure
-                    if progress_callback:
-                        self.progress_notifier.notify_page_complete(
-                            page_url, "unknown", False, progress_callback
-                        )
-
-            except Exception as e:
-                result.failed_pages.append(page_url)
-                if progress_callback:
-                    self.progress_notifier.notify_page_complete(
-                        page_url, "unknown", False, progress_callback
-                    )
+            
+            # Still finalize the result for consistency
+            result = self.result_handler.finalize_scraping_result(
+                result, start_time, time.time()
+            )
 
         return result
+
 
     def _fetch_page(self, url: str) -> Optional[str]:
         """Fetch HTML content from a URL.
@@ -225,28 +149,7 @@ class MultiPageScraper:
         Returns:
             HTML content or None if failed
         """
-        try:
-            if (
-                self.enable_ethical_scraping
-                and self.multi_strategy_scraper.ethical_scraper
-            ):
-                # Use ethical scraper with rate limiting
-                html_content = (
-                    self.multi_strategy_scraper.ethical_scraper.fetch_page_with_retry(
-                        url
-                    )
-                )
-                return html_content
-            else:
-                # Fallback method for testing
-                import requests
-
-                response = requests.get(url, timeout=30)
-                response.raise_for_status()
-                return response.text
-
-        except Exception:
-            return None
+        return self.page_processor._fetch_page(url)
 
     def _fetch_and_process_page(self, url: str) -> Optional[Dict[str, Any]]:
         """Fetch and process a single page.
@@ -257,22 +160,7 @@ class MultiPageScraper:
         Returns:
             Dictionary with page_type and extracted data, or None if failed
         """
-        # Fetch page content
-        html_content = self._fetch_page(url)
-        if not html_content:
-            return None
-
-        # Classify page type
-        page_type = self.page_classifier.classify_page(url, html_content)
-
-        # Extract restaurant data using multi-strategy approach
-        restaurant_data = self.multi_strategy_scraper.scrape_url(url)
-
-        if not restaurant_data:
-            # If multi-strategy fails, create minimal data
-            restaurant_data = RestaurantData(sources=["heuristic"])
-
-        return {"page_type": page_type, "data": restaurant_data}
+        return self.page_processor._fetch_and_process_page(url)
 
     def _extract_restaurant_name(self, html_content: str) -> str:
         """Extract restaurant name from HTML content for progress tracking.
@@ -283,25 +171,7 @@ class MultiPageScraper:
         Returns:
             Restaurant name or default
         """
-        try:
-            # Use multi-strategy scraper to extract basic info
-            from bs4 import BeautifulSoup
-
-            soup = BeautifulSoup(html_content, "html.parser")
-
-            # Try to find restaurant name in title or h1
-            title = soup.find("title")
-            if title:
-                return title.get_text().strip().split("|")[0].split("-")[0].strip()
-
-            h1 = soup.find("h1")
-            if h1:
-                return h1.get_text().strip()
-
-            return "Restaurant"
-
-        except Exception:
-            return "Restaurant"
+        return self.page_processor._extract_restaurant_name(html_content)
 
     def get_current_progress(self) -> Optional[Dict[str, Any]]:
         """Get current progress information.
@@ -975,10 +845,3 @@ class MultiPageScraper:
         }
         return delays.get(error_type, 1.0)
 
-
-@dataclass
-class PageProcessingResult:
-    """Result of processing multiple pages."""
-
-    successful_pages: List[str] = field(default_factory=list)
-    failed_pages: List[str] = field(default_factory=list)
