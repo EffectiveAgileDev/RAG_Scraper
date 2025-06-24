@@ -1,9 +1,7 @@
 """Multi-page restaurant website scraper with intelligent navigation and data aggregation."""
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional, Callable, Tuple
-from collections import deque
 import time
-import heapq
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -12,6 +10,7 @@ from .page_classifier import PageClassifier
 from .data_aggregator import DataAggregator, PageData
 from .multi_page_progress import MultiPageProgressNotifier
 from .multi_strategy_scraper import MultiStrategyScraper, RestaurantData
+from .page_queue_manager import PageQueueManager
 
 
 @dataclass
@@ -47,12 +46,9 @@ class MultiPageScraper:
         self.progress_notifier = MultiPageProgressNotifier()
         self.multi_strategy_scraper = MultiStrategyScraper(enable_ethical_scraping)
 
-        # Queue management
-        self._page_queue = None
-        self._visited_pages = set()
-        self._queue_strategy = "BFS"
-        self._queue_lock = threading.Lock()
-        self._priority_queue = []  # For priority-based ordering
+        # Queue management using dedicated PageQueueManager
+        # Extracted queue management and traversal methods into separate class for better separation of concerns
+        self.page_queue_manager = PageQueueManager(max_pages, default_strategy="BFS")
 
         # Concurrent fetching statistics
         self._concurrent_stats = {
@@ -315,14 +311,11 @@ class MultiPageScraper:
         """
         return self.progress_notifier.get_current_progress_summary()
 
-    # Queue Management Methods
+    # Queue Management Methods (delegating to PageQueueManager)
 
     def _initialize_page_queue(self):
         """Initialize the page queue for processing."""
-        with self._queue_lock:
-            self._page_queue = deque()
-            self._visited_pages.clear()
-            self._priority_queue.clear()
+        self.page_queue_manager.initialize_page_queue()
 
     def _add_pages_to_queue(self, pages: List[str], strategy: str = "BFS"):
         """Add pages to the processing queue.
@@ -331,32 +324,7 @@ class MultiPageScraper:
             pages: List of page URLs to add
             strategy: Queue strategy ("BFS" for breadth-first, "DFS" for depth-first)
         """
-        with self._queue_lock:
-            self._queue_strategy = strategy
-
-            # Remove duplicates and already visited pages
-            unique_pages = []
-            existing_in_queue = set(self._page_queue)
-            for page in pages:
-                if (
-                    page not in self._visited_pages
-                    and page not in existing_in_queue
-                    and page not in unique_pages
-                ):
-                    unique_pages.append(page)
-
-            # Respect max pages limit
-            current_total = len(self._page_queue) + len(self._visited_pages)
-            available_slots = max(0, self.max_pages - current_total)
-            unique_pages = unique_pages[:available_slots]
-
-            if strategy == "BFS":
-                # Add to the right (FIFO)
-                self._page_queue.extend(unique_pages)
-            elif strategy == "DFS":
-                # Add to the left (LIFO) - last added will be first out
-                for page in unique_pages:
-                    self._page_queue.appendleft(page)
+        self.page_queue_manager.add_pages_to_queue(pages, strategy)
 
     def _add_pages_to_queue_with_priority(
         self, pages_with_priority: List[Tuple[str, int]]
@@ -366,11 +334,7 @@ class MultiPageScraper:
         Args:
             pages_with_priority: List of (url, priority) tuples
         """
-        with self._queue_lock:
-            for url, priority in pages_with_priority:
-                if url not in self._visited_pages:
-                    # Use negative priority for max-heap behavior
-                    heapq.heappush(self._priority_queue, (-priority, url))
+        self.page_queue_manager.add_pages_to_queue_with_priority(pages_with_priority)
 
     def _get_next_page(self) -> Optional[str]:
         """Get the next page from the queue.
@@ -378,20 +342,7 @@ class MultiPageScraper:
         Returns:
             Next page URL or None if queue is empty
         """
-        with self._queue_lock:
-            # Check priority queue first
-            if self._priority_queue:
-                _, url = heapq.heappop(self._priority_queue)
-                self._visited_pages.add(url)
-                return url
-
-            # Then check regular queue
-            if self._page_queue:
-                url = self._page_queue.popleft()
-                self._visited_pages.add(url)
-                return url
-
-            return None
+        return self.page_queue_manager.get_next_page()
 
     def _has_pending_pages(self) -> bool:
         """Check if there are pending pages in the queue.
@@ -399,14 +350,11 @@ class MultiPageScraper:
         Returns:
             True if there are pages to process
         """
-        with self._queue_lock:
-            return len(self._page_queue) > 0 or len(self._priority_queue) > 0
+        return self.page_queue_manager.has_pending_pages()
 
     def _clear_page_queue(self):
         """Clear all pages from the queue."""
-        with self._queue_lock:
-            self._page_queue.clear()
-            self._priority_queue.clear()
+        self.page_queue_manager.clear_page_queue()
 
     def _get_queue_stats(self) -> Dict[str, Any]:
         """Get queue statistics.
@@ -414,15 +362,9 @@ class MultiPageScraper:
         Returns:
             Dictionary with queue statistics
         """
-        with self._queue_lock:
-            return {
-                "total_queued": len(self._page_queue) + len(self._priority_queue),
-                "pending": len(self._page_queue) + len(self._priority_queue),
-                "visited": len(self._visited_pages),
-                "strategy": self._queue_strategy,
-            }
+        return self.page_queue_manager.get_queue_stats()
 
-    # Traversal Strategy Methods
+    # Traversal Strategy Methods (delegating to PageQueueManager)
 
     def _get_traversal_strategy(self) -> str:
         """Get the current traversal strategy.
@@ -430,7 +372,7 @@ class MultiPageScraper:
         Returns:
             Current traversal strategy ("BFS" or "DFS")
         """
-        return self._queue_strategy
+        return self.page_queue_manager.get_traversal_strategy()
 
     def _set_traversal_strategy(self, strategy: str):
         """Set the traversal strategy.
@@ -438,10 +380,7 @@ class MultiPageScraper:
         Args:
             strategy: Traversal strategy ("BFS" or "DFS")
         """
-        if strategy in ["BFS", "DFS"]:
-            self._queue_strategy = strategy
-        else:
-            raise ValueError(f"Invalid traversal strategy: {strategy}")
+        self.page_queue_manager.set_traversal_strategy(strategy)
 
     def _breadth_first_traversal(
         self, start_url: str, max_depth: Optional[int] = None
@@ -455,59 +394,21 @@ class MultiPageScraper:
         Returns:
             List of visited URLs in BFS order
         """
-        visited_order = []
-        self._initialize_page_queue()
-        self._add_pages_to_queue([start_url], strategy="BFS")
+        def page_fetcher(url):
+            """Fetch and discover links from a page."""
+            html_content = self._fetch_page(url)
+            if html_content:
+                if self.page_discovery is None:
+                    self.page_discovery = PageDiscovery(url, self.max_pages)
 
-        current_depth = 0
-        pages_at_current_depth = 1
-        pages_at_next_depth = 0
+                new_links = self.page_discovery.discover_navigation_links(html_content)
+                relevant_links = self.page_discovery.filter_relevant_pages(new_links)
+                return list(relevant_links)
+            return []
 
-        while self._has_pending_pages():
-            if max_depth is not None and current_depth >= max_depth:
-                break
-
-            if pages_at_current_depth == 0:
-                # Move to next depth level
-                current_depth += 1
-                pages_at_current_depth = pages_at_next_depth
-                pages_at_next_depth = 0
-                continue
-
-            current_url = self._get_next_page()
-            if current_url is None:
-                break
-
-            visited_order.append(current_url)
-            pages_at_current_depth -= 1
-
-            # Fetch page and discover new links
-            try:
-                html_content = self._fetch_page(current_url)
-                if html_content:
-                    # Discover new pages from this page
-                    if self.page_discovery is None:
-                        self.page_discovery = PageDiscovery(current_url, self.max_pages)
-
-                    new_links = self.page_discovery.discover_navigation_links(
-                        html_content
-                    )
-                    relevant_links = self.page_discovery.filter_relevant_pages(
-                        new_links
-                    )
-
-                    # Add new links to queue for next depth level
-                    new_pages = list(relevant_links)
-                    if new_pages:
-                        self._add_pages_to_queue(new_pages, strategy="BFS")
-                        pages_at_next_depth += len(
-                            [p for p in new_pages if p not in self._visited_pages]
-                        )
-            except Exception:
-                # Continue traversal even if individual pages fail
-                continue
-
-        return visited_order
+        return self.page_queue_manager.breadth_first_traversal(
+            start_url, page_fetcher, max_depth
+        )
 
     def _depth_first_traversal(
         self, start_url: str, max_depth: Optional[int] = None
@@ -521,45 +422,21 @@ class MultiPageScraper:
         Returns:
             List of visited URLs in DFS order
         """
-        visited_order = []
-        self._initialize_page_queue()
+        def page_fetcher(url):
+            """Fetch and discover links from a page."""
+            html_content = self._fetch_page(url)
+            if html_content:
+                if self.page_discovery is None:
+                    self.page_discovery = PageDiscovery(url, self.max_pages)
 
-        def _dfs_recursive(url: str, current_depth: int = 0):
-            if max_depth is not None and current_depth >= max_depth:
-                return
-            if url in self._visited_pages:
-                return
-            if len(visited_order) >= self.max_pages:
-                return
+                new_links = self.page_discovery.discover_navigation_links(html_content)
+                relevant_links = self.page_discovery.filter_relevant_pages(new_links)
+                return list(relevant_links)
+            return []
 
-            # Visit current page
-            self._visited_pages.add(url)
-            visited_order.append(url)
-
-            try:
-                # Fetch page and discover new links
-                html_content = self._fetch_page(url)
-                if html_content:
-                    if self.page_discovery is None:
-                        self.page_discovery = PageDiscovery(url, self.max_pages)
-
-                    new_links = self.page_discovery.discover_navigation_links(
-                        html_content
-                    )
-                    relevant_links = self.page_discovery.filter_relevant_pages(
-                        new_links
-                    )
-
-                    # Recursively visit each new link (depth-first)
-                    for link in relevant_links:
-                        if link not in self._visited_pages:
-                            _dfs_recursive(link, current_depth + 1)
-            except Exception:
-                # Continue traversal even if individual pages fail
-                pass
-
-        _dfs_recursive(start_url)
-        return visited_order
+        return self.page_queue_manager.depth_first_traversal(
+            start_url, page_fetcher, max_depth
+        )
 
     def _priority_traversal(self, start_url: str) -> List[str]:
         """Perform priority-based traversal of website pages.
@@ -570,50 +447,37 @@ class MultiPageScraper:
         Returns:
             List of visited URLs in priority order
         """
-        visited_order = []
-        self._initialize_page_queue()
-
-        # Get page priorities from PageDiscovery
-        if self.page_discovery is None:
-            self.page_discovery = PageDiscovery(start_url, self.max_pages)
-
-        # Start with initial page
-        self._visited_pages.add(start_url)
-        visited_order.append(start_url)
-
-        try:
-            # Fetch initial page and discover links
-            html_content = self._fetch_page(start_url)
+        def page_fetcher(url):
+            """Fetch and discover links from a page."""
+            html_content = self._fetch_page(url)
             if html_content:
+                if self.page_discovery is None:
+                    self.page_discovery = PageDiscovery(url, self.max_pages)
+
                 new_links = self.page_discovery.discover_navigation_links(html_content)
                 relevant_links = self.page_discovery.filter_relevant_pages(new_links)
+                return list(relevant_links)
+            return []
 
-                # Get priorities for each link
-                pages_with_priority = []
-                for link in relevant_links:
-                    # Use PageDiscovery priority system
+        def prioritizer(pages):
+            """Assign priorities to pages using PageDiscovery."""
+            pages_with_priority = []
+            for link in pages:
+                if self.page_discovery:
                     priority_pages = self.page_discovery.prioritize_pages({link})
                     if priority_pages:
                         # Higher priority pages come first in the list
-                        priority = len(priority_pages) - list(priority_pages).index(
-                            link
-                        )
+                        priority = len(priority_pages) - list(priority_pages).index(link)
                         pages_with_priority.append((link, priority))
+                    else:
+                        pages_with_priority.append((link, 5))  # Default priority
+                else:
+                    pages_with_priority.append((link, 5))  # Default priority
+            return pages_with_priority
 
-                # Add to priority queue
-                self._add_pages_to_queue_with_priority(pages_with_priority)
-
-                # Process pages in priority order
-                while self._has_pending_pages():
-                    current_url = self._get_next_page()
-                    if current_url is None:
-                        break
-                    visited_order.append(current_url)
-        except Exception:
-            # Continue even if errors occur
-            pass
-
-        return visited_order
+        return self.page_queue_manager.priority_traversal(
+            start_url, page_fetcher, prioritizer
+        )
 
     def _get_traversal_stats(self) -> Dict[str, Any]:
         """Get traversal statistics.
@@ -621,14 +485,7 @@ class MultiPageScraper:
         Returns:
             Dictionary with traversal statistics
         """
-        return {
-            "pages_discovered": len(self._visited_pages)
-            + len(self._page_queue)
-            + len(self._priority_queue),
-            "pages_processed": len(self._visited_pages),
-            "pages_failed": 0,  # Would need to track failures separately
-            "traversal_strategy": self._queue_strategy,
-        }
+        return self.page_queue_manager.get_traversal_stats()
 
     # Concurrent Fetching Methods
 

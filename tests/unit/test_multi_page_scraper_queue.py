@@ -1,7 +1,6 @@
 """Unit tests for multi-page scraper queue management functionality."""
 import pytest
 from unittest.mock import Mock, patch, MagicMock
-from collections import deque
 import asyncio
 
 from src.scraper.multi_page_scraper import MultiPageScraper
@@ -14,15 +13,14 @@ class TestMultiPageScraperQueueManagement:
         """Test initializing an empty page queue."""
         scraper = MultiPageScraper()
 
-        # Queue should be initialized but empty
-        assert hasattr(scraper, "_page_queue") or not hasattr(scraper, "_page_queue")
-
         # Initialize queue
         scraper._initialize_page_queue()
 
-        assert hasattr(scraper, "_page_queue")
-        assert len(scraper._page_queue) == 0
-        assert isinstance(scraper._page_queue, deque)
+        # Queue should be empty after initialization
+        assert not scraper._has_pending_pages()
+        stats = scraper._get_queue_stats()
+        assert stats["pending"] == 0
+        assert stats["visited"] == 0
 
     def test_add_pages_to_queue_fifo(self):
         """Test adding pages to queue with FIFO (BFS) ordering."""
@@ -38,7 +36,8 @@ class TestMultiPageScraperQueueManagement:
         # Add pages to queue
         scraper._add_pages_to_queue(pages, strategy="BFS")
 
-        assert len(scraper._page_queue) == 3
+        stats = scraper._get_queue_stats()
+        assert stats["pending"] == 3
 
         # Should maintain FIFO order for BFS
         assert scraper._get_next_page() == "http://example.com/"
@@ -59,7 +58,8 @@ class TestMultiPageScraperQueueManagement:
         # Add pages to queue
         scraper._add_pages_to_queue(pages, strategy="DFS")
 
-        assert len(scraper._page_queue) == 3
+        stats = scraper._get_queue_stats()
+        assert stats["pending"] == 3
 
         # Should maintain LIFO order for DFS (reverse order)
         assert scraper._get_next_page() == "http://example.com/contact"
@@ -104,7 +104,8 @@ class TestMultiPageScraperQueueManagement:
         scraper._add_pages_to_queue(pages, strategy="BFS")
 
         # Should only have 2 unique pages
-        assert len(scraper._page_queue) == 2
+        stats = scraper._get_queue_stats()
+        assert stats["pending"] == 2
 
         # Verify both unique pages are present
         page1 = scraper._get_next_page()
@@ -124,7 +125,8 @@ class TestMultiPageScraperQueueManagement:
         scraper._add_pages_to_queue(pages, strategy="BFS")
 
         # Should only have max_pages items
-        assert len(scraper._page_queue) <= 3
+        stats = scraper._get_queue_stats()
+        assert stats["pending"] <= 3
 
     def test_queue_priority_ordering(self):
         """Test that queue can handle priority-based ordering."""
@@ -154,12 +156,12 @@ class TestMultiPageScraperQueueManagement:
         pages = ["http://example.com/menu", "http://example.com/contact"]
         scraper._add_pages_to_queue(pages, strategy="BFS")
 
-        assert len(scraper._page_queue) == 2
+        stats = scraper._get_queue_stats()
+        assert stats["pending"] == 2
 
         # Clear queue
         scraper._clear_page_queue()
 
-        assert len(scraper._page_queue) == 0
         assert not scraper._has_pending_pages()
 
     def test_queue_statistics(self):
