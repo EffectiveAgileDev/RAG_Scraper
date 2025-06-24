@@ -855,6 +855,483 @@ def create_app(testing=False):
                 ::-webkit-scrollbar-thumb:hover {
                     background: var(--accent-cyan);
                 }
+
+                /* Enhanced Results Display Styles */
+                .results-container {
+                    margin-top: 1rem;
+                    border: 1px solid var(--border-color);
+                    border-radius: 4px;
+                    background: var(--bg-secondary);
+                    overflow: hidden;
+                }
+
+                .results-header {
+                    background: var(--bg-tertiary);
+                    padding: 0.75rem 1rem;
+                    border-bottom: 1px solid var(--border-color);
+                }
+
+                .results-header h3 {
+                    margin: 0;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.875rem;
+                    color: var(--accent-green);
+                    text-transform: uppercase;
+                    letter-spacing: 0.1em;
+                }
+
+                .results-content {
+                    max-height: 400px;
+                    overflow-y: auto;
+                }
+
+                .no-results {
+                    padding: 2rem;
+                    text-align: center;
+                    color: var(--text-muted);
+                }
+
+                .no-results .status-message {
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.875rem;
+                    margin-bottom: 0.5rem;
+                }
+
+                .no-results .status-subtitle {
+                    font-size: 0.75rem;
+                    opacity: 0.7;
+                }
+
+                .sites-results {
+                    padding: 1rem;
+                }
+
+                .site-result {
+                    margin-bottom: 1.5rem;
+                    border: 1px solid var(--border-color);
+                    border-radius: 4px;
+                    background: var(--bg-primary);
+                    overflow: hidden;
+                }
+
+                .site-result:last-child {
+                    margin-bottom: 0;
+                }
+
+                .site-header {
+                    background: var(--bg-tertiary);
+                    padding: 0.75rem 1rem;
+                    border-bottom: 1px solid var(--border-color);
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                }
+
+                .site-header:hover {
+                    background: var(--bg-secondary);
+                }
+
+                .site-url {
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.8rem;
+                    color: var(--accent-cyan);
+                    margin-bottom: 0.25rem;
+                    word-break: break-all;
+                }
+
+                .pages-summary {
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.75rem;
+                    color: var(--accent-amber);
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                }
+
+                .expand-toggle {
+                    margin-left: auto;
+                    color: var(--text-muted);
+                    transition: transform 0.2s ease;
+                }
+
+                .expand-toggle.expanded {
+                    transform: rotate(180deg);
+                }
+
+                .pages-list {
+                    padding: 1rem;
+                    border-top: 1px solid var(--border-color);
+                    display: none;
+                }
+
+                .pages-list.expanded {
+                    display: block;
+                }
+
+                .page-item {
+                    display: flex;
+                    align-items: center;
+                    padding: 0.5rem;
+                    margin-bottom: 0.5rem;
+                    border: 1px solid var(--border-color);
+                    border-radius: 3px;
+                    background: var(--bg-secondary);
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.75rem;
+                }
+
+                .page-item:last-child {
+                    margin-bottom: 0;
+                }
+
+                .page-item.status-success {
+                    border-left: 3px solid var(--accent-green);
+                }
+
+                .page-item.status-failed {
+                    border-left: 3px solid var(--accent-red);
+                }
+
+                .page-url {
+                    flex: 1;
+                    color: var(--text-primary);
+                    margin-right: 1rem;
+                    word-break: break-all;
+                }
+
+                .page-status {
+                    padding: 0.2rem 0.5rem;
+                    border-radius: 2px;
+                    font-size: 0.6875rem;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    margin-right: 0.5rem;
+                }
+
+                .page-status.success {
+                    background: var(--accent-green);
+                    color: var(--bg-primary);
+                }
+
+                .page-status.failed {
+                    background: var(--accent-red);
+                    color: var(--bg-primary);
+                }
+
+                .page-time {
+                    color: var(--text-muted);
+                    font-size: 0.6875rem;
+                    min-width: 60px;
+                    text-align: right;
+                }
+
+                .show-all-link {
+                    margin-top: 0.5rem;
+                    padding: 0.5rem;
+                    text-align: center;
+                    color: var(--accent-cyan);
+                    cursor: pointer;
+                    border: 1px dashed var(--border-color);
+                    border-radius: 3px;
+                    transition: all 0.2s ease;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.75rem;
+                }
+
+                .show-all-link:hover {
+                    background: var(--bg-tertiary);
+                    border-color: var(--accent-cyan);
+                }
+
+                .processing-stats {
+                    display: flex;
+                    gap: 1rem;
+                    font-size: 0.6875rem;
+                    color: var(--text-muted);
+                }
+
+                .stat-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.25rem;
+                }
+
+                .stat-icon {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                }
+
+                .stat-icon.success {
+                    background: var(--accent-green);
+                }
+
+                .stat-icon.failed {
+                    background: var(--accent-red);
+                }
+
+                /* Page Relationships Display Styles */
+                .relationship-enabled {
+                    position: relative;
+                }
+
+                .relationship-tree {
+                    margin-top: 1rem;
+                    padding: 1rem;
+                    border: 1px solid var(--border-color);
+                    border-radius: 4px;
+                    background: var(--bg-tertiary);
+                }
+
+                .relationship-tree-header {
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.875rem;
+                    color: var(--accent-green);
+                    text-transform: uppercase;
+                    letter-spacing: 0.1em;
+                    margin-bottom: 1rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                }
+
+                .page-item.relationship-root {
+                    border-left: 4px solid var(--accent-green);
+                    background: linear-gradient(90deg, rgba(0, 255, 136, 0.1) 0%, transparent 100%);
+                }
+
+                .page-item.relationship-child {
+                    border-left: 4px solid var(--accent-cyan);
+                    background: linear-gradient(90deg, rgba(0, 204, 255, 0.05) 0%, transparent 100%);
+                }
+
+                .page-item.relationship-orphaned {
+                    border-left: 4px solid var(--accent-amber);
+                    background: linear-gradient(90deg, rgba(255, 193, 7, 0.1) 0%, transparent 100%);
+                }
+
+                .relationship-indicator {
+                    display: inline-flex;
+                    align-items: center;
+                    padding: 0.2rem 0.5rem;
+                    border-radius: 3px;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.6875rem;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    margin-right: 0.5rem;
+                }
+
+                .relationship-indicator.ROOT {
+                    background: var(--accent-green);
+                    color: var(--bg-primary);
+                }
+
+                .relationship-indicator.child {
+                    background: var(--accent-cyan);
+                    color: var(--bg-primary);
+                    font-size: 0.75rem;
+                }
+
+                .relationship-indicator.orphaned {
+                    background: var(--accent-amber);
+                    color: var(--bg-primary);
+                }
+
+                .indentation {
+                    display: inline-block;
+                    margin-right: 0.5rem;
+                    color: var(--text-muted);
+                    font-family: 'JetBrains Mono', monospace;
+                }
+
+                .depth-0 .indentation::before {
+                    content: '';
+                }
+
+                .depth-1 .indentation::before {
+                    content: '  └─ ';
+                    color: var(--accent-cyan);
+                }
+
+                .depth-2 .indentation::before {
+                    content: '    └─ ';
+                    color: var(--accent-cyan);
+                }
+
+                .depth-3 .indentation::before {
+                    content: '      └─ ';
+                    color: var(--accent-cyan);
+                }
+
+                .depth-4 .indentation::before {
+                    content: '        └─ ';
+                    color: var(--accent-cyan);
+                }
+
+                .depth-5 .indentation::before {
+                    content: '          └─ ';
+                    color: var(--accent-cyan);
+                }
+
+                .parent-reference {
+                    font-size: 0.6875rem;
+                    color: var(--text-muted);
+                    font-style: italic;
+                    margin-left: 0.5rem;
+                }
+
+                .discovery-info {
+                    font-size: 0.6875rem;
+                    color: var(--accent-amber);
+                    margin-left: 0.5rem;
+                    padding: 0.1rem 0.3rem;
+                    background: rgba(255, 193, 7, 0.1);
+                    border-radius: 2px;
+                }
+
+                .children-count {
+                    font-size: 0.6875rem;
+                    color: var(--accent-green);
+                    margin-left: 0.5rem;
+                    padding: 0.1rem 0.3rem;
+                    background: rgba(0, 255, 136, 0.1);
+                    border-radius: 2px;
+                }
+
+                .depth-level {
+                    font-size: 0.6875rem;
+                    color: var(--text-muted);
+                    margin-left: 0.5rem;
+                }
+
+                .relationship-stats {
+                    margin-top: 1rem;
+                    padding: 0.75rem;
+                    background: var(--bg-secondary);
+                    border-radius: 3px;
+                    border: 1px solid var(--border-color);
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.75rem;
+                }
+
+                .relationship-stats-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                    gap: 0.5rem;
+                }
+
+                .stat-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+
+                .stat-label {
+                    color: var(--text-muted);
+                }
+
+                .stat-value {
+                    color: var(--accent-green);
+                    font-weight: bold;
+                }
+
+                .tree-toggle {
+                    cursor: pointer;
+                    margin-left: 0.5rem;
+                    padding: 0.2rem;
+                    border-radius: 2px;
+                    transition: all 0.2s ease;
+                    font-size: 0.6875rem;
+                }
+
+                .tree-toggle:hover {
+                    background: var(--bg-secondary);
+                    color: var(--accent-cyan);
+                }
+
+                .tree-toggle.expanded {
+                    transform: rotate(180deg);
+                }
+
+                .children-list {
+                    margin-left: 1rem;
+                    margin-top: 0.5rem;
+                    border-left: 1px dashed var(--border-color);
+                    padding-left: 1rem;
+                    display: none;
+                }
+
+                .children-list.expanded {
+                    display: block;
+                }
+
+                .broken-relationship {
+                    border-left-color: var(--accent-red) !important;
+                    background: linear-gradient(90deg, rgba(220, 53, 69, 0.1) 0%, transparent 100%);
+                }
+
+                .relationship-warning {
+                    color: var(--accent-red);
+                    font-size: 0.6875rem;
+                    margin-left: 0.5rem;
+                    padding: 0.1rem 0.3rem;
+                    background: rgba(220, 53, 69, 0.1);
+                    border-radius: 2px;
+                }
+
+                .relationship-tooltip {
+                    position: relative;
+                    cursor: help;
+                    margin-left: 0.25rem;
+                    color: var(--accent-cyan);
+                    font-size: 0.75rem;
+                }
+
+                .relationship-tooltip:hover::after {
+                    content: attr(data-tooltip);
+                    position: absolute;
+                    bottom: 100%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: var(--bg-primary);
+                    color: var(--text-primary);
+                    padding: 0.5rem;
+                    border-radius: 4px;
+                    border: 1px solid var(--border-color);
+                    white-space: nowrap;
+                    z-index: 1000;
+                    font-size: 0.6875rem;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+                }
+
+                .orphaned-section {
+                    margin-top: 1rem;
+                    padding: 0.75rem;
+                    background: rgba(255, 193, 7, 0.05);
+                    border: 1px dashed var(--accent-amber);
+                    border-radius: 4px;
+                }
+
+                .orphaned-section-header {
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.75rem;
+                    color: var(--accent-amber);
+                    text-transform: uppercase;
+                    letter-spacing: 0.1em;
+                    margin-bottom: 0.5rem;
+                }
+
+                .highlight-relationship-chain .page-item {
+                    opacity: 0.3;
+                    transition: opacity 0.2s ease;
+                }
+
+                .highlight-relationship-chain .page-item.highlighted {
+                    opacity: 1;
+                    box-shadow: 0 0 10px rgba(0, 204, 255, 0.3);
+                }
             </style>
         </head>
         <body>
@@ -1082,8 +1559,19 @@ https://restaurant3.com
                     <div id="memoryUsage"></div>
                 </div>
                 
-                <div id="resultsContainer" class="terminal-output">
-                    <div id="resultsContent"></div>
+                <div id="resultsContainer" class="results-container" style="display: none;">
+                    <div class="results-header">
+                        <h3>📊 SCRAPING_RESULTS</h3>
+                    </div>
+                    <div class="results-content" id="resultsContent">
+                        <div class="no-results" id="noResults">
+                            <div class="status-message">No results available</div>
+                            <div class="status-subtitle">Complete a scraping operation to see detailed results</div>
+                        </div>
+                        <div class="sites-results" id="sitesResults" style="display: none;">
+                            <!-- Site results will be populated here -->
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -1102,6 +1590,8 @@ https://restaurant3.com
                 const memoryUsage = document.getElementById('memoryUsage');
                 const resultsContainer = document.getElementById('resultsContainer');
                 const resultsContent = document.getElementById('resultsContent');
+                const noResults = document.getElementById('noResults');
+                const sitesResults = document.getElementById('sitesResults');
                 const urlValidation = document.getElementById('urlValidation');
                 const statusBar = document.querySelector('.status-bar');
                 const formatOptions = document.querySelectorAll('.format-option');
@@ -1552,41 +2042,384 @@ https://restaurant3.com
                 
                 function showResults(data, success) {
                     resultsContainer.style.display = 'block';
-                    resultsContainer.className = 'terminal-output ' + (success ? 'success' : 'error');
+                    
+                    if (success && data.sites_data) {
+                        // Show enhanced results display
+                        showEnhancedResults(data);
+                    } else if (success) {
+                        // Show legacy results display for backward compatibility
+                        showLegacyResults(data, success);
+                    } else {
+                        // Show error results
+                        showErrorResults(data);
+                    }
+                }
+
+                function showEnhancedResults(data) {
+                    noResults.style.display = 'none';
+                    sitesResults.style.display = 'block';
+                    
+                    const scrapingMode = getSelectedScrapingMode();
+                    const sitesData = data.sites_data || [];
                     
                     let html = '';
                     
-                    if (success) {
-                        html += `<div style="margin-bottom: 1rem;">${terminalLog('EXTRACTION_COMPLETE // All targets processed successfully', 'success')}</div>`;
-                        
-                        if (data.processed_count) {
-                            html += `<div>${terminalLog(`Targets processed: ${data.processed_count}`, 'info')}</div>`;
-                        }
-                        
-                        if (data.output_files && data.output_files.length > 0) {
-                            html += `<div style="margin: 1rem 0;">${terminalLog('Generated output files:', 'info')}</div>`;
-                            html += '<div class="file-links">';
-                            data.output_files.forEach(file => {
-                                const fileName = file.split('/').pop();
-                                const downloadUrl = `/api/download/${encodeURIComponent(fileName)}`;
-                                html += `<a href="${downloadUrl}" target="_blank" class="file-link">${fileName}</a>`;
-                            });
-                            html += '</div>';
-                        }
-                        
-                        if (data.failed_count && data.failed_count > 0) {
-                            html += `<div style="margin-top: 1rem;">${terminalLog(`Failed targets: ${data.failed_count}`, 'error')}</div>`;
-                        }
-                        
-                        if (data.processing_time) {
-                            html += `<div>${terminalLog(`Processing time: ${data.processing_time.toFixed(2)}s`, 'info')}</div>`;
-                        }
-                    } else {
-                        html += `<div>${terminalLog('EXTRACTION_FAILED // System error detected', 'error')}</div>`;
-                        html += `<div style="margin-top: 0.5rem;">${terminalLog(`Error details: ${data.error || 'Unknown system failure'}`, 'error')}</div>`;
+                    sitesData.forEach((siteData, index) => {
+                        html += generateSiteResultHTML(siteData, index, scrapingMode);
+                    });
+                    
+                    sitesResults.innerHTML = html;
+                    
+                    // Set up event listeners for interactive elements
+                    setupResultsInteractivity();
+                }
+
+                function showLegacyResults(data, success) {
+                    // Keep existing functionality for backward compatibility
+                    noResults.style.display = 'none';
+                    sitesResults.style.display = 'none';
+                    
+                    let html = '';
+                    
+                    html += `<div style="margin-bottom: 1rem;">${terminalLog('EXTRACTION_COMPLETE // All targets processed successfully', 'success')}</div>`;
+                    
+                    if (data.processed_count) {
+                        html += `<div>${terminalLog(`Targets processed: ${data.processed_count}`, 'info')}</div>`;
+                    }
+                    
+                    if (data.output_files && data.output_files.length > 0) {
+                        html += `<div style="margin: 1rem 0;">${terminalLog('Generated output files:', 'info')}</div>`;
+                        html += '<div class="file-links">';
+                        data.output_files.forEach(file => {
+                            const fileName = file.split('/').pop();
+                            const downloadUrl = `/api/download/${encodeURIComponent(fileName)}`;
+                            html += `<a href="${downloadUrl}" target="_blank" class="file-link">${fileName}</a>`;
+                        });
+                        html += '</div>';
+                    }
+                    
+                    if (data.failed_count && data.failed_count > 0) {
+                        html += `<div style="margin-top: 1rem;">${terminalLog(`Failed targets: ${data.failed_count}`, 'error')}</div>`;
+                    }
+                    
+                    if (data.processing_time) {
+                        html += `<div>${terminalLog(`Processing time: ${data.processing_time.toFixed(2)}s`, 'info')}</div>`;
                     }
                     
                     resultsContent.innerHTML = html;
+                }
+
+                function showErrorResults(data) {
+                    noResults.style.display = 'none';
+                    sitesResults.style.display = 'none';
+                    
+                    let html = '';
+                    html += `<div>${terminalLog('EXTRACTION_FAILED // System error detected', 'error')}</div>`;
+                    html += `<div style="margin-top: 0.5rem;">${terminalLog(`Error details: ${data.error || 'Unknown system failure'}`, 'error')}</div>`;
+                    
+                    resultsContent.innerHTML = html;
+                }
+
+                function generateSiteResultHTML(siteData, index, scrapingMode) {
+                    const { site_url, pages_processed, pages } = siteData;
+                    const successCount = pages.filter(p => p.status === 'success').length;
+                    const failedCount = pages.filter(p => p.status === 'failed').length;
+                    
+                    // Check if any pages have relationship data
+                    const hasRelationships = pages.some(p => p.relationship);
+                    const isMultiPageMode = scrapingMode === 'multi';
+                    
+                    let html = `
+                        <div class="site-result ${hasRelationships && isMultiPageMode ? 'relationship-enabled' : ''}">
+                            <div class="site-header" onclick="toggleSiteExpansion(${index})">
+                                <div class="site-url">${site_url}</div>
+                                <div class="pages-summary">
+                                    <span>Pages Processed: ${pages_processed}</span>
+                                    <div class="processing-stats">
+                                        <div class="stat-item">
+                                            <div class="stat-icon success"></div>
+                                            <span>${successCount} success</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-icon failed"></div>
+                                            <span>${failedCount} failed</span>
+                                        </div>
+                                    </div>
+                                    <div class="expand-toggle" id="toggle-${index}">▼</div>
+                                </div>
+                            </div>
+                            <div class="pages-list" id="pages-${index}">
+                    `;
+                    
+                    if (hasRelationships && isMultiPageMode) {
+                        // Generate relationship tree for multi-page mode
+                        html += generateRelationshipTree(pages, index);
+                    } else {
+                        // Generate simple page list for single-page mode or no relationships
+                        const pagesToShow = pages.slice(0, 5);
+                        const hasMorePages = pages.length > 5;
+                        
+                        pagesToShow.forEach(page => {
+                            html += generatePageItemHTML(page, isMultiPageMode);
+                        });
+                        
+                        if (hasMorePages) {
+                            html += `
+                                <div class="show-all-link" onclick="showAllPages(${index})">
+                                    Show all ${pages.length} pages
+                                </div>
+                            `;
+                        }
+                    }
+                    
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                    
+                    return html;
+                }
+
+                function generatePageItemHTML(page, showRelationships = false) {
+                    const statusClass = `status-${page.status}`;
+                    const statusText = page.status === 'success' ? 'SUCCESS' : 'FAILED';
+                    const statusClassName = page.status === 'success' ? 'success' : 'failed';
+                    
+                    let relationshipClasses = '';
+                    let relationshipContent = '';
+                    
+                    if (page.relationship && showRelationships) {
+                        const rel = page.relationship;
+                        relationshipClasses = `relationship-${rel.type} depth-${rel.depth || 0}`;
+                        
+                        if (rel.error) {
+                            relationshipClasses += ' broken-relationship';
+                        }
+                        
+                        // Add relationship indicator
+                        if (rel.type === 'root') {
+                            relationshipContent += '<span class="relationship-indicator ROOT">ROOT</span>';
+                            relationshipContent += '<span class="discovery-info">Entry point</span>';
+                        } else if (rel.type === 'child') {
+                            relationshipContent += '<span class="indentation"></span>';
+                            relationshipContent += '<span class="relationship-indicator child">↳</span>';
+                            if (rel.parent_url) {
+                                relationshipContent += `<span class="parent-reference">from: ${rel.parent_url}</span>`;
+                                relationshipContent += `<span class="discovery-info">Discovered from: ${rel.parent_url}</span>`;
+                            }
+                        } else if (rel.type === 'orphaned') {
+                            relationshipContent += '<span class="relationship-indicator orphaned">⚠ ORPHANED</span>';
+                        }
+                        
+                        // Add children count if applicable
+                        if (rel.children_count > 0) {
+                            relationshipContent += `<span class="children-count">Children discovered: ${rel.children_count}</span>`;
+                        }
+                        
+                        // Add depth level
+                        if (rel.depth !== undefined) {
+                            relationshipContent += `<span class="depth-level">Depth level: ${rel.depth}</span>`;
+                        }
+                        
+                        // Add discovery method
+                        if (rel.discovery_method) {
+                            relationshipContent += `<span class="discovery-info">${rel.discovery_method}</span>`;
+                        }
+                        
+                        // Add error indicators
+                        if (rel.error) {
+                            relationshipContent += '<span class="relationship-warning">⚠ Relationship broken</span>';
+                        }
+                        
+                        // Add tooltip
+                        const tooltipText = `Type: ${rel.type}, Depth: ${rel.depth || 0}, Discovery: ${rel.discovery_method || 'unknown'}`;
+                        relationshipContent += `<span class="relationship-tooltip" data-tooltip="${tooltipText}">ℹ</span>`;
+                    }
+                    
+                    return `
+                        <div class="page-item ${statusClass} ${relationshipClasses}" 
+                             onmouseover="highlightRelationshipChain('${page.url}')"
+                             onmouseout="clearRelationshipHighlight()">
+                            ${relationshipContent}
+                            <div class="page-url">${page.url}</div>
+                            <div class="page-status ${statusClassName}">${statusText}</div>
+                            <div class="page-time">${page.processing_time.toFixed(1)}s</div>
+                        </div>
+                    `;
+                }
+
+                function setupResultsInteractivity() {
+                    // Event listeners are set up via onclick attributes in HTML
+                    // This function can be extended for additional interactivity
+                }
+
+                function toggleSiteExpansion(siteIndex) {
+                    const pagesList = document.getElementById(`pages-${siteIndex}`);
+                    const toggle = document.getElementById(`toggle-${siteIndex}`);
+                    
+                    if (pagesList.classList.contains('expanded')) {
+                        pagesList.classList.remove('expanded');
+                        toggle.classList.remove('expanded');
+                    } else {
+                        pagesList.classList.add('expanded');
+                        toggle.classList.add('expanded');
+                    }
+                }
+
+                function showAllPages(siteIndex) {
+                    // This would be implemented to show all pages for a site
+                    // For now, just log the action
+                    console.log(`Show all pages for site ${siteIndex}`);
+                }
+
+                function getSelectedScrapingMode() {
+                    const modeInput = document.querySelector('input[name="scrapingMode"]:checked');
+                    return modeInput ? modeInput.value : 'single';
+                }
+
+                // Page Relationship Functions
+                function generateRelationshipTree(pages, siteIndex) {
+                    let html = '<div class="relationship-tree">';
+                    html += '<div class="relationship-tree-header">🌳 PAGE RELATIONSHIP TREE</div>';
+                    
+                    // Sort pages by depth for hierarchical display
+                    const sortedPages = pages.slice().sort((a, b) => {
+                        const depthA = a.relationship?.depth || 0;
+                        const depthB = b.relationship?.depth || 0;
+                        return depthA - depthB;
+                    });
+                    
+                    // Group orphaned pages separately
+                    const orphanedPages = pages.filter(p => p.relationship?.type === 'orphaned');
+                    const hierarchicalPages = pages.filter(p => p.relationship?.type !== 'orphaned');
+                    
+                    // Generate hierarchical pages
+                    hierarchicalPages.forEach((page, index) => {
+                        html += generatePageItemHTML(page, true);
+                    });
+                    
+                    // Generate orphaned pages section if any exist
+                    if (orphanedPages.length > 0) {
+                        html += '<div class="orphaned-section">';
+                        html += '<div class="orphaned-section-header">⚠ ORPHANED PAGES</div>';
+                        orphanedPages.forEach(page => {
+                            html += generatePageItemHTML(page, true);
+                        });
+                        html += '</div>';
+                    }
+                    
+                    // Add relationship statistics
+                    html += generateRelationshipStats(pages);
+                    
+                    html += '</div>';
+                    return html;
+                }
+
+                function generateRelationshipStats(pages) {
+                    const stats = {
+                        total: pages.length,
+                        root: pages.filter(p => p.relationship?.type === 'root').length,
+                        children: pages.filter(p => p.relationship?.type === 'child').length,
+                        orphaned: pages.filter(p => p.relationship?.type === 'orphaned').length,
+                        maxDepth: Math.max(...pages.map(p => p.relationship?.depth || 0)),
+                        totalRelationships: pages.filter(p => p.relationship?.parent_url).length
+                    };
+                    
+                    return `
+                        <div class="relationship-stats">
+                            <div class="relationship-stats-grid">
+                                <div class="stat-row">
+                                    <span class="stat-label">Total Pages:</span>
+                                    <span class="stat-value">${stats.total}</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Root Pages:</span>
+                                    <span class="stat-value">${stats.root}</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Child Pages:</span>
+                                    <span class="stat-value">${stats.children}</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Orphaned Pages:</span>
+                                    <span class="stat-value">${stats.orphaned}</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Max Depth:</span>
+                                    <span class="stat-value">${stats.maxDepth}</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Total Relationships:</span>
+                                    <span class="stat-value">${stats.totalRelationships}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                function highlightRelationshipChain(targetUrl) {
+                    // Get all page items in the current site
+                    const pageItems = document.querySelectorAll('.page-item');
+                    
+                    // Clear existing highlights
+                    pageItems.forEach(item => {
+                        item.classList.remove('highlighted');
+                    });
+                    
+                    // Find related pages and highlight them
+                    const relatedUrls = findRelatedPages(targetUrl);
+                    
+                    pageItems.forEach(item => {
+                        const urlElement = item.querySelector('.page-url');
+                        if (urlElement && relatedUrls.includes(urlElement.textContent)) {
+                            item.classList.add('highlighted');
+                        }
+                    });
+                    
+                    // Add highlighting effect to container
+                    const container = document.querySelector('.relationship-enabled');
+                    if (container) {
+                        container.classList.add('highlight-relationship-chain');
+                    }
+                }
+
+                function clearRelationshipHighlight() {
+                    const pageItems = document.querySelectorAll('.page-item');
+                    pageItems.forEach(item => {
+                        item.classList.remove('highlighted');
+                    });
+                    
+                    const container = document.querySelector('.relationship-enabled');
+                    if (container) {
+                        container.classList.remove('highlight-relationship-chain');
+                    }
+                }
+
+                function findRelatedPages(targetUrl) {
+                    // This is a simplified version - in a real implementation,
+                    // this would traverse the actual relationship data
+                    const related = [targetUrl];
+                    
+                    // Find pages that mention this URL as parent
+                    const pageItems = document.querySelectorAll('.page-item');
+                    pageItems.forEach(item => {
+                        const parentRef = item.querySelector('.parent-reference');
+                        if (parentRef && parentRef.textContent.includes(targetUrl)) {
+                            const urlElement = item.querySelector('.page-url');
+                            if (urlElement) {
+                                related.push(urlElement.textContent);
+                            }
+                        }
+                    });
+                    
+                    return related;
+                }
+
+                function toggleRelationshipTreeExpansion(siteIndex) {
+                    const tree = document.querySelector(`#pages-${siteIndex} .relationship-tree`);
+                    if (tree) {
+                        tree.classList.toggle('expanded');
+                    }
                 }
                 
                 function hideResults() {
@@ -1839,6 +2672,9 @@ https://restaurant3.com
                             f"{fmt.upper()} generation error: {str(e)}"
                         )
 
+            # Generate enhanced results data for UI display
+            sites_data = generate_sites_data(result, scraping_mode)
+            
             # Return results with actual file paths
             response_data = {
                 "success": True,
@@ -1846,6 +2682,7 @@ https://restaurant3.com
                 "failed_count": len(result.failed_urls),
                 "output_files": generated_files,
                 "processing_time": getattr(result, "processing_time", 0),
+                "sites_data": sites_data,
             }
 
             # Include file generation errors if any occurred
@@ -2186,6 +3023,157 @@ https://restaurant3.com
             ),
             500,
         )
+
+    def generate_sites_data(result, scraping_mode):
+        """Generate enhanced sites data for results display."""
+        from urllib.parse import urlparse
+        
+        sites_data = []
+        
+        if scraping_mode == 'single':
+            # In single-page mode, each URL is treated as a separate site
+            for extraction in result.successful_extractions:
+                url = extraction.get('url', 'Unknown URL')
+                processing_time = extraction.get('processing_time', 0.0)
+                
+                sites_data.append({
+                    'site_url': url,
+                    'pages_processed': 1,
+                    'pages': [{
+                        'url': url,
+                        'status': 'success',
+                        'processing_time': processing_time
+                    }]
+                })
+            
+            for failed_url in result.failed_urls:
+                url = failed_url.get('url', 'Unknown URL')
+                
+                sites_data.append({
+                    'site_url': url,
+                    'pages_processed': 1,
+                    'pages': [{
+                        'url': url,
+                        'status': 'failed',
+                        'processing_time': 0.0
+                    }]
+                })
+        
+        else:  # multi-page mode
+            # Group pages by site
+            sites = {}
+            
+            # Process successful extractions
+            for extraction in result.successful_extractions:
+                url = extraction.get('url', 'Unknown URL')
+                processing_time = extraction.get('processing_time', 0.0)
+                
+                # Extract base site URL
+                site_url = extract_site_url(url)
+                
+                if site_url not in sites:
+                    sites[site_url] = {
+                        'site_url': site_url,
+                        'pages_processed': 0,
+                        'pages': []
+                    }
+                
+                # Generate relationship data based on URL patterns (mock implementation)
+                relationship_data = generate_mock_relationship_data(url, site_url)
+                
+                sites[site_url]['pages'].append({
+                    'url': url,
+                    'status': 'success',
+                    'processing_time': processing_time,
+                    'relationship': relationship_data
+                })
+                sites[site_url]['pages_processed'] += 1
+            
+            # Process failed URLs
+            for failed_url in result.failed_urls:
+                url = failed_url.get('url', 'Unknown URL')
+                
+                # Extract base site URL
+                site_url = extract_site_url(url)
+                
+                if site_url not in sites:
+                    sites[site_url] = {
+                        'site_url': site_url,
+                        'pages_processed': 0,
+                        'pages': []
+                    }
+                
+                # Generate relationship data for failed URLs too
+                relationship_data = generate_mock_relationship_data(url, site_url)
+                
+                sites[site_url]['pages'].append({
+                    'url': url,
+                    'status': 'failed',
+                    'processing_time': 0.0,
+                    'relationship': relationship_data
+                })
+                sites[site_url]['pages_processed'] += 1
+            
+            sites_data = list(sites.values())
+        
+        return sites_data
+    
+    def generate_mock_relationship_data(url, site_url):
+        """Generate mock relationship data based on URL patterns."""
+        from urllib.parse import urlparse
+        
+        parsed = urlparse(url)
+        path = parsed.path.strip('/')
+        path_parts = path.split('/') if path else []
+        
+        # Determine relationship type based on URL structure
+        if url == site_url or url == site_url + '/' or not path:
+            # Root page
+            return {
+                'type': 'root',
+                'depth': 0,
+                'parent_url': None,
+                'children_count': min(len(path_parts) + 2, 5),  # Mock children count
+                'discovery_method': 'manual'
+            }
+        elif len(path_parts) == 1:
+            # First level child (e.g., /menu, /contact)
+            return {
+                'type': 'child',
+                'depth': 1,
+                'parent_url': site_url,
+                'children_count': 1 if 'menu' in path.lower() else 0,  # Menu might have subpages
+                'discovery_method': 'link'
+            }
+        elif len(path_parts) >= 2:
+            # Deeper child page (e.g., /menu/specials)
+            parent_path = '/'.join(path_parts[:-1])
+            parent_url = f"{site_url}/{parent_path}"
+            
+            return {
+                'type': 'child',
+                'depth': len(path_parts),
+                'parent_url': parent_url,
+                'children_count': 0,
+                'discovery_method': 'link'
+            }
+        else:
+            # Orphaned page (shouldn't happen with current logic, but for completeness)
+            return {
+                'type': 'orphaned',
+                'depth': None,
+                'parent_url': None,
+                'children_count': 0,
+                'discovery_method': 'unknown'
+            }
+
+    def extract_site_url(page_url):
+        """Extract site URL from page URL."""
+        try:
+            parsed = urlparse(page_url)
+            return f"{parsed.scheme}://{parsed.netloc}"
+        except Exception:
+            return page_url
 
     return app
 

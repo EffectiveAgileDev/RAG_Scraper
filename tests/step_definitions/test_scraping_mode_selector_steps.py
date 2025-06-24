@@ -168,6 +168,14 @@ def status_shows_single_page_mode(context):
     assert 'SINGLE_PAGE_MODE' in context['status_bar_text']
 
 
+@then("the multi-page mode should become unselected")
+def multipage_mode_unselected(context):
+    """Verify multi-page mode becomes unselected."""
+    radio_button = context['soup'].find('input', {'name': 'scrapingMode', 'value': 'multi'})
+    assert radio_button is not None, "Multi-page radio button should exist"
+    assert radio_button.get('checked') is None, "Multi-page radio button should not be checked"
+
+
 # Scenario 2: Switch to multi-page mode
 @given("the single-page mode is selected")
 def single_page_mode_selected(context):
@@ -503,17 +511,28 @@ def request_includes_multi_mode(context):
     assert context['form_data']['scraping_mode'] == 'multi'
 
 
-@then("the request should include multi_page_config with:")
-def request_includes_multipage_config(context):
-    """Verify request includes multi-page config with specified values."""
+@then(parsers.parse("the request should include multi_page_config with:\n{table}"))
+def request_includes_multipage_config_table(context, table):
+    """Verify request includes multi-page config with specified values from table."""
     config = context['form_data']['multi_page_config']
     
-    # Verify the expected configuration values
-    assert config.get('maxPages') == 75
-    assert config.get('crawlDepth') == 3
-    assert config.get('includePatterns') == 'menu,food'
-    assert config.get('excludePatterns') == 'admin,login'
-    assert config.get('rateLimit') == 1500
+    # Parse the table from the feature file
+    lines = table.strip().split('\n')
+    for line in lines:
+        if '|' in line:
+            parts = [part.strip() for part in line.split('|') if part.strip()]
+            if len(parts) >= 2:
+                key, value = parts[0], parts[1]
+                if key == 'maxPages':
+                    assert config.get('maxPages') == int(value)
+                elif key == 'crawlDepth':
+                    assert config.get('crawlDepth') == int(value)
+                elif key == 'includePatterns':
+                    assert config.get('includePatterns') == value
+                elif key == 'excludePatterns':
+                    assert config.get('excludePatterns') == value
+                elif key == 'rateLimit':
+                    assert config.get('rateLimit') == int(value)
 
 
 @then('the status should show "INITIATING_EXTRACTION // MULTI_MODE"')

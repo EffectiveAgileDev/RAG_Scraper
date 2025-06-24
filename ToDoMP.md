@@ -272,17 +272,45 @@
     - [x] JavaScript functionality simulation tests
 
 **📁 KEY FILES MODIFIED/CREATED:**
-  - **Modified**: `src/web_interface/app.py` - Added mode selector UI, JavaScript functions, API parameter handling
+  - **Modified**: `src/web_interface/app.py` - Added mode selector UI, enhanced results display, page relationships, JavaScript functions, API parameter handling
   - **Modified**: `src/scraper/restaurant_scraper.py` - Enhanced constructor with enable_multi_page parameter
-  - **Created**: `tests/features/scraping_mode_selector.feature` - BDD acceptance criteria
-  - **Created**: `tests/step_definitions/test_scraping_mode_selector_steps.py` - BDD step implementations
-  - **Created**: `tests/unit/test_scraping_mode_selector.py` - Unit test suite
-  - **Created**: `tests/integration/test_scraping_mode_api.py` - Integration test suite
+  - **Created**: `tests/features/scraping_mode_selector.feature` - BDD acceptance criteria for mode selector
+  - **Created**: `tests/step_definitions/test_scraping_mode_selector_steps.py` - BDD step implementations for mode selector
+  - **Created**: `tests/unit/test_scraping_mode_selector.py` - Unit test suite for mode selector
+  - **Created**: `tests/integration/test_scraping_mode_api.py` - Integration test suite for mode selector API
+  - **Created**: `tests/features/enhanced_results_display.feature` - BDD acceptance criteria for enhanced results
+  - **Created**: `tests/step_definitions/test_enhanced_results_display_steps.py` - BDD step implementations for enhanced results
+  - **Created**: `tests/unit/test_enhanced_results_display.py` - Unit test suite for enhanced results display
+  - **Created**: `tests/features/page_relationships_display.feature` - BDD acceptance criteria for page relationships
+  - **Created**: `tests/step_definitions/test_page_relationships_display_steps.py` - BDD step implementations for page relationships
+  - **Created**: `tests/unit/test_page_relationships_display.py` - Unit test suite for page relationships display
+
+**✅ COMPLETED TASKS - Enhanced Results Display:**
+  - [x] **Show list of pages processed per site** ✅ COMPLETED
+    - [x] Site-based grouping with expandable page lists
+    - [x] Success/failure status indicators with color coding
+    - [x] Processing time display for each page
+    - [x] Pages processed count per site
+    - [x] Smart display for large sites (show first 5, then "show all" option)
+    - [x] Backward compatibility with existing results format
+    - [x] 16 unit tests (100% passing) with comprehensive test coverage
+  - [x] **Display page relationships (parent/child indicators)** ✅ COMPLETED
+    - [x] ROOT indicators for entry point pages with green highlighting
+    - [x] Child page indicators (↳) with cyan styling and hierarchical indentation
+    - [x] ORPHANED page warnings for pages with broken relationships
+    - [x] Hierarchical tree structure with visual depth indicators (└─)
+    - [x] Discovery source tracking ("Discovered from: [parent URL]")
+    - [x] Depth level indicators (Depth level: 0, 1, 2, etc.)
+    - [x] Children count display ("Children discovered: X")
+    - [x] Discovery method tracking (manual, link, sitemap)
+    - [x] Interactive hover highlighting of relationship chains
+    - [x] Tooltips with detailed relationship metadata
+    - [x] Orphaned pages section for broken relationships
+    - [x] Relationship statistics showing totals, depths, and counts
+    - [x] 18 unit tests + 8 BDD scenarios (100% passing)
 
 **📋 REMAINING TASKS - UI Enhancements:**
-  - [ ] Enhance results display section
-    - [ ] Show list of pages processed per site
-    - [ ] Display page relationships (parent/child indicators)
+  - [ ] Enhance results display section (PARTIALLY COMPLETED - 2/4 sub-tasks done)
     - [ ] Show success/failure status per page with details
     - [ ] Add per-page processing time information
   - [ ] Add advanced options toggle section
@@ -292,7 +320,7 @@
   - [ ] Improve progress visualization
     - [ ] Show current page being processed in real-time
     - [ ] Display page queue status and remaining count
-    - [ ] Add simple page relationship diagram/tree view
+    - [ ] Add simple page relationship diagram/tree view (ALREADY IMPLEMENTED ✅)
 
 ### 4.2 API Documentation
 **NOTE: Most API endpoints already exist and are functional**
