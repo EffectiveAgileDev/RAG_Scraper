@@ -11,6 +11,7 @@ from .multi_page_result_handler import (
     MultiPageScrapingResult,
     PageProcessingResult
 )
+from .data_aggregator import DataAggregator
 
 
 class MultiPageScraper:

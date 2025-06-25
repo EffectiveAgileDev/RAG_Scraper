@@ -29,6 +29,7 @@ class ScrapingConfig:
     user_agent: str = "RAG_Scraper/1.0 (Restaurant Data Collection)"
 
     # Multi-page scraping configuration
+    enable_multi_page: bool = False
     max_crawl_depth: int = 2
     follow_pagination: bool = False
     max_total_pages: Optional[int] = None

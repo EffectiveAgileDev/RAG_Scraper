@@ -1901,6 +1901,12 @@ https://restaurant3.com
                 const submitBtn = document.getElementById('submitBtn');
                 const validateBtn = document.getElementById('validateBtn');
                 const clearBtn = document.getElementById('clearBtn');
+                
+                // Debug: Check if elements were found
+                console.log('DOM Elements found:');
+                console.log('form:', form);
+                console.log('urlsInput:', urlsInput);
+                console.log('submitBtn:', submitBtn);
                 const progressContainer = document.getElementById('progressContainer');
                 const progressFill = document.getElementById('progressFill');
                 const progressText = document.getElementById('progressText');
@@ -2287,7 +2293,13 @@ https://restaurant3.com
                 form.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     
+                    console.log('Form submission started');
+                    console.log('urlsInput element:', urlsInput);
+                    console.log('urlsInput.value:', urlsInput.value);
                     const urls = urlsInput.value.trim().split('\\n').filter(url => url.trim());
+                    console.log('Processed URLs:', urls);
+                    console.log('URLs length:', urls.length);
+                    
                     const outputDir = document.getElementById('outputDir').value.trim();
                     const fileMode = document.getElementById('fileMode').value;
                     const fileFormat = document.querySelector('input[name="fileFormat"]:checked').value;
@@ -2312,24 +2324,23 @@ https://restaurant3.com
                     // Collect multi-page configuration if multi-page mode is selected
                     let multiPageConfig = null;
                     if (scrapingMode === 'multi') {
-                        // Validate advanced options before proceeding
-                        if (!validateAdvancedOptions()) {
-                            updateSystemStatus('ERROR // INVALID_ADVANCED_OPTIONS_DETECTED');
-                            showTerminalAlert('CONFIGURATION ERROR: Please fix invalid advanced options before proceeding.');
-                            return;
-                        }
-
-                        const advancedOptions = getAdvancedOptionsConfig();
-                        
+                        // Always provide default multi-page configuration
                         multiPageConfig = {
-                            maxPages: parseInt(document.getElementById('maxPages').value) || 50,
-                            crawlDepth: parseInt(document.getElementById('crawlDepth').value) || 2,
-                            includePatterns: document.getElementById('includePatterns').value || 'menu,food,restaurant',
-                            excludePatterns: document.getElementById('excludePatterns').value || 'admin,login,cart',
-                            rateLimit: parseInt(document.getElementById('rateLimit').value) || 1000,
-                            // Advanced Options
-                            ...advancedOptions
+                            maxPages: parseInt(document.getElementById('maxPages')?.value) || 50,
+                            crawlDepth: parseInt(document.getElementById('crawlDepth')?.value) || 2,
+                            includePatterns: document.getElementById('includePatterns')?.value || 'menu,food,restaurant',
+                            excludePatterns: document.getElementById('excludePatterns')?.value || 'admin,login,cart',
+                            rateLimit: parseInt(document.getElementById('rateLimit')?.value) || 1000
                         };
+                        
+                        // Add advanced options if validation passes
+                        if (validateAdvancedOptions()) {
+                            const advancedOptions = getAdvancedOptionsConfig();
+                            multiPageConfig = {
+                                ...multiPageConfig,
+                                ...advancedOptions
+                            };
+                        }
                     }
                     
                     updateSystemStatus(`INITIATING_EXTRACTION // ${urls.length}_TARGETS_QUEUED // ${scrapingMode.toUpperCase()}_MODE`);
@@ -2469,6 +2480,11 @@ https://restaurant3.com
                         clearTimeout(timeoutId);
                         
                         const data = await response.json();
+                        
+                        // Debug logging to help identify the issue
+                        console.log('API Response:', data);
+                        console.log('Processed count:', data.processed_count);
+                        console.log('Sites data:', data.sites_data);
                         
                         if (data.success) {
                             updateSystemStatus(`EXTRACTION_COMPLETE // ${data.processed_count || 0}_TARGETS_PROCESSED`);
@@ -2721,7 +2737,9 @@ https://restaurant3.com
                 }
 
                 function generateSiteResultHTML(siteData, index, scrapingMode) {
+                    console.log('generateSiteResultHTML called with:', siteData);
                     const { site_url, pages_processed, pages } = siteData;
+                    console.log('Extracted values:', { site_url, pages_processed, pages });
                     const successCount = pages.filter(p => p.status === 'success').length;
                     const failedCount = pages.filter(p => p.status === 'failed').length;
                     

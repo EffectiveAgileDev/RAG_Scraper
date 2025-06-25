@@ -111,89 +111,12 @@ def register_api_routes(app, advanced_monitor, file_generator_service):
             config = ScrapingConfig(
                 urls=urls, 
                 output_directory=output_dir, 
-                file_mode=file_mode,
-                enable_javascript_rendering=enable_javascript,
-                javascript_timeout=js_timeout,
-                enable_popup_detection=enable_popup_handling,
-                popup_handling_strategy="auto" if enable_popup_handling else "skip"
+                file_mode=file_mode
             )
 
-            # Initialize Advanced Progress Monitor session
-            session_id = advanced_monitor.start_monitoring_session(
-                urls=urls, enable_real_time_updates=True
-            )
-
-            # Enable advanced features
-            advanced_monitor.enable_advanced_features(
-                time_estimation=True, real_time_updates=True, error_notifications=True
-            )
-
-            # Enable multi-page monitoring based on scraping mode
-            if scraping_mode == "multi":
-                advanced_monitor.enable_multipage_monitoring()
-            elif any("menu" in url.lower() or "page" in url.lower() for url in urls):
-                # Fallback: auto-detect multi-page sites
-                advanced_monitor.enable_multipage_monitoring()
-
-            # Progress callback that updates Advanced Progress Monitor
+            # Simple progress callback for basic functionality
             def progress_callback(message, percentage=None, time_estimate=None):
-                nonlocal active_scraper
-
-                # Update current URL being processed
-                if message:
-                    # Extract URL from progress message patterns
-                    import re
-                    
-                    # Pattern for "Processing X of Y: URL"
-                    multi_pattern = r"Processing \d+ of \d+: (.+)"
-                    single_pattern = r"Processing (.+)"
-                    
-                    match = re.search(multi_pattern, message)
-                    if not match:
-                        match = re.search(single_pattern, message)
-                    
-                    if match:
-                        extracted_url = match.group(1).strip()
-                        try:
-                            advanced_monitor.set_current_url(extracted_url)
-                        except:
-                            pass
-                    else:
-                        # Fallback: check if any URL is at the end of the message
-                        for url in urls:
-                            if message.endswith(url):
-                                try:
-                                    advanced_monitor.set_current_url(url)
-                                    break
-                                except:
-                                    pass
-                    
-                    # Update current operation
-                    try:
-                        from src.scraper.advanced_progress_monitor import OperationType
-
-                        if "processing" in message.lower() and ("1 of" in message or "2 of" in message or "3 of" in message):
-                            advanced_monitor.set_current_operation(
-                                OperationType.ANALYZING_PAGE_STRUCTURE
-                            )
-                        elif "analyzing" in message.lower():
-                            advanced_monitor.set_current_operation(
-                                OperationType.ANALYZING_PAGE_STRUCTURE
-                            )
-                        elif "extract" in message.lower():
-                            advanced_monitor.set_current_operation(
-                                OperationType.EXTRACTING_DATA
-                            )
-                        elif "menu" in message.lower():
-                            advanced_monitor.set_current_operation(
-                                OperationType.PROCESSING_MENU_ITEMS
-                            )
-                        elif "discovered" in message.lower() and "pages" in message.lower():
-                            advanced_monitor.set_current_operation(
-                                OperationType.DISCOVERING_PAGES
-                            )
-                    except:
-                        pass  # Fall back gracefully if operation setting fails
+                pass
 
             # Create and run scraper with progress tracking
             enable_multi_page = (scraping_mode == "multi")
@@ -242,35 +165,22 @@ def register_api_routes(app, advanced_monitor, file_generator_service):
                 config, progress_callback=progress_callback
             )
 
-            # Update Advanced Progress Monitor with completion data
-            successful_urls = set()
-
-            # Track which URLs were successful (RestaurantData doesn't have source_url, so we track by result count)
-            if result.successful_extractions:
-                # Assume first N URLs were successful where N = number of successful extractions
-                successful_count = min(len(result.successful_extractions), len(urls))
-                successful_urls = set(urls[:successful_count])
-
-            for i, url in enumerate(urls):
-                if url in successful_urls:
-                    # Simulate processing time for successful URLs
-                    processing_time = 3.0 + (i * 0.5)
-                    advanced_monitor.update_url_completion(
-                        url, processing_time, success=True
-                    )
-                elif url in result.failed_urls:
-                    # Add error notification for failed URLs
-                    error_msg = "Failed to extract data"
-                    advanced_monitor.add_error_notification(
-                        url, "extraction_error", error_msg
-                    )
-                    advanced_monitor.update_url_completion(url, 1.0, success=False)
-                else:
-                    # Default case for unprocessed URLs
-                    processing_time = 2.0 + (i * 0.3)
-                    advanced_monitor.update_url_completion(
-                        url, processing_time, success=True
-                    )
+            # Disable Advanced Progress Monitor updates to avoid interference
+            # successful_urls = set()
+            # if result.successful_extractions:
+            #     successful_count = min(len(result.successful_extractions), len(urls))
+            #     successful_urls = set(urls[:successful_count])
+            # for i, url in enumerate(urls):
+            #     if url in successful_urls:
+            #         processing_time = 3.0 + (i * 0.5)
+            #         advanced_monitor.update_url_completion(url, processing_time, success=True)
+            #     elif url in result.failed_urls:
+            #         error_msg = "Failed to extract data"
+            #         advanced_monitor.add_error_notification(url, "extraction_error", error_msg)
+            #         advanced_monitor.update_url_completion(url, 1.0, success=False)
+            #     else:
+            #         processing_time = 2.0 + (i * 0.3)
+            #         advanced_monitor.update_url_completion(url, processing_time, success=True)
 
             # Clear active scraper
             active_scraper = None
