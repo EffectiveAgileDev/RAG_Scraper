@@ -44,3 +44,24 @@ def test_data_dir():
 def temp_output_dir(tmp_path):
     """Provide temporary directory for test output files."""
     return tmp_path / "output"
+
+
+@pytest.fixture
+def mock_flask_app():
+    """Mock Flask app for web interface tests."""
+    from unittest.mock import Mock
+    app = Mock()
+    app.config = {"TESTING": True}
+    return app
+
+
+@pytest.fixture
+def progress_context():
+    """Provide progress context for tracking test state."""
+    return {}
+
+
+@pytest.fixture
+def queue_context():
+    """Provide queue context for tracking test state."""
+    return {}

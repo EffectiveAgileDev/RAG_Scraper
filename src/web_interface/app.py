@@ -574,6 +574,132 @@ def create_app(testing=False):
                     50% { transform: translateX(-10px); opacity: 1; }
                 }
 
+                /* Real-Time Progress Visualization Styles */
+                .real-time-progress {
+                    margin-top: 1rem;
+                    padding: 1rem;
+                    background: rgba(26, 26, 26, 0.8);
+                    border: 1px solid var(--border-glow);
+                    border-radius: 4px;
+                }
+
+                .currently-processing {
+                    margin-bottom: 1rem;
+                    padding: 0.5rem;
+                    background: rgba(0, 255, 136, 0.1);
+                    border-left: 3px solid var(--accent-green);
+                }
+
+                .currently-processing .label {
+                    color: var(--accent-green);
+                    font-weight: 600;
+                    margin-right: 0.5rem;
+                }
+
+                .current-url {
+                    color: var(--text-primary);
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.875rem;
+                }
+
+                .current-url.pulsing {
+                    animation: pulse 2s ease-in-out infinite;
+                }
+
+                @keyframes pulse {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.6; }
+                }
+
+                .queue-status {
+                    margin-bottom: 1rem;
+                }
+
+                .queue-metrics {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                    gap: 0.5rem;
+                }
+
+                .metric {
+                    background: rgba(0, 0, 0, 0.3);
+                    padding: 0.5rem;
+                    border-radius: 4px;
+                    text-align: center;
+                }
+
+                .metric-label {
+                    display: block;
+                    color: var(--text-secondary);
+                    font-size: 0.75rem;
+                    margin-bottom: 0.25rem;
+                }
+
+                .metric-value {
+                    display: block;
+                    color: var(--accent-cyan);
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 1rem;
+                    font-weight: 600;
+                }
+
+                .time-estimates {
+                    display: flex;
+                    gap: 1rem;
+                    margin-bottom: 1rem;
+                }
+
+                .estimate {
+                    flex: 1;
+                    padding: 0.5rem;
+                    background: rgba(255, 170, 0, 0.1);
+                    border-left: 3px solid var(--accent-amber);
+                }
+
+                .estimate-label {
+                    display: block;
+                    color: var(--accent-amber);
+                    font-size: 0.75rem;
+                    margin-bottom: 0.25rem;
+                }
+
+                .estimate-value {
+                    display: block;
+                    color: var(--text-primary);
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.875rem;
+                    font-weight: 600;
+                }
+
+                .discovery-notifications {
+                    max-height: 200px;
+                    overflow-y: auto;
+                }
+
+                .notification {
+                    padding: 0.5rem;
+                    margin-bottom: 0.5rem;
+                    background: rgba(0, 170, 255, 0.1);
+                    border-left: 3px solid var(--accent-cyan);
+                    border-radius: 4px;
+                    animation: slideIn 0.3s ease-out;
+                }
+
+                @keyframes slideIn {
+                    from { opacity: 0; transform: translateY(-10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+
+                .notification .icon {
+                    margin-right: 0.5rem;
+                    color: var(--accent-cyan);
+                }
+
+                .notification .message {
+                    color: var(--text-primary);
+                    font-size: 0.875rem;
+                }
+
                 .validation-output {
                     margin-top: 0.5rem;
                     font-family: 'JetBrains Mono', monospace;
@@ -1706,6 +1832,50 @@ https://restaurant3.com
                     <div id="currentUrl"></div>
                     <div id="timeEstimate"></div>
                     <div id="memoryUsage"></div>
+                    
+                    <!-- Enhanced Real-Time Progress Visualization -->
+                    <div id="realTimeProgress" class="real-time-progress" style="display: none;">
+                        <div class="currently-processing">
+                            <span class="label">Currently Processing:</span>
+                            <span id="currentPageUrl" class="current-url pulsing"></span>
+                        </div>
+                        
+                        <div class="queue-status">
+                            <div class="queue-metrics">
+                                <div class="metric">
+                                    <span class="metric-label">Completed:</span>
+                                    <span id="pagesCompleted" class="metric-value">0</span>
+                                </div>
+                                <div class="metric">
+                                    <span class="metric-label">In Queue:</span>
+                                    <span id="pagesInQueue" class="metric-value">0</span>
+                                </div>
+                                <div class="metric">
+                                    <span class="metric-label">Remaining:</span>
+                                    <span id="pagesRemaining" class="metric-value">0</span>
+                                </div>
+                                <div class="metric">
+                                    <span class="metric-label">Processing:</span>
+                                    <span id="currentlyProcessing" class="metric-value">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="time-estimates">
+                            <div class="estimate">
+                                <span class="estimate-label">Estimated Remaining:</span>
+                                <span id="estimatedTimeRemaining" class="estimate-value">~0s</span>
+                            </div>
+                            <div class="estimate">
+                                <span class="estimate-label">Average Time:</span>
+                                <span id="averageProcessingTime" class="estimate-value">0s</span>
+                            </div>
+                        </div>
+                        
+                        <div id="discoveryNotifications" class="discovery-notifications">
+                            <!-- Discovery notifications will appear here -->
+                        </div>
+                    </div>
                 </div>
                 
                 <div id="resultsContainer" class="results-container" style="display: none;">
@@ -1745,6 +1915,17 @@ https://restaurant3.com
                 const statusBar = document.querySelector('.status-bar');
                 const formatOptions = document.querySelectorAll('.format-option');
                 const dataFlow = document.querySelector('.data-flow');
+                
+                // Real-time progress elements
+                const realTimeProgress = document.getElementById('realTimeProgress');
+                const currentPageUrl = document.getElementById('currentPageUrl');
+                const pagesCompleted = document.getElementById('pagesCompleted');
+                const pagesInQueue = document.getElementById('pagesInQueue');
+                const pagesRemaining = document.getElementById('pagesRemaining');
+                const currentlyProcessing = document.getElementById('currentlyProcessing');
+                const estimatedTimeRemaining = document.getElementById('estimatedTimeRemaining');
+                const averageProcessingTime = document.getElementById('averageProcessingTime');
+                const discoveryNotifications = document.getElementById('discoveryNotifications');
                 
                 let progressInterval;
                 let terminalEffects = true;
@@ -2383,10 +2564,77 @@ https://restaurant3.com
                             if (data.current_operation) {
                                 progressText.textContent = terminalLog(data.current_operation, 'info');
                             }
+                            
+                            // Enhanced real-time progress visualization
+                            updateRealTimeProgress(data);
                         }
                     } catch (error) {
                         console.error('Progress update error:', error);
                     }
+                }
+                
+                function updateRealTimeProgress(data) {
+                    // Show/hide real-time progress based on multi-page mode
+                    if (data.multi_page_mode && data.total_pages > 1) {
+                        realTimeProgress.style.display = 'block';
+                        
+                        // Update current page being processed
+                        if (data.current_page_url) {
+                            currentPageUrl.textContent = data.current_page_url;
+                            currentPageUrl.classList.add('pulsing');
+                        }
+                        
+                        // Update queue metrics
+                        const completed = data.pages_completed || 0;
+                        const total = data.total_pages || 0;
+                        const inQueue = data.pages_in_queue || 0;
+                        const remaining = total - completed;
+                        const processing = data.currently_processing || (data.current_page_url ? 1 : 0);
+                        
+                        pagesCompleted.textContent = completed;
+                        pagesInQueue.textContent = inQueue;
+                        pagesRemaining.textContent = remaining;
+                        currentlyProcessing.textContent = processing;
+                        
+                        // Update time estimates
+                        if (data.estimated_remaining_time !== undefined) {
+                            estimatedTimeRemaining.textContent = `~${data.estimated_remaining_time.toFixed(1)}s`;
+                        }
+                        
+                        if (data.average_processing_time !== undefined) {
+                            averageProcessingTime.textContent = `${data.average_processing_time.toFixed(1)}s`;
+                        }
+                        
+                        // Handle new page discoveries
+                        if (data.new_pages_discovered && data.new_pages_discovered > 0) {
+                            showDiscoveryNotification(data.new_pages_discovered);
+                        }
+                    } else {
+                        realTimeProgress.style.display = 'none';
+                    }
+                }
+                
+                function showDiscoveryNotification(count) {
+                    const notification = document.createElement('div');
+                    notification.className = 'notification';
+                    notification.innerHTML = `
+                        <span class="icon">🔍</span>
+                        <span class="message">New pages discovered: ${count}</span>
+                    `;
+                    
+                    discoveryNotifications.insertBefore(notification, discoveryNotifications.firstChild);
+                    
+                    // Remove old notifications (keep max 5)
+                    while (discoveryNotifications.children.length > 5) {
+                        discoveryNotifications.removeChild(discoveryNotifications.lastChild);
+                    }
+                    
+                    // Auto-remove after 10 seconds
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.remove();
+                        }
+                    }, 10000);
                 }
                 
                 function showResults(data, success) {
