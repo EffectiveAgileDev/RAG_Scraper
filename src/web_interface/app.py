@@ -1532,6 +1532,105 @@ https://restaurant3.com
                                         </label>
                                         <div class="config-desc">Auto-handle restaurant popups (age verification, location, etc.)</div>
                                     </div>
+                                    
+                                    <!-- Advanced Options Section -->
+                                    <div class="config-section-divider"></div>
+                                    <div class="config-item advanced-options-header">
+                                        <div class="config-toggle-header" onclick="toggleAdvancedOptions()">
+                                            <span class="config-label">🔧 ADVANCED_OPTIONS</span>
+                                            <span class="expand-icon" id="advancedOptionsIcon">▼</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="advancedOptionsPanel" class="advanced-options-panel collapsed">
+                                        <!-- Page Discovery Toggle -->
+                                        <div class="config-item">
+                                            <label class="config-label toggle-switch-label">
+                                                <input 
+                                                    type="checkbox" 
+                                                    id="pageDiscoveryEnabled" 
+                                                    name="pageDiscoveryEnabled" 
+                                                    class="terminal-checkbox toggle-switch" 
+                                                    checked />
+                                                <span class="toggle-slider"></span>
+                                                ENABLE_PAGE_DISCOVERY
+                                            </label>
+                                            <div class="config-desc">Automatically discover and crawl linked pages beyond explicit URLs</div>
+                                            <div class="config-warning" id="pageDiscoveryWarning" style="display: none;">
+                                                ⚠️ REDUCED_FUNCTIONALITY // Only explicitly provided URLs will be processed
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Request Timeout -->
+                                        <div class="config-item">
+                                            <label class="config-label" for="requestTimeout">REQUEST_TIMEOUT_SECONDS:</label>
+                                            <input 
+                                                type="number" 
+                                                id="requestTimeout" 
+                                                name="requestTimeout" 
+                                                class="terminal-input config-input"
+                                                value="30"
+                                                min="5"
+                                                max="300"
+                                                step="5" />
+                                            <div class="config-range-indicator">Range: 5-300 seconds</div>
+                                            <div class="config-desc">Maximum time to wait for each page request</div>
+                                            <div class="validation-error" id="timeoutValidationError" style="display: none;"></div>
+                                        </div>
+                                        
+                                        <!-- Concurrent Requests -->
+                                        <div class="config-item">
+                                            <label class="config-label" for="concurrentRequests">CONCURRENT_REQUESTS:</label>
+                                            <input 
+                                                type="range" 
+                                                id="concurrentRequests" 
+                                                name="concurrentRequests" 
+                                                class="terminal-slider"
+                                                value="5"
+                                                min="1"
+                                                max="10"
+                                                step="1" />
+                                            <div class="slider-value">Concurrent: <span id="concurrentRequestsValue">5</span></div>
+                                            <div class="config-desc">Number of simultaneous requests (be respectful to servers)</div>
+                                        </div>
+                                        
+                                        <!-- Follow Redirects -->
+                                        <div class="config-item">
+                                            <label class="config-label">
+                                                <input 
+                                                    type="checkbox" 
+                                                    id="followRedirects" 
+                                                    name="followRedirects" 
+                                                    class="terminal-checkbox" 
+                                                    checked />
+                                                FOLLOW_REDIRECTS
+                                            </label>
+                                            <div class="config-desc">Automatically follow HTTP redirects (301, 302, etc.)</div>
+                                        </div>
+                                        
+                                        <!-- Respect Robots.txt -->
+                                        <div class="config-item">
+                                            <label class="config-label">
+                                                <input 
+                                                    type="checkbox" 
+                                                    id="respectRobotsTxt" 
+                                                    name="respectRobotsTxt" 
+                                                    class="terminal-checkbox" 
+                                                    checked />
+                                                RESPECT_ROBOTS_TXT
+                                            </label>
+                                            <div class="config-desc">Check and respect robots.txt rules (ethical scraping)</div>
+                                        </div>
+                                        
+                                        <!-- Reset Button -->
+                                        <div class="config-item reset-section">
+                                            <button type="button" 
+                                                    class="reset-defaults-btn" 
+                                                    onclick="resetAdvancedOptionsToDefaults()">
+                                                🔄 RESET_TO_DEFAULTS
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1738,6 +1837,88 @@ https://restaurant3.com
                     }
                 }
 
+                function toggleAdvancedOptions() {
+                    const advancedPanel = document.getElementById('advancedOptionsPanel');
+                    const expandIcon = document.getElementById('advancedOptionsIcon');
+                    
+                    if (advancedPanel.classList.contains('collapsed')) {
+                        advancedPanel.classList.remove('collapsed');
+                        expandIcon.classList.add('expanded');
+                        expandIcon.textContent = '▲';
+                        updateSystemStatus('ADVANCED_OPTIONS // PANEL_EXPANDED');
+                    } else {
+                        advancedPanel.classList.add('collapsed');
+                        expandIcon.classList.remove('expanded');
+                        expandIcon.textContent = '▼';
+                        updateSystemStatus('ADVANCED_OPTIONS // PANEL_COLLAPSED');
+                    }
+                }
+
+                function resetAdvancedOptionsToDefaults() {
+                    // Reset all advanced options to their default values
+                    document.getElementById('pageDiscoveryEnabled').checked = true;
+                    document.getElementById('requestTimeout').value = 30;
+                    document.getElementById('concurrentRequests').value = 5;
+                    document.getElementById('followRedirects').checked = true;
+                    document.getElementById('respectRobotsTxt').checked = true;
+                    
+                    // Update display values
+                    updateConcurrentRequestsDisplay();
+                    togglePageDiscoveryWarning();
+                    validateAdvancedOptions();
+                    
+                    updateSystemStatus('ADVANCED_OPTIONS // RESET_TO_DEFAULTS_COMPLETE');
+                    showTerminalAlert('SUCCESS: Advanced options reset to default values.');
+                }
+
+                function validateAdvancedOptions() {
+                    const timeout = parseInt(document.getElementById('requestTimeout').value);
+                    const timeoutError = document.getElementById('timeoutValidationError');
+                    let isValid = true;
+                    
+                    // Validate timeout
+                    if (timeout < 5 || timeout > 300) {
+                        timeoutError.textContent = 'ERROR: Timeout must be between 5 and 300 seconds';
+                        timeoutError.style.display = 'block';
+                        isValid = false;
+                    } else {
+                        timeoutError.style.display = 'none';
+                    }
+                    
+                    return isValid;
+                }
+
+                function togglePageDiscoveryWarning() {
+                    const checkbox = document.getElementById('pageDiscoveryEnabled');
+                    const warning = document.getElementById('pageDiscoveryWarning');
+                    
+                    if (!checkbox.checked) {
+                        warning.style.display = 'block';
+                        updateSystemStatus('PAGE_DISCOVERY // DISABLED_WARNING_ACTIVE');
+                    } else {
+                        warning.style.display = 'none';
+                        updateSystemStatus('PAGE_DISCOVERY // ENABLED_FULL_FUNCTIONALITY');
+                    }
+                }
+
+                function updateConcurrentRequestsDisplay() {
+                    const slider = document.getElementById('concurrentRequests');
+                    const display = document.getElementById('concurrentRequestsValue');
+                    if (slider && display) {
+                        display.textContent = slider.value;
+                    }
+                }
+
+                function getAdvancedOptionsConfig() {
+                    return {
+                        pageDiscoveryEnabled: document.getElementById('pageDiscoveryEnabled').checked,
+                        requestTimeout: parseInt(document.getElementById('requestTimeout').value),
+                        concurrentRequests: parseInt(document.getElementById('concurrentRequests').value),
+                        followRedirects: document.getElementById('followRedirects').checked,
+                        respectRobotsTxt: document.getElementById('respectRobotsTxt').checked
+                    };
+                }
+
                 function setupSliderUpdates() {
                     // Crawl depth slider
                     const crawlDepthSlider = document.getElementById('crawlDepth');
@@ -1815,6 +1996,57 @@ https://restaurant3.com
                             updateSystemStatus(`EXCLUDE_PATTERNS_SET // ${patterns}_FILTERS_ACTIVE`);
                         });
                     }
+
+                    // Advanced Options Event Listeners
+                    setupAdvancedOptionsEventListeners();
+                }
+
+                function setupAdvancedOptionsEventListeners() {
+                    // Page Discovery toggle
+                    const pageDiscoveryToggle = document.getElementById('pageDiscoveryEnabled');
+                    if (pageDiscoveryToggle) {
+                        pageDiscoveryToggle.addEventListener('change', togglePageDiscoveryWarning);
+                    }
+
+                    // Request timeout validation
+                    const requestTimeout = document.getElementById('requestTimeout');
+                    if (requestTimeout) {
+                        requestTimeout.addEventListener('input', function() {
+                            validateAdvancedOptions();
+                            updateSystemStatus(`REQUEST_TIMEOUT_SET // ${this.value}S_LIMIT`);
+                        });
+                    }
+
+                    // Concurrent requests slider
+                    const concurrentRequests = document.getElementById('concurrentRequests');
+                    if (concurrentRequests) {
+                        concurrentRequests.addEventListener('input', function() {
+                            updateConcurrentRequestsDisplay();
+                            updateSystemStatus(`CONCURRENT_REQUESTS_SET // ${this.value}_SIMULTANEOUS`);
+                        });
+                    }
+
+                    // Follow redirects toggle
+                    const followRedirects = document.getElementById('followRedirects');
+                    if (followRedirects) {
+                        followRedirects.addEventListener('change', function() {
+                            const status = this.checked ? 'ENABLED' : 'DISABLED';
+                            updateSystemStatus(`FOLLOW_REDIRECTS // ${status}`);
+                        });
+                    }
+
+                    // Respect robots.txt toggle
+                    const respectRobotsTxt = document.getElementById('respectRobotsTxt');
+                    if (respectRobotsTxt) {
+                        respectRobotsTxt.addEventListener('change', function() {
+                            const status = this.checked ? 'ENABLED' : 'DISABLED';
+                            updateSystemStatus(`RESPECT_ROBOTS_TXT // ${status}`);
+                        });
+                    }
+
+                    // Initialize display values
+                    updateConcurrentRequestsDisplay();
+                    togglePageDiscoveryWarning();
                 }
 
                 function setupModeSelection() {
@@ -1899,12 +2131,23 @@ https://restaurant3.com
                     // Collect multi-page configuration if multi-page mode is selected
                     let multiPageConfig = null;
                     if (scrapingMode === 'multi') {
+                        // Validate advanced options before proceeding
+                        if (!validateAdvancedOptions()) {
+                            updateSystemStatus('ERROR // INVALID_ADVANCED_OPTIONS_DETECTED');
+                            showTerminalAlert('CONFIGURATION ERROR: Please fix invalid advanced options before proceeding.');
+                            return;
+                        }
+
+                        const advancedOptions = getAdvancedOptionsConfig();
+                        
                         multiPageConfig = {
                             maxPages: parseInt(document.getElementById('maxPages').value) || 50,
                             crawlDepth: parseInt(document.getElementById('crawlDepth').value) || 2,
                             includePatterns: document.getElementById('includePatterns').value || 'menu,food,restaurant',
                             excludePatterns: document.getElementById('excludePatterns').value || 'admin,login,cart',
-                            rateLimit: parseInt(document.getElementById('rateLimit').value) || 1000
+                            rateLimit: parseInt(document.getElementById('rateLimit').value) || 1000,
+                            // Advanced Options
+                            ...advancedOptions
                         };
                     }
                     
@@ -2291,8 +2534,14 @@ https://restaurant3.com
 
                 function generatePageItemHTML(page, showRelationships = false) {
                     const statusClass = `status-${page.status}`;
-                    const statusText = page.status === 'success' ? 'SUCCESS' : 'FAILED';
-                    const statusClassName = page.status === 'success' ? 'success' : 'failed';
+                    const statusText = page.status === 'success' ? '✓ SUCCESS' : 
+                                     page.status === 'failed' ? '✗ FAILED' :
+                                     page.status === 'timeout' ? '⏰ TIMEOUT' :
+                                     page.status === 'redirected' ? '↪ REDIRECTED' : '? UNKNOWN';
+                    const statusClassName = page.status === 'success' ? 'success' : 
+                                          page.status === 'failed' ? 'failed' :
+                                          page.status === 'timeout' ? 'timeout' :
+                                          page.status === 'redirected' ? 'redirected' : 'unknown';
                     
                     let relationshipClasses = '';
                     let relationshipContent = '';
@@ -2345,16 +2594,121 @@ https://restaurant3.com
                         relationshipContent += `<span class="relationship-tooltip" data-tooltip="${tooltipText}">ℹ</span>`;
                     }
                     
+                    // Generate detailed status information
+                    let statusDetails = '';
+                    let tooltipData = '';
+                    
+                    if (page.status === 'success') {
+                        statusDetails += `
+                            <span class="http-status">${page.http_status || 200}</span>
+                            <span class="data-count">${page.data_extracted || 0} items</span>
+                            <span class="content-size">${formatContentSize(page.content_size || 0)}</span>
+                        `;
+                        tooltipData = `Status: ${page.http_status || 200} | Data: ${page.data_extracted || 0} items | Size: ${formatContentSize(page.content_size || 0)} | Method: ${page.extraction_method || 'unknown'}`;
+                    } else if (page.status === 'failed') {
+                        statusDetails += `
+                            <span class="http-status">${page.http_status || 'N/A'}</span>
+                            <span class="error-message">${page.error_message || 'Unknown error'}</span>
+                        `;
+                        tooltipData = `Status: ${page.http_status || 'N/A'} | Error: ${page.error_message || 'Unknown error'}`;
+                    } else if (page.status === 'timeout') {
+                        statusDetails += `
+                            <span class="timeout-duration">${page.timeout_duration || 30.0}s</span>
+                            ${page.partial_data ? `<span class="partial-data">${page.partial_data} items</span>` : ''}
+                        `;
+                        tooltipData = `Timeout: ${page.timeout_duration || 30.0}s | Partial data: ${page.partial_data || 0} items`;
+                    } else if (page.status === 'redirected') {
+                        statusDetails += `
+                            <span class="final-url">→ ${page.final_url || page.url}</span>
+                            ${page.redirect_chain ? `<span class="redirect-count">${page.redirect_chain.length} redirects</span>` : ''}
+                        `;
+                        tooltipData = `Final URL: ${page.final_url || page.url} | Redirects: ${page.redirect_chain ? page.redirect_chain.length : 1}`;
+                    }
+                    
+                    // Add timestamp to tooltip
+                    if (page.timestamp) {
+                        tooltipData += ` | Time: ${formatTimestamp(page.timestamp)}`;
+                    }
+
                     return `
                         <div class="page-item ${statusClass} ${relationshipClasses}" 
                              onmouseover="highlightRelationshipChain('${page.url}')"
-                             onmouseout="clearRelationshipHighlight()">
+                             onmouseout="clearRelationshipHighlight()"
+                             title="${tooltipData}">
                             ${relationshipContent}
                             <div class="page-url">${page.url}</div>
-                            <div class="page-status ${statusClassName}">${statusText}</div>
-                            <div class="page-time">${page.processing_time.toFixed(1)}s</div>
+                            <div class="page-status-container">
+                                <div class="page-status ${statusClassName}">${statusText}</div>
+                                <div class="status-details">${statusDetails}</div>
+                            </div>
+                            <div class="page-time ${getPerformanceRating(page.processing_time || 0)}" 
+                                 title="${generateProcessingTimeTooltip(page)}">
+                                ${formatProcessingTime(page.processing_time || 0)}
+                                <span class="performance-indicator ${getPerformanceRating(page.processing_time || 0)}"></span>
+                            </div>
                         </div>
                     `;
+                }
+
+                function formatContentSize(sizeBytes) {
+                    if (!sizeBytes || sizeBytes === 0) return "0 B";
+                    if (sizeBytes < 1024) return `${sizeBytes} B`;
+                    if (sizeBytes < 1048576) return `${(sizeBytes / 1024).toFixed(1)} KB`;
+                    return `${(sizeBytes / 1048576).toFixed(1)} MB`;
+                }
+
+                function formatTimestamp(timestampStr) {
+                    if (!timestampStr) return "";
+                    try {
+                        const date = new Date(timestampStr);
+                        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                    } catch (e) {
+                        return timestampStr;
+                    }
+                }
+
+                function formatProcessingTime(timeSeconds) {
+                    if (!timeSeconds || timeSeconds === 0) return "0.00s";
+                    if (timeSeconds < 60) {
+                        return `${timeSeconds.toFixed(2)}s`;
+                    } else {
+                        const minutes = Math.floor(timeSeconds / 60);
+                        const seconds = timeSeconds % 60;
+                        return `${minutes}m ${seconds.toFixed(2)}s`;
+                    }
+                }
+
+                function getPerformanceRating(timeSeconds) {
+                    if (!timeSeconds || timeSeconds < 1.0) return 'excellent';
+                    if (timeSeconds < 5.0) return 'good';
+                    if (timeSeconds < 10.0) return 'slow';
+                    return 'very_slow';
+                }
+
+                function generateProcessingTimeTooltip(page) {
+                    const totalTime = page.processing_time || 0;
+                    const networkTime = page.network_time || 0;
+                    const parsingTime = page.parsing_time || 0;
+                    const extractionTime = page.extraction_time || 0;
+                    
+                    let tooltip = `Total: ${totalTime.toFixed(2)}s`;
+                    
+                    if (networkTime > 0) tooltip += ` | Network: ${networkTime.toFixed(2)}s`;
+                    if (parsingTime > 0) tooltip += ` | Parsing: ${parsingTime.toFixed(2)}s`;
+                    if (extractionTime > 0) tooltip += ` | Extraction: ${extractionTime.toFixed(2)}s`;
+                    
+                    // Add speed metrics if available
+                    if (page.content_size && totalTime > 0) {
+                        const bytesPerSec = (page.content_size / totalTime);
+                        tooltip += ` | Speed: ${formatContentSize(bytesPerSec)}/s`;
+                    }
+                    
+                    if (page.data_extracted && totalTime > 0) {
+                        const itemsPerSec = (page.data_extracted / totalTime).toFixed(1);
+                        tooltip += ` | Rate: ${itemsPerSec} items/s`;
+                    }
+                    
+                    return tooltip;
                 }
 
                 function setupResultsInteractivity() {
