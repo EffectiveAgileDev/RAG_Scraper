@@ -56,6 +56,16 @@ def mock_flask_app():
 
 
 @pytest.fixture
+def client():
+    """Create Flask test client for acceptance tests."""
+    from src.web_interface.app import create_app
+    app = create_app(testing=True)
+    with app.test_client() as client:
+        with app.app_context():
+            yield client
+
+
+@pytest.fixture
 def progress_context():
     """Provide progress context for tracking test state."""
     return {}

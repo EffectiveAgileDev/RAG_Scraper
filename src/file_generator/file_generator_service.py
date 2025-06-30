@@ -298,7 +298,7 @@ class FileGeneratorService:
             "special_features": getattr(restaurant, "special_features", []),
             "parking": getattr(restaurant, "parking", None),
             "reservations": getattr(restaurant, "reservations", None),
-            "menu_items": list(restaurant.menu_items.keys())
+            "menu_items": [item for section_items in restaurant.menu_items.values() for item in section_items]
             if restaurant.menu_items
             else [],
             "pricing": restaurant.price_range,

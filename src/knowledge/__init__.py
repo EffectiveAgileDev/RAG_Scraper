@@ -1,0 +1,1 @@
+"""Knowledge management module for industry-specific databases."""

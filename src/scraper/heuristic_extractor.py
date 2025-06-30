@@ -400,37 +400,124 @@ class HeuristicExtractor:
         """Extract menu items from section headers and content."""
         menu_items = {}
 
-        # Look for menu section headers
-        section_headers = ["appetizers", "entrees", "desserts", "beverages", "mains"]
+        # Enhanced menu section patterns for modern restaurant websites
+        section_patterns = [
+            # Traditional patterns
+            r"appetizers?",
+            r"entrees?",
+            r"desserts?",
+            r"beverages?",
+            r"mains?",
+            r"drinks?",
+            r"cocktails?",
+            # Modern/creative patterns
+            r"shared plates?",
+            r"small plates?",
+            r"starters?",
+            r"salads?",
+            r"greens?",
+            r"soups?",
+            r"burgers?",
+            r"sandwiches?",
+            r"pizza",
+            r"pasta",
+            r"main plates?",
+            r"brunch",
+            r"lunch",
+            r"dinner",
+            r"sides?",
+            r"kids?",
+            r"wine",
+            r"beer",
+            r"favorites?",
+            r"specials?",
+            r"classics?",
+        ]
 
-        for header in section_headers:
-            # Find headers containing the section name
-            headers = soup.find_all(
-                ["h1", "h2", "h3", "h4"], string=re.compile(header, re.I)
-            )
-
-            for header_elem in headers:
-                section_name = header_elem.get_text().strip().title()
+        # Find all h2 and h3 headers (common for menu sections)
+        all_headers = soup.find_all(["h2", "h3"])
+        
+        for header_elem in all_headers:
+            header_text = header_elem.get_text().strip()
+            
+            # Check if this header matches any menu section pattern
+            is_menu_section = False
+            for pattern in section_patterns:
+                if re.search(pattern, header_text, re.I):
+                    is_menu_section = True
+                    break
+            
+            # Also check for common menu-related words
+            menu_keywords = ["menu", "food", "plate", "item", "dish"]
+            if not is_menu_section:
+                for keyword in menu_keywords:
+                    if keyword in header_text.lower():
+                        is_menu_section = True
+                        break
+            
+            if is_menu_section:
+                section_name = header_text.title()
                 menu_items[section_name] = []
-
-                # Look for items after the header
-                next_sibling = header_elem.find_next_sibling()
+                
+                # Look for menu items after this header
+                current_elem = header_elem.find_next_sibling()
                 item_count = 0
-
-                while next_sibling and item_count < 10:  # Limit items per section
-                    if next_sibling.name in ["h1", "h2", "h3", "h4"]:
-                        break  # Stop at next header
-
-                    if next_sibling.name == "p":
-                        text = next_sibling.get_text().strip()
-                        if text and len(text) < 100:  # Reasonable item length
-                            # Extract just the item name (before dash or price)
-                            item_name = re.split(r"[-–$]", text)[0].strip()
-                            if item_name:
+                
+                while current_elem and item_count < 20:  # Increased limit for modern menus
+                    # Stop at next section header
+                    if current_elem.name in ["h1", "h2"] and current_elem != header_elem:
+                        # Check if this is another menu section
+                        next_header_text = current_elem.get_text().strip().lower()
+                        if any(re.search(pattern, next_header_text, re.I) for pattern in section_patterns):
+                            break
+                        if any(keyword in next_header_text for keyword in menu_keywords):
+                            break
+                    
+                    # Look for h3 elements (commonly used for individual menu items)
+                    if current_elem.name == "h3":
+                        item_text = current_elem.get_text().strip()
+                        if item_text and len(item_text) < 100:
+                            # Clean up the item name (remove prices, asterisks, etc.)
+                            item_name = re.split(r"[*]?\s*\$", item_text)[0].strip()
+                            item_name = re.sub(r"\*+$", "", item_name).strip()  # Remove trailing asterisks
+                            
+                            if item_name and len(item_name) > 2:  # Reasonable item name length
                                 menu_items[section_name].append(item_name)
                                 item_count += 1
-
-                    next_sibling = next_sibling.find_next_sibling()
+                    
+                    # Look inside div containers for h3 menu items (common pattern)
+                    elif current_elem.name == "div":
+                        inner_h3s = current_elem.find_all("h3")
+                        for h3_elem in inner_h3s:
+                            if item_count >= 20:
+                                break
+                            item_text = h3_elem.get_text().strip()
+                            if item_text and len(item_text) < 100:
+                                # Clean up the item name (remove prices, asterisks, etc.)
+                                item_name = re.split(r"[*]?\s*\$", item_text)[0].strip()
+                                item_name = re.sub(r"\*+$", "", item_name).strip()  # Remove trailing asterisks
+                                
+                                if item_name and len(item_name) > 2:  # Reasonable item name length
+                                    menu_items[section_name].append(item_name)
+                                    item_count += 1
+                    
+                    # Also check paragraphs for menu items (fallback)
+                    elif current_elem.name == "p":
+                        text = current_elem.get_text().strip()
+                        if text and len(text) < 200 and "$" in text:  # Likely a menu item with price
+                            # Extract item name (everything before price)
+                            item_name = re.split(r"\$", text)[0].strip()
+                            item_name = re.sub(r"\*+$", "", item_name).strip()
+                            
+                            if item_name and len(item_name) > 2 and len(item_name) < 80:
+                                menu_items[section_name].append(item_name)
+                                item_count += 1
+                    
+                    current_elem = current_elem.find_next_sibling()
+                
+                # Remove empty sections
+                if not menu_items[section_name]:
+                    del menu_items[section_name]
 
         return menu_items
 

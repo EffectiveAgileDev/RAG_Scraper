@@ -524,19 +524,309 @@
     - [x] Add simple page relationship diagram/tree view (ALREADY IMPLEMENTED ✅)
 
 ### 4.2 API Documentation
-**NOTE: Most API endpoints already exist and are functional**
-- [x] Multi-page scraping endpoint (ALREADY DOCUMENTED in app.py)
-- [x] Configuration endpoints (ALREADY EXIST: /api/file-config)
-- [x] Progress tracking endpoints (ALREADY EXIST: /api/progress)
-- [ ] **NEW TASKS - Documentation Enhancement:**
-  - [ ] Create comprehensive API documentation file
-    - [ ] Document all existing endpoints with examples
-    - [ ] Add parameter descriptions for multi-page settings
-    - [ ] Include response format specifications
-  - [ ] Create API usage examples
-    - [ ] Restaurant directory scraping example with curl
-    - [ ] Configuration examples with different settings
-    - [ ] Progress monitoring integration examples
+**✅ COMPLETED - Comprehensive API Documentation**
+
+All API endpoints are fully functional and documented. The RAG Scraper web interface provides the following REST API endpoints:
+
+#### Core Endpoints
+
+##### 1. `/` (GET)
+- **Purpose**: Main web interface
+- **Method**: GET
+- **Response**: HTML page with terminal-style UI
+- **Features**: Single-page and multi-page scraping interface with real-time progress visualization
+
+##### 2. `/api/validate` (POST)
+- **Purpose**: Validate URLs before scraping
+- **Method**: POST
+- **Request Body**:
+  ```json
+  {
+    "url": "https://example.com"  // Single URL
+    // OR
+    "urls": ["https://example1.com", "https://example2.com"]  // Multiple URLs
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "is_valid": true,
+    "error": null
+    // OR for multiple URLs
+    "results": [
+      {"is_valid": true, "error": null},
+      {"is_valid": false, "error": "Invalid URL format"}
+    ]
+  }
+  ```
+
+##### 3. `/api/scrape` (POST)
+- **Purpose**: Main scraping endpoint supporting both single-page and multi-page modes
+- **Method**: POST
+- **Request Body**:
+  ```json
+  {
+    "urls": ["https://restaurant.com"],
+    "scraping_mode": "multi",  // "single" or "multi"
+    "file_format": "text",     // "text", "pdf", or "both"
+    "output_dir": "/tmp",
+    "file_mode": "single",
+    "multi_page_config": {
+      "maxPages": 50,
+      "crawlDepth": 2,
+      "rateLimit": 1000,
+      "includePatterns": "menu,food,restaurant,about,contact",
+      "excludePatterns": "admin,login,cart,checkout"
+    }
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "processed_count": 1,
+    "failed_count": 0,
+    "output_files": ["/tmp/WebScrape_20250625-1234.txt"],
+    "processing_time": 22.35,
+    "sites_data": [
+      {
+        "site_url": "https://restaurant.com",
+        "pages_processed": 5,
+        "pages": [
+          {
+            "url": "https://restaurant.com/menu",
+            "status": "success",
+            "processing_time": 3.6
+          }
+        ]
+      }
+    ]
+  }
+  ```
+
+##### 4. `/api/progress` (GET)
+- **Purpose**: Real-time progress monitoring with enhanced visualization data
+- **Method**: GET
+- **Response**:
+  ```json
+  {
+    "current_url": "https://restaurant.com/menu",
+    "urls_completed": 3,
+    "urls_total": 5,
+    "progress_percentage": 60,
+    "estimated_time_remaining": 45,
+    "current_operation": "Processing page content",
+    "memory_usage_mb": 128,
+    "status": "processing",
+    "session_id": "session_1234567890",
+    "progress_bar_percentage": 60,
+    "status_message": "Processing page 3 of 5",
+    "page_progress": {
+      "current_page": "https://restaurant.com/menu",
+      "total_pages": 5,
+      "progress_message": "Extracting menu data..."
+    },
+    "notifications": ["Discovered 2 new pages", "Processing menu page"],
+    "error_notifications": [],
+    "completion_events": []
+  }
+  ```
+
+#### File Management Endpoints
+
+##### 5. `/api/download/<filename>` (GET)
+- **Purpose**: Download generated files
+- **Method**: GET
+- **Parameters**: `filename` - Name of the file to download
+- **Response**: File download with appropriate headers
+- **Security**: Validates filename to prevent directory traversal
+
+##### 6. `/api/generate-file` (POST)
+- **Purpose**: Generate files from scraped restaurant data
+- **Method**: POST
+- **Request Body**:
+  ```json
+  {
+    "restaurant_data": [
+      {
+        "name": "Restaurant Name",
+        "address": "123 Main St",
+        "phone": "555-1234",
+        "hours": "9 AM - 10 PM",
+        "price_range": "$$",
+        "cuisine": "Italian",
+        "menu_items": {},
+        "social_media": []
+      }
+    ],
+    "file_format": "text",
+    "output_directory": "/tmp",
+    "allow_overwrite": true,
+    "save_preferences": false
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "file_path": "/tmp/WebScrape_20250625-1234.txt"
+  }
+  ```
+
+#### Configuration Endpoints
+
+##### 7. `/api/file-config` (GET)
+- **Purpose**: Get current file generation configuration
+- **Method**: GET
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "config": {
+      "default_format": "text",
+      "output_directory": "/tmp"
+    },
+    "supported_formats": ["text", "pdf", "json"],
+    "directory_options": ["/tmp", "/home/user/Downloads"]
+  }
+  ```
+
+##### 8. `/api/file-config` (POST)
+- **Purpose**: Update file generation configuration
+- **Method**: POST
+- **Request Body**:
+  ```json
+  {
+    "default_format": "pdf",
+    "output_directory": "/home/user/Documents"
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "message": "Configuration updated successfully"
+  }
+  ```
+
+##### 9. `/api/validate-directory` (POST)
+- **Purpose**: Validate directory permissions for file generation
+- **Method**: POST
+- **Request Body**:
+  ```json
+  {
+    "directory_path": "/home/user/Documents"
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "validation": {
+      "exists": true,
+      "writable": true,
+      "readable": true
+    }
+  }
+  ```
+
+##### 10. `/api/create-directory` (POST)
+- **Purpose**: Create custom directory for file output
+- **Method**: POST
+- **Request Body**:
+  ```json
+  {
+    "parent_directory": "/home/user",
+    "directory_name": "rag_scraper_output"
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "directory_path": "/home/user/rag_scraper_output"
+  }
+  ```
+
+#### Enhanced Features (Completed in Latest Session)
+
+**✅ Real-Time Progress Visualization:**
+- Current page display showing exact page being processed
+- Page queue status with remaining count tracking
+- Progress bar with smooth percentage updates
+- Time estimates for completion
+- Memory usage monitoring
+- Error notifications and completion events
+
+**✅ Multi-Page Scraping Configuration:**
+- Configurable max pages per site (1-50)
+- Crawl depth control (1-5 levels)
+- Rate limiting with millisecond precision
+- Include/exclude pattern filtering with regex support
+- Page relationship tracking and hierarchy display
+
+**✅ Enhanced Results Display:**
+- Per-page processing times and status indicators
+- Site-level organization with page hierarchies
+- Processing statistics with detailed timing
+- Success/failure status clearly marked
+- Page relationship information showing discovery methods
+
+**✅ Advanced Options Panel:**
+- Page discovery enable/disable toggle
+- Request timeout configuration (5-300 seconds)
+- Concurrent request limits (1-10)
+- HTTP redirect following toggle
+- Robots.txt compliance toggle
+- Reset to defaults functionality
+
+#### API Usage Examples
+
+**Single-Page Scraping:**
+```bash
+curl -X POST http://localhost:8085/api/scrape \
+  -H "Content-Type: application/json" \
+  -d '{
+    "urls": ["https://restaurant.com"],
+    "scraping_mode": "single",
+    "file_format": "text"
+  }'
+```
+
+**Multi-Page Scraping with Advanced Configuration:**
+```bash
+curl -X POST http://localhost:8085/api/scrape \
+  -H "Content-Type: application/json" \
+  -d '{
+    "urls": ["https://restaurant.com"],
+    "scraping_mode": "multi",
+    "file_format": "both",
+    "multi_page_config": {
+      "maxPages": 10,
+      "crawlDepth": 2,
+      "rateLimit": 2000,
+      "includePatterns": "menu,about,contact",
+      "excludePatterns": "admin,login"
+    }
+  }'
+```
+
+**Progress Monitoring:**
+```bash
+curl http://localhost:8085/api/progress
+```
+
+**File Download:**
+```bash
+curl -O http://localhost:8085/api/download/WebScrape_20250625-1234.txt
+```
+
+- [x] ✅ **COMPLETED** - All API endpoints documented with examples
+- [x] ✅ **COMPLETED** - Parameter descriptions for multi-page settings
+- [x] ✅ **COMPLETED** - Response format specifications
+- [x] ✅ **COMPLETED** - Restaurant scraping examples with curl
+- [x] ✅ **COMPLETED** - Configuration examples with different settings
+- [x] ✅ **COMPLETED** - Progress monitoring integration examples
 
 ## Phase 5: Testing and Quality Assurance
 

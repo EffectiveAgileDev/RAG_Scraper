@@ -2,18 +2,21 @@
 import os
 import json
 import tempfile
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, session
 from werkzeug.exceptions import BadRequest
 from urllib.parse import urlparse
 
 from src.config.url_validator import URLValidator
 from src.config.scraping_config import ScrapingConfig
+from src.config.industry_config import IndustryConfig
 from src.scraper.restaurant_scraper import RestaurantScraper
 from src.scraper.advanced_progress_monitor import AdvancedProgressMonitor
 from src.file_generator.file_generator_service import (
     FileGeneratorService,
     FileGenerationRequest,
 )
+from src.web_interface.session_manager import IndustrySessionManager
+from src.web_interface.validators import validate_industry_selection
 
 
 def register_api_routes(app, advanced_monitor, file_generator_service):
@@ -21,6 +24,111 @@ def register_api_routes(app, advanced_monitor, file_generator_service):
     
     # Global scraper instance for progress tracking
     active_scraper = None
+
+    # Industry Selection API Routes
+    @app.route("/api/industries", methods=["GET"])
+    def get_industries():
+        """Get list of available industries."""
+        try:
+            config = IndustryConfig()
+            industries = config.get_industry_list()
+            return jsonify(industries)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    @app.route("/api/industry-help", methods=["GET"])
+    def get_industry_help():
+        """Get help text for selected industry."""
+        try:
+            session_manager = IndustrySessionManager()
+            industry = session_manager.get_industry()
+            
+            if not industry:
+                return "", 200
+            
+            config = IndustryConfig()
+            help_text = config.get_help_text(industry)
+            return help_text, 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    @app.route("/api/clear-industry", methods=["POST"])
+    def clear_industry():
+        """Clear industry selection from session."""
+        try:
+            session_manager = IndustrySessionManager()
+            session_manager.clear_industry()
+            return "", 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    # Form-based routes for industry validation
+    @app.route("/scrape", methods=["POST"])
+    def scrape_form():
+        """Handle form-based scraping requests with industry validation."""
+        try:
+            form_data = request.form.to_dict()
+            
+            # Validate industry selection
+            session_manager = IndustrySessionManager()
+            
+            # Add industry from session if not in form data
+            if 'industry' not in form_data or not form_data['industry']:
+                session_industry = session_manager.get_industry()
+                if session_industry:
+                    form_data['industry'] = session_industry
+            
+            # Validate industry
+            is_valid, error_message = validate_industry_selection(form_data)
+            if not is_valid:
+                return f"<html><body><h1>Error</h1><p>{error_message}</p></body></html>", 400
+            
+            # Store industry in session
+            if 'industry' in form_data:
+                session_manager.store_industry(form_data['industry'])
+            
+            # Redirect to API endpoint with JSON data
+            import json
+            json_data = {
+                "url": form_data.get("url"),
+                "industry": form_data.get("industry")
+            }
+            
+            # For now, return success - full implementation would redirect to API
+            return jsonify({"success": True, "industry": form_data.get("industry")})
+            
+        except Exception as e:
+            return f"<html><body><h1>Error</h1><p>{str(e)}</p></body></html>", 500
+
+    @app.route("/scrape/batch", methods=["POST"])
+    def scrape_batch_form():
+        """Handle form-based batch scraping requests with industry validation."""
+        try:
+            form_data = request.form.to_dict()
+            
+            # Validate industry selection
+            session_manager = IndustrySessionManager()
+            
+            # Add industry from session if not in form data
+            if 'industry' not in form_data or not form_data['industry']:
+                session_industry = session_manager.get_industry()
+                if session_industry:
+                    form_data['industry'] = session_industry
+            
+            # Validate industry
+            is_valid, error_message = validate_industry_selection(form_data)
+            if not is_valid:
+                return f"<html><body><h1>Error</h1><p>{error_message}</p></body></html>", 400
+            
+            # Store industry in session
+            if 'industry' in form_data:
+                session_manager.store_industry(form_data['industry'])
+            
+            # For now, return success - full implementation would process batch
+            return jsonify({"success": True, "industry": form_data.get("industry")})
+            
+        except Exception as e:
+            return f"<html><body><h1>Error</h1><p>{str(e)}</p></body></html>", 500
 
     @app.route("/api/validate", methods=["POST"])
     def validate_urls():
@@ -95,6 +203,25 @@ def register_api_routes(app, advanced_monitor, file_generator_service):
                     ),
                     400,
                 )
+
+            # Validate industry selection
+            session_manager = IndustrySessionManager()
+            form_data = data.copy()
+            
+            # Add industry from session if not in form data
+            if 'industry' not in form_data or not form_data['industry']:
+                session_industry = session_manager.get_industry()
+                if session_industry:
+                    form_data['industry'] = session_industry
+            
+            # Validate industry
+            is_valid, error_message = validate_industry_selection(form_data)
+            if not is_valid:
+                return jsonify({"success": False, "error": error_message}), 400
+            
+            # Store industry in session
+            if 'industry' in form_data:
+                session_manager.store_industry(form_data['industry'])
 
             # Configure scraping
             output_dir = data.get("output_dir") or app.config["UPLOAD_FOLDER"]
