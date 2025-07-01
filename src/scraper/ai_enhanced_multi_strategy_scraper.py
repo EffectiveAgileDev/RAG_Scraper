@@ -12,6 +12,7 @@ from .multi_strategy_scraper import MultiStrategyScraper, RestaurantData
 from ..ai.llm_extractor import LLMExtractor
 from ..ai.confidence_scorer import ConfidenceScorer
 from ..config.scraping_config import ScrapingConfig
+from ..processors.multi_modal_processor import MultiModalProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -277,6 +278,7 @@ class AIEnhancedMultiStrategyScraper(MultiStrategyScraper):
                  confidence_scorer: ConfidenceScorer = None,
                  traditional_extractors: Dict[str, Any] = None,
                  enable_ai_extraction: bool = True,
+                 enable_multi_modal: bool = True,
                  parallel_processing: bool = True,
                  **kwargs):
         """Initialize AI-enhanced scraper."""
@@ -285,7 +287,18 @@ class AIEnhancedMultiStrategyScraper(MultiStrategyScraper):
         self.llm_extractor = llm_extractor
         self.confidence_scorer = confidence_scorer or ConfidenceScorer()
         self.enable_ai_extraction = enable_ai_extraction
+        self.enable_multi_modal = enable_multi_modal
         self.parallel_processing = parallel_processing
+        
+        # Initialize multi-modal processor
+        if enable_multi_modal:
+            self.multi_modal_processor = MultiModalProcessor(
+                enable_ocr=True,
+                enable_image_analysis=True,
+                enable_pdf_processing=True
+            )
+        else:
+            self.multi_modal_processor = None
         
         # Override traditional extractors if provided
         if traditional_extractors:
@@ -304,6 +317,7 @@ class AIEnhancedMultiStrategyScraper(MultiStrategyScraper):
             "total_extractions": 0,
             "ai_extractions": 0,
             "traditional_extractions": 0,
+            "multi_modal_extractions": 0,
             "errors": []
         }
     
@@ -426,13 +440,17 @@ class AIEnhancedMultiStrategyScraper(MultiStrategyScraper):
         traditional_start = time.time()
         results = []
         
-        with ThreadPoolExecutor(max_workers=4) as executor:
+        with ThreadPoolExecutor(max_workers=5) as executor:
             # Submit traditional extraction tasks
             futures = {
                 executor.submit(self._extract_json_ld, html_content): "json_ld",
                 executor.submit(self._extract_microdata, html_content): "microdata", 
                 executor.submit(self._extract_heuristic, html_content): "heuristic"
             }
+            
+            # Submit multi-modal extraction if enabled
+            if self.enable_multi_modal and self.multi_modal_processor:
+                futures[executor.submit(self._extract_multi_modal, html_content, config)] = "multi_modal"
             
             # Collect results
             for future in as_completed(futures):
@@ -462,6 +480,10 @@ class AIEnhancedMultiStrategyScraper(MultiStrategyScraper):
             ("microdata", self._extract_microdata),
             ("heuristic", self._extract_heuristic)
         ]
+        
+        # Add multi-modal extraction if enabled
+        if self.enable_multi_modal and self.multi_modal_processor:
+            methods.append(("multi_modal", lambda html: self._extract_multi_modal(html, config)))
         
         for method_name, extract_func in methods:
             try:
@@ -542,6 +564,49 @@ class AIEnhancedMultiStrategyScraper(MultiStrategyScraper):
             return {"data": data, "success": True, "confidence": 0.70}
         else:
             return {"data": {}, "success": False, "confidence": 0.0}
+    
+    def _extract_multi_modal(self, html_content: str, config: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract using multi-modal processing."""
+        if not self.multi_modal_processor:
+            return {"data": {}, "success": False, "confidence": 0.0}
+        
+        try:
+            # Extract media URLs from HTML content
+            media_files = self._extract_media_from_html(html_content)
+            
+            # Process with multi-modal processor
+            multi_modal_result = self.multi_modal_processor.process_multi_modal(
+                html_content, 
+                config=config
+            )
+            
+            # Convert multi-modal results to standard format
+            mm_data = self._convert_multi_modal_to_data(multi_modal_result, media_files)
+            
+            # Calculate confidence based on processing stats
+            confidence = multi_modal_result.get("processing_stats", {}).get("success_rate", 0.8)
+            
+            # Track multi-modal extraction
+            self.extraction_stats["multi_modal_extractions"] += 1
+            
+            return {
+                "method": "multi_modal",
+                "data": mm_data,
+                "success": True,
+                "confidence": confidence,
+                "raw_result": multi_modal_result,
+                "media_files": media_files
+            }
+            
+        except Exception as e:
+            logger.error(f"Multi-modal extraction failed: {e}")
+            return {
+                "method": "multi_modal",
+                "data": {},
+                "success": False,
+                "confidence": 0.0,
+                "error": str(e)
+            }
     
     def _extract_with_ai(self, html_content: str, config: Dict[str, Any]) -> Dict[str, Any]:
         """Extract using AI/LLM method."""
@@ -781,6 +846,7 @@ class AIEnhancedMultiStrategyScraper(MultiStrategyScraper):
             "total_extractions": self.extraction_stats["total_extractions"],
             "ai_extractions": self.extraction_stats["ai_extractions"],
             "traditional_extractions": self.extraction_stats["traditional_extractions"],
+            "multi_modal_extractions": self.extraction_stats["multi_modal_extractions"],
             "method_usage_count": {method: data["usage_count"] for method, data in method_stats.items()},
             "method_success_rates": {method: data["success_rate"] for method, data in method_stats.items()},
             "average_confidence_by_method": {method: data["average_confidence"] for method, data in method_stats.items()}
@@ -809,3 +875,134 @@ class AIEnhancedMultiStrategyScraper(MultiStrategyScraper):
         """Reset extractors for testing."""
         # This method is for testing purposes
         pass
+    
+    def _extract_media_from_html(self, html_content: str) -> List[Dict[str, Any]]:
+        """Extract media files (images, PDFs) from HTML content with optimized processing."""
+        if not html_content or len(html_content.strip()) < 10:
+            return []
+        
+        try:
+            from bs4 import BeautifulSoup
+            import re
+            
+            # Pre-compiled patterns for better performance
+            pdf_pattern = re.compile(r'href="([^"]*\.pdf)"', re.IGNORECASE)
+            
+            # Category keyword sets for fast lookup
+            menu_keywords = {'menu', 'food', 'dish', 'wine', 'drink'}
+            hours_keywords = {'hours', 'time', 'schedule'}
+            contact_keywords = {'contact', 'phone', 'email'}
+            ambiance_keywords = {'interior', 'ambiance', 'dining', 'atmosphere'}
+            service_keywords = {'brochure', 'service', 'catering'}
+            
+            soup = BeautifulSoup(html_content, 'html.parser')
+            media_files = []
+            
+            # Fast image extraction with optimized categorization
+            for img in soup.find_all('img', src=True):
+                src = img.get('src', '')
+                alt = img.get('alt', '')
+                
+                # Fast category determination using set intersection
+                combined_text = (src + alt).lower()
+                if any(kw in combined_text for kw in menu_keywords):
+                    category = "menu"
+                elif any(kw in combined_text for kw in hours_keywords):
+                    category = "hours"
+                elif any(kw in combined_text for kw in contact_keywords):
+                    category = "contact"
+                elif any(kw in combined_text for kw in ambiance_keywords):
+                    category = "ambiance"
+                else:
+                    category = "general"
+                
+                media_files.append({
+                    "type": "image",
+                    "url": src,
+                    "alt": alt,
+                    "category": category
+                })
+            
+            # Fast PDF extraction
+            pdf_matches = pdf_pattern.findall(html_content)
+            for pdf_url in pdf_matches:
+                pdf_lower = pdf_url.lower()
+                if any(kw in pdf_lower for kw in menu_keywords):
+                    category = "menu"
+                elif any(kw in pdf_lower for kw in service_keywords):
+                    category = "services"
+                else:
+                    category = "general"
+                
+                media_files.append({
+                    "type": "pdf",
+                    "url": pdf_url,
+                    "category": category
+                })
+            
+            return media_files
+            
+        except Exception as e:
+            logger.error(f"Failed to extract media from HTML: {e}")
+            return []
+    
+    def _convert_multi_modal_to_data(self, multi_modal_result: Dict[str, Any], 
+                                   media_files: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Convert multi-modal processing results to standard restaurant data format."""
+        try:
+            mm_data = {}
+            
+            # Extract text content from OCR results
+            text_extraction = multi_modal_result.get("text_extraction", {})
+            ocr_results = text_extraction.get("ocr_results", {})
+            
+            # Extract menu items
+            if "menu_items" in ocr_results:
+                mm_data["menu"] = ocr_results["menu_items"]
+            
+            # Extract business hours from OCR
+            if "business_hours" in ocr_results:
+                mm_data["hours"] = ocr_results["business_hours"]
+            
+            # Extract contact information from OCR
+            if "contact_info" in ocr_results:
+                mm_data["contact"] = ocr_results["contact_info"]
+            
+            # Extract services from PDF processing
+            pdf_results = text_extraction.get("pdf_results", {})
+            if "structured_data" in pdf_results:
+                pdf_data = pdf_results["structured_data"]
+                if "services" in pdf_data:
+                    mm_data["services"] = pdf_data["services"]
+                if "pricing" in pdf_data:
+                    mm_data["pricing"] = pdf_data["pricing"]
+            
+            # Extract ambiance information from image analysis
+            image_analysis = multi_modal_result.get("image_analysis", {})
+            if "ambiance_description" in image_analysis:
+                mm_data["ambiance"] = {
+                    "description": image_analysis["ambiance_description"],
+                    "visual_elements": image_analysis.get("visual_elements", {}),
+                    "atmosphere_tags": image_analysis.get("atmosphere_tags", [])
+                }
+            
+            # Add source attribution
+            source_attribution = multi_modal_result.get("source_attribution", {})
+            if source_attribution:
+                mm_data["_source_attribution"] = source_attribution
+            
+            # Add processing metadata
+            processing_stats = multi_modal_result.get("processing_stats", {})
+            if processing_stats:
+                mm_data["_processing_stats"] = {
+                    "images_processed": processing_stats.get("images_processed", 0),
+                    "pdfs_processed": processing_stats.get("pdfs_processed", 0),
+                    "total_time": processing_stats.get("total_time", 0),
+                    "success_rate": processing_stats.get("success_rate", 0)
+                }
+            
+            return mm_data
+            
+        except Exception as e:
+            logger.error(f"Failed to convert multi-modal results: {e}")
+            return {}
