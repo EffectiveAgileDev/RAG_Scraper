@@ -1901,7 +1901,73 @@ https://restaurant3.com
                     setupFormatSelection();
                     setupSliderUpdates();
                     setupModeSelection();
+                    
+                    // Force dropdown styling
+                    forceDropdownStyling();
                 });
+
+                function forceDropdownStyling() {
+                    // Force all select elements to have dark background
+                    const selects = document.querySelectorAll('select.terminal-input');
+                    
+                    selects.forEach(select => {
+                        // Apply inline styles to override any browser defaults
+                        select.style.cssText = `
+                            background: #1a1a1a !important;
+                            background-color: #1a1a1a !important;
+                            color: #ffffff !important;
+                            -webkit-appearance: none !important;
+                            -moz-appearance: none !important;
+                            appearance: none !important;
+                        `;
+                        
+                        // Re-apply styles on focus/blur
+                        select.addEventListener('focus', function() {
+                            this.style.backgroundColor = '#1a1a1a';
+                            this.style.color = '#ffffff';
+                        });
+                        
+                        select.addEventListener('blur', function() {
+                            this.style.backgroundColor = '#1a1a1a';
+                            this.style.color = '#ffffff';
+                        });
+                    });
+                    
+                    // Use MutationObserver to catch any dynamic style changes
+                    const observer = new MutationObserver(function(mutations) {
+                        mutations.forEach(function(mutation) {
+                            if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                                const target = mutation.target;
+                                if (target.tagName === 'SELECT' && target.classList.contains('terminal-input')) {
+                                    if (target.style.backgroundColor !== '#1a1a1a') {
+                                        target.style.backgroundColor = '#1a1a1a';
+                                        target.style.color = '#ffffff';
+                                    }
+                                }
+                            }
+                        });
+                    });
+                    
+                    // Observe all select elements
+                    selects.forEach(select => {
+                        observer.observe(select, { attributes: true, attributeFilter: ['style'] });
+                    });
+                    
+                    // Apply fixes again after a delay to catch any async changes
+                    setTimeout(() => {
+                        selects.forEach(select => {
+                            select.style.backgroundColor = '#1a1a1a';
+                            select.style.color = '#ffffff';
+                        });
+                    }, 100);
+                    
+                    setTimeout(() => {
+                        selects.forEach(select => {
+                            select.style.backgroundColor = '#1a1a1a';
+                            select.style.color = '#ffffff';
+                        });
+                    }, 500);
+                }
 
                 function initializeTerminalEffects() {
                     // Create matrix background effect
@@ -2255,7 +2321,15 @@ https://restaurant3.com
                     console.log('Form submission started');
                     console.log('urlsInput element:', urlsInput);
                     console.log('urlsInput.value:', urlsInput.value);
-                    const urls = urlsInput.value.trim().split('\\n').filter(url => url.trim());
+                    // Extract URLs using regex to handle quotes and other text
+                    const urlPattern = /https?:\/\/[^\s"']+(?:\/[^\s"']*)*\/?/g;
+                    const urls = urlsInput.value.match(urlPattern) || [];
+                    
+                    // If no URLs found with regex, fall back to newline splitting
+                    if (urls.length === 0) {
+                        const lines = urlsInput.value.trim().split('\n').filter(line => line.trim());
+                        urls.push(...lines);
+                    }
                     console.log('Processed URLs:', urls);
                     console.log('URLs length:', urls.length);
                     
@@ -2352,7 +2426,15 @@ https://restaurant3.com
                 }
                 
                 async function validateURLsInput() {
-                    const urls = urlsInput.value.trim().split('\\n').filter(url => url.trim());
+                    // Extract URLs using regex to handle quotes and other text
+                    const urlPattern = /https?:\/\/[^\s"']+(?:\/[^\s"']*)*\/?/g;
+                    const urls = urlsInput.value.match(urlPattern) || [];
+                    
+                    // If no URLs found with regex, fall back to newline splitting
+                    if (urls.length === 0) {
+                        const lines = urlsInput.value.trim().split('\n').filter(line => line.trim());
+                        urls.push(...lines);
+                    }
                     
                     if (urls.length === 0) {
                         urlValidation.innerHTML = '';
@@ -2409,6 +2491,7 @@ https://restaurant3.com
                     showProgress();
                     hideResults();
                     
+                    const industry = document.getElementById('industry').value;
                     updateSystemStatus(`EXTRACTION_INITIATED // ${urls.length}_TARGETS_PROCESSING`);
                     
                     try {
@@ -2427,6 +2510,7 @@ https://restaurant3.com
                                 output_dir: outputDir,
                                 file_mode: fileMode,
                                 file_format: fileFormat,
+                                industry: industry,
                                 json_field_selections: jsonFieldSelections,
                                 scraping_mode: scrapingMode,
                                 multi_page_config: multiPageConfig,

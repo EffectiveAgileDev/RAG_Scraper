@@ -119,7 +119,7 @@ class HeuristicExtractor:
         r"(?:Average\s*cost|from):?\s*\$\d{1,3}[-–to\s]+\$?\d{1,3}",
     ]
 
-    def extract_from_html(self, html_content: str) -> List[HeuristicExtractionResult]:
+    def extract_from_html(self, html_content: str, url: Optional[str] = None) -> List[HeuristicExtractionResult]:
         """Extract restaurant data from HTML using heuristic patterns."""
         if not html_content or not html_content.strip():
             return []
@@ -128,6 +128,11 @@ class HeuristicExtractor:
             soup = BeautifulSoup(html_content, "html.parser")
         except Exception:
             return []
+
+        # First try to extract from JavaScript pageData (for sites like mobimag.co)
+        js_extraction_result = self._extract_from_javascript(html_content, url)
+        if js_extraction_result:
+            return [js_extraction_result]
 
         # Check if this looks like a restaurant page
         if not self._is_restaurant_page(soup):
@@ -603,3 +608,149 @@ class HeuristicExtractor:
     def is_restaurant_keyword(self, keyword: str) -> bool:
         """Check if keyword is restaurant-related."""
         return keyword.lower() in self.RESTAURANT_KEYWORDS
+
+    def _extract_from_javascript(self, html_content: str, url: Optional[str] = None) -> Optional[HeuristicExtractionResult]:
+        """Extract restaurant data from JavaScript pageData (for sites like mobimag.co)."""
+        try:
+            # Look for pageData in JavaScript
+            import json
+            from urllib.parse import unquote
+            
+            # Pattern to find pageData JSON
+            pattern = r'pageData = JSON\.parse\(decodeURIComponent\("([^"]+)"\)\)'
+            match = re.search(pattern, html_content)
+            
+            if not match:
+                return None
+            
+            # Decode and parse the JSON data
+            encoded_data = match.group(1)
+            decoded_data = unquote(encoded_data)
+            page_data = json.loads(decoded_data)
+            
+            if not isinstance(page_data, list) or len(page_data) == 0:
+                return None
+            
+            # Extract restaurant ID from URL if provided
+            restaurant_index = 0  # Default to first restaurant
+            if url:
+                restaurant_id = self._extract_restaurant_id_from_url(url)
+                if restaurant_id:
+                    # Find the restaurant by pageID or array index
+                    restaurant_index = self._find_restaurant_index(page_data, restaurant_id)
+            
+            # Get the specific restaurant data
+            if restaurant_index < len(page_data):
+                restaurant_data = page_data[restaurant_index]
+                
+                # Extract data from the JavaScript object
+                extraction_data = self._extract_data_from_js_object(restaurant_data)
+                
+                if extraction_data.get("name"):
+                    # Calculate confidence - higher for structured JS data
+                    confidence = "high"
+                    return self._create_extraction_result(extraction_data, confidence)
+            
+            return None
+            
+        except Exception as e:
+            # Log error but continue with normal extraction
+            print(f"JavaScript extraction error: {e}")
+            return None
+
+    def _extract_restaurant_id_from_url(self, url: str) -> Optional[str]:
+        """Extract restaurant ID from URL path."""
+        try:
+            path_parts = url.split('/')
+            if path_parts and path_parts[-1].isdigit():
+                return path_parts[-1]
+            return None
+        except Exception:
+            return None
+
+    def _find_restaurant_index(self, page_data: List[Dict], restaurant_id: str) -> int:
+        """Find restaurant index in pageData array."""
+        try:
+            # Method 1: Try to find by pageID field
+            for i, item in enumerate(page_data):
+                if isinstance(item, dict):
+                    if str(item.get("pageID", "")) == restaurant_id:
+                        return i
+            
+            # Method 2: Try array index (1-based to 0-based conversion)
+            try:
+                index = int(restaurant_id) - 1
+                if 0 <= index < len(page_data):
+                    return index
+            except ValueError:
+                pass
+            
+            # Method 3: Try direct array index
+            try:
+                index = int(restaurant_id)
+                if 0 <= index < len(page_data):
+                    return index
+            except ValueError:
+                pass
+            
+            # Default to first item
+            return 0
+            
+        except Exception:
+            return 0
+
+    def _extract_data_from_js_object(self, restaurant_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract restaurant data from JavaScript object."""
+        extraction_data = {}
+        
+        # Map JavaScript fields to our data structure
+        field_mappings = {
+            "name": ["name", "restaurantName", "businessName", "title"],
+            "address": ["address", "location", "addr", "street"],
+            "phone": ["phone", "telephone", "phoneNumber", "tel"],
+            "hours": ["hours", "openingHours", "businessHours", "operatingHours"],
+            "price_range": ["priceRange", "pricing", "cost", "price"],
+            "cuisine": ["cuisine", "cuisineType", "foodType", "category"],
+        }
+        
+        # Extract basic fields
+        for our_field, js_fields in field_mappings.items():
+            for js_field in js_fields:
+                if js_field in restaurant_data and restaurant_data[js_field]:
+                    extraction_data[our_field] = str(restaurant_data[js_field])
+                    break
+        
+        # Extract menu items
+        menu_items = {}
+        if "menu" in restaurant_data:
+            menu_data = restaurant_data["menu"]
+            if isinstance(menu_data, list):
+                # Simple list of menu items
+                menu_items["Menu Items"] = menu_data
+            elif isinstance(menu_data, dict):
+                # Structured menu with sections
+                menu_items = menu_data
+        
+        # Also check for menuItems field
+        elif "menuItems" in restaurant_data:
+            menu_data = restaurant_data["menuItems"]
+            if isinstance(menu_data, list):
+                menu_items["Menu Items"] = menu_data
+            elif isinstance(menu_data, dict):
+                menu_items = menu_data
+        
+        extraction_data["menu_items"] = menu_items
+        
+        # Extract social media (look for website, social fields)
+        social_media = []
+        for field in ["website", "socialMedia", "social", "facebook", "instagram", "twitter"]:
+            if field in restaurant_data and restaurant_data[field]:
+                value = restaurant_data[field]
+                if isinstance(value, str):
+                    social_media.append(value)
+                elif isinstance(value, list):
+                    social_media.extend(value)
+        
+        extraction_data["social_media"] = social_media
+        
+        return extraction_data

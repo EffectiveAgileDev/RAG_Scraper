@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "generation_timestamp": "2025-07-02T11:30:44.563616",
+    "restaurant_count": 2,
+    "format_version": "1.0"
+  },
+  "restaurants": [
+    {
+      "basic_info": {
+        "name": "Portland",
+        "address": "",
+        "phone": "",
+        "hours": "",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Bbq"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Portland",
+        "address": "",
+        "phone": "",
+        "hours": "",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [
+          "Bbq"
+        ],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    }
+  ]
+}

@@ -44,6 +44,11 @@ document.addEventListener('DOMContentLoaded', function() {
     setupFormatSelection();
     setupSliderUpdates();
     setupModeSelection();
+    fixSelectDropdownStyles();
+    
+    // Also fix styles after a short delay to catch any async changes
+    setTimeout(fixSelectDropdownStyles, 100);
+    setTimeout(fixSelectDropdownStyles, 500);
 });
 
 /**
@@ -94,6 +99,66 @@ function addTerminalCursorEffect() {
         input.addEventListener('blur', function() {
             this.style.animation = 'none';
         });
+    });
+}
+
+/**
+ * Fix select dropdown background color issues
+ */
+function fixSelectDropdownStyles() {
+    // Force background color on all select elements with terminal-input class
+    const selects = document.querySelectorAll('select.terminal-input');
+    const bgColor = '#1a1a1a'; // var(--bg-tertiary)
+    
+    selects.forEach(select => {
+        // Apply styles directly to ensure they override any browser defaults
+        select.style.backgroundColor = bgColor;
+        select.style.background = bgColor;
+        
+        // Also fix the industry dropdown specifically
+        if (select.id === 'industry' || select.classList.contains('industry-dropdown')) {
+            select.style.backgroundColor = bgColor;
+            select.style.background = bgColor;
+        }
+        
+        // Re-apply styles on focus/blur to combat any dynamic changes
+        select.addEventListener('focus', function() {
+            this.style.backgroundColor = bgColor;
+            this.style.background = bgColor;
+        });
+        
+        select.addEventListener('blur', function() {
+            this.style.backgroundColor = bgColor;
+            this.style.background = bgColor;
+        });
+        
+        // Fix options background
+        const options = select.querySelectorAll('option');
+        options.forEach(option => {
+            option.style.backgroundColor = bgColor;
+            option.style.background = bgColor;
+        });
+    });
+    
+    // Use MutationObserver to watch for any style changes
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                const target = mutation.target;
+                if (target.tagName === 'SELECT' && target.classList.contains('terminal-input')) {
+                    // Reapply our background color if it was changed
+                    if (target.style.backgroundColor !== bgColor) {
+                        target.style.backgroundColor = bgColor;
+                        target.style.background = bgColor;
+                    }
+                }
+            }
+        });
+    });
+    
+    // Observe all select elements
+    selects.forEach(select => {
+        observer.observe(select, { attributes: true, attributeFilter: ['style'] });
     });
 }
 
@@ -334,7 +399,15 @@ urlsInput.addEventListener('input', debounce(validateURLsInput, 500));
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const urls = urlsInput.value.trim().split('\\n').filter(url => url.trim());
+    // Extract URLs using regex to handle quotes and other text
+    const urlPattern = /https?:\/\/[^\s"']+(?:\/[^\s"']*)*\/?/g;
+    const urls = urlsInput.value.match(urlPattern) || [];
+    
+    // If no URLs found with regex, fall back to newline splitting
+    if (urls.length === 0) {
+        const lines = urlsInput.value.trim().split('\n').filter(line => line.trim());
+        urls.push(...lines);
+    }
     const outputDir = document.getElementById('outputDir').value.trim();
     const fileMode = document.getElementById('fileMode').value;
     const fileFormat = document.querySelector('input[name="fileFormat"]:checked').value;
@@ -398,7 +471,15 @@ clearBtn.addEventListener('click', () => {
  * Validate URLs input field and display results
  */
 async function validateURLsInput() {
-    const urls = urlsInput.value.trim().split('\\n').filter(url => url.trim());
+    // Extract URLs using regex to handle quotes and other text
+    const urlPattern = /https?:\/\/[^\s"']+(?:\/[^\s"']*)*\/?/g;
+    const urls = urlsInput.value.match(urlPattern) || [];
+    
+    // If no URLs found with regex, fall back to newline splitting
+    if (urls.length === 0) {
+        const lines = urlsInput.value.trim().split('\n').filter(line => line.trim());
+        urls.push(...lines);
+    }
     
     if (urls.length === 0) {
         urlValidation.innerHTML = '';

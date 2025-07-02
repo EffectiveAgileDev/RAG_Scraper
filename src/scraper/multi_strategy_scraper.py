@@ -111,7 +111,7 @@ class MultiStrategyScraper:
         html_content = self._process_javascript_and_popups(html_content, url)
 
         # Extract data using all strategies
-        return self._extract_with_all_strategies(html_content)
+        return self._extract_with_all_strategies(html_content, url)
 
     def _process_javascript_and_popups(self, html_content: str, url: str) -> str:
         """Process JavaScript rendering and handle popups."""
@@ -162,11 +162,11 @@ class MultiStrategyScraper:
             
         return html_content
 
-    def _extract_with_all_strategies(self, html_content: str) -> Optional[RestaurantData]:
+    def _extract_with_all_strategies(self, html_content: str, url: Optional[str] = None) -> Optional[RestaurantData]:
         """Extract data using all strategies and merge results."""
         json_ld_results = self.json_ld_extractor.extract_from_html(html_content)
         microdata_results = self.microdata_extractor.extract_from_html(html_content)
-        heuristic_results = self.heuristic_extractor.extract_from_html(html_content)
+        heuristic_results = self.heuristic_extractor.extract_from_html(html_content, url)
 
         # Merge results with priority: JSON-LD > Microdata > Heuristic
         merged_data = self._merge_extraction_results(

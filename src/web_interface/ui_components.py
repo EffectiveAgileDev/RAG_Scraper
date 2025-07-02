@@ -27,7 +27,7 @@ class IndustryDropdown:
         industries = self.config.get_industry_list()
         
         # Build CSS classes
-        classes = ['industry-dropdown']
+        classes = ['industry-dropdown', 'terminal-input']
         if self.css_class:
             classes.append(self.css_class)
         if self.error:

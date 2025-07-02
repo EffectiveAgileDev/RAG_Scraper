@@ -279,6 +279,57 @@ body {
     font-style: italic;
 }
 
+/* Specific styling for select dropdowns */
+select.terminal-input,
+select.terminal-input:focus,
+select.terminal-input:hover,
+select.terminal-input:active {
+    background: #1a1a1a !important;
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23ffffff' d='M2 0L0 2h4z'/></svg>") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 1rem center !important;
+    background-size: 0.65rem auto !important;
+    padding-right: 2.5rem !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Override browser autofill styles */
+select.terminal-input:-webkit-autofill,
+select.terminal-input:-webkit-autofill:hover,
+select.terminal-input:-webkit-autofill:focus,
+select.terminal-input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px var(--bg-tertiary) inset !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+    background-color: var(--bg-tertiary) !important;
+}
+
+/* Industry dropdown specific overrides */
+select#industry.terminal-input,
+select.industry-dropdown {
+    background: var(--bg-tertiary) !important;
+    background-color: var(--bg-tertiary) !important;
+}
+
+select.terminal-input option {
+    background: var(--bg-tertiary) !important;
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    padding: 0.5rem;
+}
+
+/* Firefox specific fixes */
+@-moz-document url-prefix() {
+    select.terminal-input {
+        background-color: var(--bg-tertiary) !important;
+    }
+}
+
 .url-textarea {
     min-height: 120px;
     font-family: 'JetBrains Mono', monospace;
