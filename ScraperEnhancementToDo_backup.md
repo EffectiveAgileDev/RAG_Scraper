@@ -48,9 +48,9 @@
 - [x] Implement content personalization based on user queries
 - [x] **Achievement**: 16/16 unit tests passing using strict TDD methodology
 
-### Phase 3.4: Manual Testing Defect Resolution ✅ COMPLETE
+## Phase 3.4: Manual Testing Defect Resolution ✅ COMPLETE
 
-#### UI and Frontend Defects
+### UI and Frontend Defects
 - [x] **Industry Dropdown Styling**: Fixed white background making options unreadable
   - **Issue**: Industry dropdown had white text on white background
   - **Solution**: Added `terminal-input` CSS class, enhanced CSS with `!important` declarations
@@ -68,7 +68,7 @@
 
 - [x] **URL Splitting on Newlines/Spaces**: Fixed regex pattern for robust URL separation
   - **Issue**: URLs separated by spaces or newlines not being split correctly
-  - **Solution**: Enhanced regex pattern `/[\\n\\s]+/` for flexible URL separation
+  - **Solution**: Enhanced regex pattern `/[\n\s]+/` for flexible URL separation
   - **Test**: `TestURLSplittingDefect` (4 tests)
 
 - [x] **URL Concatenation with Quotes**: Fixed space-separated URLs being processed as single concatenated URL
@@ -76,12 +76,12 @@
   - **Solution**: Implemented regex URL extraction to handle quoted and mixed content
   - **Test**: `test_url_concatenation_with_quotes_defect`, `test_space_separated_urls_concatenation_defect`
 
-- [x] **Space-Separated URLs Bug**: Fixed double backslash (`\\\\n`) preventing proper URL splitting
-  - **Issue**: JavaScript using `split('\\\\n')` instead of `split('\\n')` for newline separation
+- [x] **Space-Separated URLs Bug**: Fixed double backslash (`\\n`) preventing proper URL splitting
+  - **Issue**: JavaScript using `split('\\n')` instead of `split('\n')` for newline separation
   - **Solution**: Applied regex URL extraction to both locations in HTML template
   - **Test**: `test_single_url_recognition_defect`, `test_unknown_error_in_scraping_defect`
 
-#### Data Extraction Defects
+### Data Extraction Defects
 - [x] **Incomplete Data Export**: Fixed missing basic info fields (address, phone, hours, website)
   - **Issue**: Export showing empty/null values for basic restaurant information
   - **Solution**: Enhanced HeuristicExtractor with JavaScript `pageData` support
@@ -107,86 +107,15 @@
   - **Solution**: Complete JavaScript extraction pipeline with structured data mapping
   - **Result**: Now extracts "Kells Irish Pub Downtown" vs "Mucca Osteria" instead of duplicate "Portland"
 
-#### Testing Coverage
+### Testing Coverage
 - [x] **Unit Tests for All Defects**: Created 28 comprehensive unit tests documenting and preventing regression
   - **Files**: `test_ui_defects.py` (18 tests), `test_data_export_defects.py` (5 tests), `test_mobimag_extraction.py` (5 tests)
   - **Coverage**: All manual testing defects documented with unit tests
   - **TDD Process**: All defects resolved using Red-Green-Refactor methodology
 
-## Phase 4: Production Features 📋 PLANNED
+## Phase 4.4: Advanced Features and Production Readiness 📋 PLANNED
 
-### Phase 4.1: User Experience Enhancements
-- [ ] Advanced filtering and search capabilities
-- [ ] Export options (JSON, CSV, PDF)
-- [ ] Data visualization and analytics dashboard
-- [ ] Scheduled scraping and automated updates
-- [ ] Email notifications and alerts
-- [ ] User preferences and customization
-
-### Phase 4.2: Enterprise Features
-- [ ] Multi-user support and access control
-- [ ] API endpoints for external integrations
-- [ ] Database storage for scraped data
-- [ ] Advanced analytics and reporting
-- [ ] White-label customization options
-- [ ] Enterprise-grade security features
-
-### Phase 4.3W: WTEG-Specific Schema Implementation ✅ COMPLETE + CLEAN CODE REFACTORED
-- [x] **WTEG Restaurant Schema**: ✅ Complete data structure with Clean Code refactoring
-  - [x] **Location**: Physical address and geographic details
-  - [x] **Cuisine**: Restaurant cuisine type and style  
-  - [x] **Brief Description**: Restaurant overview and highlights
-  - [x] **Menu Items**: Complete menu with items, descriptions, prices
-  - [x] **Click to Call**: Phone number extraction for direct calling
-  - [x] **Click to Link**: Online ordering links and platforms
-  - [x] **Services Offered**: Delivery, takeout, catering, special services
-  - [x] **Click for Website**: Official restaurant website links
-  - [x] **Click for Map**: Location mapping and directions
-  - [x] **Clean Code**: Extracted base classes, eliminated duplication, improved organization
-
-- [x] **WTEG URL Pattern Recognition**: ✅ Complete pattern-based scraping system
-  - [x] Pattern name input (e.g., "WTEG") for guide identification
-  - [x] City input (e.g., "Portland") for geographic targeting
-  - [x] URL construction: `https://mobimag.co/{pattern}/{city}/{page_id}`
-  - [x] Multi-page aggregation from page 1 through all available pages
-  - [x] Page 2+ data integration for complete restaurant profiles
-
-- [x] **WTEG JavaScript Data Extraction**: ✅ Complete mobimag.co extraction with modular design
-  - [x] Extract from pageData arrays with restaurant-specific indexing
-  - [x] Parse embedded JSON with URL decoding for complete data
-  - [x] Handle dynamic content loading for WTEG guide format
-  - [x] Maintain data fidelity without AI interpretation
-  - [x] **Clean Code**: Specialized components (Parser, Selector, Mapper, Validator)
-
-- [x] **WTEG Export Format**: ✅ Complete client-ready export with multiple formats
-  - [x] Direct mapping to WTEG schema fields
-  - [x] Preserve original text and formatting
-  - [x] Include source attribution and confidence scoring
-  - [x] RAG-ready chunking for client ChatBot integration
-  - [x] **Clean Code**: Separated formatters for different export types
-
-### Phase 4.3G: Generic AI-Powered Extraction
-- [ ] **LLM-Powered Content Analysis**: AI interpretation for unknown sites
-  - [ ] Automated field mapping for non-standard restaurant sites
-  - [ ] Intelligent content categorization using AI
-  - [ ] Context-aware data extraction from unstructured content
-  - [ ] Confidence scoring based on AI analysis quality
-
-- [ ] **Advanced Content Understanding**: AI-driven insights
-  - [ ] Menu item enhancement with nutritional context
-  - [ ] Price range analysis and competitive positioning
-  - [ ] Cuisine classification with cultural context
-  - [ ] Service offering standardization across sites
-
-- [ ] **Generic Site Adaptation**: AI learns new site patterns
-  - [ ] Dynamic schema generation for unknown restaurant sites
-  - [ ] Pattern recognition for new guide formats
-  - [ ] Adaptive extraction rules based on site structure
-  - [ ] Learning from successful extractions
-
-### Phase 4.4: Advanced Features and Production Readiness
-
-#### Demo and Licensing System
+### Demo and Licensing System
 - [ ] **Demo Version Creation**: Implement limited-feature demo with usage restrictions
   - [ ] Limit number of URLs per session (e.g., 5 URLs max)
   - [ ] Watermark exported data with "Demo Version" identifier
@@ -217,7 +146,7 @@
   - [ ] Conversion funnel analysis (demo to licensed)
   - [ ] Performance metrics per license type
 
-#### Export Metadata and RAG Integration
+### Export Metadata and RAG Integration
 - [ ] **Export Metadata/Manifest System**: Create comprehensive metadata documentation for downstream RAG systems
   - [ ] Generate schema documentation for JSON export format
   - [ ] Create field-by-field data dictionary with descriptions and types
@@ -253,7 +182,7 @@
   - [ ] Add temporal metadata (hours, seasonal info) for time-aware queries
   - [ ] Include geographic coordinates and location-based search optimization
 
-#### Repository and Security Enhancements
+### Repository and Security Enhancements
 - [ ] **Private Repository Migration**: Move from public to private GitHub repository
   - [ ] Create private repository with full history preservation
   - [ ] Update all documentation references to private repo
@@ -284,7 +213,7 @@
   - [ ] Anti-reverse engineering measures
   - [ ] License validation integration
 
-#### Enterprise Production Features
+### Enterprise Production Features
 - [ ] **Multi-tenant Architecture**: Support multiple customers with data isolation
   - [ ] Database schema with tenant isolation
   - [ ] Resource allocation per tenant
@@ -314,6 +243,46 @@
   - [ ] Data access and modification tracking
   - [ ] System event monitoring and alerting
   - [ ] Compliance reporting and export capabilities
+
+## Phase 4: Production Features 📋 PLANNED
+
+### Phase 4.1: User Experience Enhancements
+- [ ] Advanced filtering and search capabilities
+- [ ] Export options (JSON, CSV, PDF)
+- [ ] Data visualization and analytics dashboard
+- [ ] Scheduled scraping and automated updates
+- [ ] Email notifications and alerts
+- [ ] User preferences and customization
+
+### Phase 4.2: Enterprise Features
+- [ ] Multi-user support and access control
+- [ ] API endpoints for external integrations
+- [ ] Database storage for scraped data
+- [ ] Advanced analytics and reporting
+- [ ] White-label customization options
+- [ ] Enterprise-grade security features
+
+### Phase 4.3: AI Integration ⚠️ CRITICAL FOR CLIENT
+- [ ] **LLM-Powered Data Extraction**: Critical mobimag.co URLs 21/16 extraction failure
+  - [ ] Implement AI-based extraction for complex JavaScript-rendered sites
+  - [ ] Address, phone, hours, menu data extraction from mobimag URLs
+  - [ ] Handle dynamic content loading and AJAX-based data
+  - [ ] Extract complete restaurant profiles for client RAG system
+  - [ ] **BLOCKING**: Client cannot deploy without complete data extraction
+
+- [ ] **Advanced Content Analysis**: LLM-powered content analysis and insights
+  - [ ] Automated content categorization using AI
+  - [ ] Intelligent duplicate detection and merging
+  - [ ] AI-driven content quality assessment
+  - [ ] Natural language query interface
+  - [ ] Predictive analytics for content trends
+
+- [ ] **RAG-Optimized Extraction**: AI-enhanced extraction for RAG systems
+  - [ ] Generate embedding-friendly content summaries
+  - [ ] Extract semantic relationships between restaurant data
+  - [ ] Enhance menu item descriptions with AI analysis
+  - [ ] Create query-optimized data structures
+  - [ ] Validate extraction completeness with AI assessment
 
 ## Technical Debt and Improvements 🔧 ONGOING
 - [ ] Comprehensive error handling review

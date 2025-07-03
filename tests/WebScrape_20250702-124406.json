@@ -1,0 +1,61 @@
+{
+  "metadata": {
+    "generation_timestamp": "2025-07-02T12:44:06.566565",
+    "restaurant_count": 2,
+    "format_version": "1.0"
+  },
+  "restaurants": [
+    {
+      "basic_info": {
+        "name": "Canard",
+        "address": "",
+        "phone": "",
+        "hours": "",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    },
+    {
+      "basic_info": {
+        "name": "Mamma Khouri's",
+        "address": "",
+        "phone": "",
+        "hours": "",
+        "website": null
+      },
+      "additional_details": {
+        "cuisine_types": [],
+        "special_features": [],
+        "parking": null,
+        "reservations": null,
+        "menu_items": [],
+        "pricing": ""
+      },
+      "contact_info": {
+        "email": null,
+        "social_media": [],
+        "delivery_options": []
+      },
+      "characteristics": {
+        "dietary_accommodations": [],
+        "ambiance": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+"""WTEG (Where To Eat Guide) specific scraping module."""
