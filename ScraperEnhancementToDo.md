@@ -131,7 +131,7 @@
 - [ ] White-label customization options
 - [ ] Enterprise-grade security features
 
-### Phase 4.3W: WTEG-Specific Schema Implementation ✅ COMPLETE + CLEAN CODE REFACTORED
+### Phase 4.3W: WTEG-Specific Schema Implementation ✅ COMPLETE + CLEAN CODE REFACTORED + PDF PROCESSING
 - [x] **WTEG Restaurant Schema**: ✅ Complete data structure with Clean Code refactoring
   - [x] **Location**: Physical address and geographic details
   - [x] **Cuisine**: Restaurant cuisine type and style  
@@ -164,6 +164,81 @@
   - [x] Include source attribution and confidence scoring
   - [x] RAG-ready chunking for client ChatBot integration
   - [x] **Clean Code**: Separated formatters for different export types
+
+- [ ] **PDF Import Processing**: Advanced data extraction from PDF-based restaurant guides
+  - [ ] **PDF Download System**: Secure download and caching of restaurant guide PDFs
+    - [ ] Authentication handling for protected PDF sources (mobimag.co API keys)
+    - [ ] Session management for PDF viewer authentication
+    - [ ] Retry mechanisms for failed PDF downloads
+    - [ ] Local PDF caching with expiration policies
+    - [ ] PDF integrity validation and corruption detection
+  
+  - [ ] **PDF Text Extraction Engine**: Multi-library approach for robust text extraction
+    - [ ] PyMuPDF integration for high-quality text extraction
+    - [ ] pdfplumber fallback for complex layouts
+    - [ ] OCR processing (Tesseract) for image-based PDFs
+    - [ ] Text coordinate mapping for positional data extraction
+    - [ ] Table detection and structured data extraction
+  
+  - [ ] **WTEG PDF Schema Mapping**: Intelligent mapping from PDF content to WTEG schema
+    - [ ] Pattern recognition for restaurant names, addresses, phone numbers
+    - [ ] Menu section identification and item extraction
+    - [ ] Hours parsing from various text formats
+    - [ ] Service offering extraction (delivery, takeout, catering)
+    - [ ] Price range detection and normalization
+    - [ ] Website and social media link extraction
+  
+  - [ ] **Import Target System**: Enhanced input handling beyond URLs
+    - [ ] **URL Import**: Maintain current mobimag.co URL parsing and processing
+    - [ ] **Local File Import**: Support for local PDF files on network drives
+      - [ ] File path validation and security checks
+      - [ ] Network drive mounting and access handling
+      - [ ] Batch processing of multiple PDF files from directories
+      - [ ] File format validation (PDF, DOC, DOCX support)
+      - [ ] Permission and access control for network resources
+    
+    - [ ] **Import Target Validation**: Comprehensive input validation system
+      - [ ] URL format validation and accessibility testing
+      - [ ] File path existence and permission verification
+      - [ ] Content type detection and format compatibility
+      - [ ] Size limitations and memory management
+      - [ ] Virus scanning integration for uploaded files
+
+- [ ] **Single-Page Multi-Page Feature Integration**: Bring advanced features to single-page mode
+  - [ ] **JavaScript Rendering**: Enable JavaScript processing in single-page mode
+    - [ ] Browser automation integration (Playwright/Selenium)
+    - [ ] Configurable JS timeout and wait conditions
+    - [ ] Dynamic content loading detection
+    - [ ] SPA (Single Page Application) navigation handling
+    - [ ] Cookie and session state management
+  
+  - [ ] **Advanced Progress Monitoring**: Real-time progress for single-page operations
+    - [ ] Step-by-step progress indicators (Download → Parse → Extract → Export)
+    - [ ] Memory usage monitoring during PDF processing
+    - [ ] Processing time estimates based on file size
+    - [ ] Error recovery and retry progress tracking
+    - [ ] Detailed logging for troubleshooting
+  
+  - [ ] **Enhanced Error Handling**: Comprehensive error recovery for single-page mode
+    - [ ] PDF corruption detection and alternative processing
+    - [ ] Network timeout handling with exponential backoff
+    - [ ] Authentication failure recovery mechanisms
+    - [ ] Partial data extraction with quality scoring
+    - [ ] Graceful degradation for unsupported content types
+  
+  - [ ] **Configurable Extraction Options**: Fine-tuned control over single-page extraction
+    - [ ] OCR quality settings (DPI, language packs)
+    - [ ] Text extraction confidence thresholds
+    - [ ] Field-specific extraction toggles (menu/contact/hours)
+    - [ ] Output format preferences per extraction type
+    - [ ] Custom field mapping for non-standard layouts
+  
+  - [ ] **Rate Limiting and Ethics**: Responsible scraping for single-page mode
+    - [ ] Configurable delay between requests
+    - [ ] Robots.txt compliance checking
+    - [ ] User-agent rotation and request throttling
+    - [ ] Fair use monitoring and usage limits
+    - [ ] Request caching to minimize server load
 
 ### Phase 4.3G: Generic AI-Powered Extraction
 - [ ] **LLM-Powered Content Analysis**: AI interpretation for unknown sites

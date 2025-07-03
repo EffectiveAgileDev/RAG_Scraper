@@ -238,7 +238,10 @@ def register_api_routes(app, advanced_monitor, file_generator_service):
             config = ScrapingConfig(
                 urls=urls, 
                 output_directory=output_dir, 
-                file_mode=file_mode
+                file_mode=file_mode,
+                enable_javascript_rendering=enable_javascript,
+                javascript_timeout=js_timeout,
+                enable_popup_detection=enable_popup_handling
             )
 
             # Simple progress callback for basic functionality
@@ -253,7 +256,7 @@ def register_api_routes(app, advanced_monitor, file_generator_service):
             if enable_multi_page and multi_page_config:
                 max_pages = multi_page_config.get("maxPages", 50)
                 
-            scraper = RestaurantScraper(enable_multi_page=enable_multi_page)
+            scraper = RestaurantScraper(enable_multi_page=enable_multi_page, config=config)
             
             # Update the multi-page scraper with UI configuration
             if enable_multi_page and scraper.multi_page_scraper and multi_page_config:

@@ -10,6 +10,10 @@ from .pattern_matchers import (
     HoursPatternMatcher,
     RestaurantNameExtractor,
 )
+try:
+    from ..wteg.wteg_extractor import WTEGExtractor
+except ImportError:
+    WTEGExtractor = None
 
 
 @dataclass
@@ -28,6 +32,7 @@ class HeuristicExtractor:
         self.address_matcher = AddressPatternMatcher()
         self.hours_matcher = HoursPatternMatcher()
         self.name_extractor = RestaurantNameExtractor()
+        self.wteg_extractor = WTEGExtractor() if WTEGExtractor else None
 
     # Restaurant-specific keywords
     RESTAURANT_KEYWORDS = {
@@ -128,6 +133,12 @@ class HeuristicExtractor:
             soup = BeautifulSoup(html_content, "html.parser")
         except Exception:
             return []
+
+        # Check if this is a WTEG URL and use specialized extractor
+        if url and 'mobimag.co/wteg' in url:
+            wteg_result = self._extract_with_wteg(html_content, url)
+            if wteg_result:
+                return [wteg_result]
 
         # First try to extract from JavaScript pageData (for sites like mobimag.co)
         js_extraction_result = self._extract_from_javascript(html_content, url)
@@ -754,3 +765,80 @@ class HeuristicExtractor:
         extraction_data["social_media"] = social_media
         
         return extraction_data
+
+    def _extract_with_wteg(self, html_content: str, url: str) -> Optional[HeuristicExtractionResult]:
+        """Extract data using simplified WTEG approach for mobimag.co URLs."""
+        try:
+            # Since PDFs aren't accessible, extract what we can from the pageData
+            import json
+            from urllib.parse import unquote
+            
+            # Extract pageData
+            pattern = r'pageData = JSON\.parse\(decodeURIComponent\("([^"]+)"\)\)'
+            match = re.search(pattern, html_content)
+            
+            if not match:
+                return None
+            
+            # Decode pageData
+            encoded_data = match.group(1)
+            decoded_data = unquote(encoded_data)
+            page_data = json.loads(decoded_data)
+            
+            # Extract restaurant ID from URL
+            restaurant_id = self._extract_restaurant_id_from_url(url)
+            if not restaurant_id:
+                return None
+                
+            # Find restaurant by URL ID (convert to 0-based index)
+            try:
+                index = int(restaurant_id) - 1
+                if 0 <= index < len(page_data):
+                    restaurant_data = page_data[index]
+                else:
+                    return None
+            except (ValueError, IndexError):
+                return None
+            
+            # Extract basic information available
+            restaurant_name = restaurant_data.get("name", "")
+            if not restaurant_name or restaurant_name in ["None", None]:
+                return None
+            
+            # Create extraction data with available information
+            extraction_data = {
+                "name": restaurant_name,
+                "address": "⚠️ REQUIRES PDF PROCESSING: Contact details available in PDF format",
+                "phone": "⚠️ REQUIRES PDF PROCESSING: Phone number available in PDF format",
+                "hours": "⚠️ REQUIRES PDF PROCESSING: Operating hours available in PDF format", 
+                "price_range": "⚠️ REQUIRES PDF PROCESSING: Pricing available in PDF format",
+                "cuisine": "⚠️ REQUIRES PDF PROCESSING: Cuisine details available in PDF format",
+                "menu_items": {"PDF Processing Required": [
+                    "✅ Restaurant confirmed in WTEG Portland guide",
+                    f"📄 PDF available at mobimag.co: {restaurant_data.get('pdfFilePath', 'Unknown path')}",
+                    "🔧 Next step: Implement PDF text extraction to access full restaurant data",
+                    "💡 Alternative: Manual extraction or OCR processing of PDF content"
+                ]},
+                "social_media": [],
+                "pdf_available": True,
+                "data_source": "mobimag_pagedata",
+                "pdf_path": restaurant_data.get('pdfFilePath', ''),
+                "page_id": restaurant_data.get('pageID', ''),
+                "implementation_status": "PARTIAL - Name extraction working, PDF processing needed for complete data"
+            }
+            
+            # Add detailed next steps
+            extraction_data["next_steps"] = [
+                "1. Implement PDF text extraction library (PyMuPDF, pdfplumber, or similar)",
+                "2. Download PDF from mobimag.co with proper authentication/session handling",
+                "3. Extract structured data: address, phone, hours, menu items, services",
+                "4. Map extracted text to WTEG schema fields",
+                "5. Validate extraction against known restaurant data"
+            ]
+            
+            # Create extraction result with medium confidence (since we have limited data)
+            return self._create_extraction_result(extraction_data, "medium")
+            
+        except Exception as e:
+            print(f"WTEG simplified extraction error: {e}")
+            return None

@@ -59,14 +59,15 @@ class RestaurantScraper:
     """Main restaurant scraper class for Flask integration."""
 
     def __init__(
-        self, enable_batch_processing: bool = True, enable_multi_page: bool = True
+        self, enable_batch_processing: bool = True, enable_multi_page: bool = True, config=None
     ):
         """Initialize restaurant scraper with multi-strategy backend."""
-        self.multi_scraper = MultiStrategyScraper(enable_ethical_scraping=True)
+        self.multi_scraper = MultiStrategyScraper(enable_ethical_scraping=True, config=config)
         self.enable_batch_processing = enable_batch_processing
         self.enable_multi_page = enable_multi_page
         self.batch_processor = None
         self.multi_page_scraper = None
+        self.config = config
 
         if enable_batch_processing:
             batch_config = BatchConfig(
@@ -120,6 +121,10 @@ class RestaurantScraper:
         failed_urls = []
         errors = []
         multi_page_results = []
+        
+        # Update multi_scraper with config if needed
+        if config and not self.multi_scraper.config:
+            self.multi_scraper = MultiStrategyScraper(enable_ethical_scraping=True, config=config)
 
         if progress_callback:
             progress_callback("Starting restaurant data extraction...", 0)
