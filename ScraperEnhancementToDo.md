@@ -131,7 +131,7 @@
 - [ ] White-label customization options
 - [ ] Enterprise-grade security features
 
-### Phase 4.3W: WTEG-Specific Schema Implementation ✅ COMPLETE + CLEAN CODE REFACTORED + PDF PROCESSING
+### Phase 4.3W: WTEG-Specific Schema Implementation ⚠️ PARTIALLY COMPLETE (Web Scraping Only)
 - [x] **WTEG Restaurant Schema**: ✅ Complete data structure with Clean Code refactoring
   - [x] **Location**: Physical address and geographic details
   - [x] **Cuisine**: Restaurant cuisine type and style  
@@ -165,22 +165,22 @@
   - [x] RAG-ready chunking for client ChatBot integration
   - [x] **Clean Code**: Separated formatters for different export types
 
-- [ ] **PDF Import Processing**: Advanced data extraction from PDF-based restaurant guides
-  - [ ] **PDF Download System**: Secure download and caching of restaurant guide PDFs
-    - [ ] Authentication handling for protected PDF sources (mobimag.co API keys)
-    - [ ] Session management for PDF viewer authentication
-    - [ ] Retry mechanisms for failed PDF downloads
-    - [ ] Local PDF caching with expiration policies
-    - [ ] PDF integrity validation and corruption detection
+- [ ] **PDF Import Processing**: ⚠️ PARTIAL - Only PDF download from URLs implemented
+  - [x] **PDF Download System**: ✅ Basic download and caching implemented
+    - [x] Authentication handling for protected PDF sources (mobimag.co API keys)
+    - [x] Session management for PDF viewer authentication
+    - [x] Retry mechanisms for failed PDF downloads
+    - [x] Local PDF caching with expiration policies
+    - [x] PDF integrity validation and corruption detection
   
-  - [ ] **PDF Text Extraction Engine**: Multi-library approach for robust text extraction
+  - [ ] **PDF Text Extraction Engine**: ❌ NOT IMPLEMENTED
     - [ ] PyMuPDF integration for high-quality text extraction
     - [ ] pdfplumber fallback for complex layouts
     - [ ] OCR processing (Tesseract) for image-based PDFs
     - [ ] Text coordinate mapping for positional data extraction
     - [ ] Table detection and structured data extraction
   
-  - [ ] **WTEG PDF Schema Mapping**: Intelligent mapping from PDF content to WTEG schema
+  - [ ] **WTEG PDF Schema Mapping**: ❌ NOT IMPLEMENTED
     - [ ] Pattern recognition for restaurant names, addresses, phone numbers
     - [ ] Menu section identification and item extraction
     - [ ] Hours parsing from various text formats
@@ -188,17 +188,18 @@
     - [ ] Price range detection and normalization
     - [ ] Website and social media link extraction
   
-  - [ ] **Import Target System**: Enhanced input handling beyond URLs
-    - [ ] **URL Import**: Maintain current mobimag.co URL parsing and processing
-    - [ ] **Local File Import**: Support for local PDF files on network drives
+  - [ ] **Import Target System**: ❌ NOT IMPLEMENTED - No UI for file upload
+    - [x] **URL Import**: ✅ Web URL scraping works correctly
+    - [ ] **Local File Import**: ❌ No file upload UI or backend support
+      - [ ] File upload UI component
       - [ ] File path validation and security checks
       - [ ] Network drive mounting and access handling
       - [ ] Batch processing of multiple PDF files from directories
       - [ ] File format validation (PDF, DOC, DOCX support)
       - [ ] Permission and access control for network resources
     
-    - [ ] **Import Target Validation**: Comprehensive input validation system
-      - [ ] URL format validation and accessibility testing
+    - [ ] **Import Target Validation**: ❌ Only URL validation exists
+      - [x] URL format validation and accessibility testing
       - [ ] File path existence and permission verification
       - [ ] Content type detection and format compatibility
       - [ ] Size limitations and memory management
@@ -390,6 +391,22 @@
   - [ ] System event monitoring and alerting
   - [ ] Compliance reporting and export capabilities
 
+## Important Clarifications 🚨
+
+### PDF Import vs PDF Export
+- **PDF Export**: ✅ WORKING - The system can export scraped web data TO PDF format
+- **PDF Import**: ❌ NOT IMPLEMENTED - Cannot import/read PDF files despite being marked complete
+- **Local File Import**: ❌ NOT IMPLEMENTED - No UI or backend support for uploading files
+- **What Actually Works**: Only web URL scraping with export to Text/PDF/JSON formats
+
+### Current Capabilities
+1. **Web Scraping**: ✅ Fully functional for restaurant websites
+2. **Multi-page Navigation**: ✅ Can crawl related pages from a website
+3. **JavaScript Rendering**: ✅ Can handle dynamic content
+4. **Data Export**: ✅ Can export to Text, PDF, or JSON formats
+5. **PDF File Import**: ❌ Cannot read/import PDF files
+6. **Local File Upload**: ❌ No file upload functionality
+
 ## Technical Debt and Improvements 🔧 ONGOING
 - [ ] Comprehensive error handling review
 - [ ] Performance optimization for large-scale scraping
@@ -420,8 +437,17 @@
 
 ---
 
-**Current Status**: Phase 3.4 Complete - All manual testing defects resolved with comprehensive unit test coverage
-**Next Priority**: Phase 4.3 - AI Integration for critical client mobimag.co extraction failure
-**Critical Issue**: Phase 4.3 LLM-powered extraction required for client deployment
-**Achievement**: 58+ tests passing across all phases with complete TDD methodology implementation
-**Customer Impact**: ⚠️ CRITICAL - mobimag.co URLs extract names only, missing address/phone/hours/menu data required for client RAG system
+**Current Status**: Phase 4.3W Partially Complete - WTEG web scraping works, but PDF import is NOT implemented
+**Critical Gap**: PDF Import Processing marked as complete but only URL download exists - no local file support
+**Next Priority**: 
+  - Complete PDF text extraction and local file import UI for Phase 4.3W
+  - OR proceed to Phase 4.1 - User Experience Enhancements
+  - OR Phase 4.3G - Generic AI-Powered Extraction
+**Latest Achievement**: PDF Download infrastructure (commit 785616a) - but no text extraction
+**Previous Achievements**: 
+  - WTEG Implementation with Clean Code Refactoring (commit 2754077)
+  - Manual Testing Defect Resolution (commit 176a8d3)
+  - Customer Intent Mapping with TDD (commit 796f2fd)
+  - Semantic Structuring with TDD (commit 3fc1328)
+**Test Coverage**: TDD/ATDD implementation for completed features only
+**Customer Impact**: ⚠️ PARTIAL - mobimag.co web extraction works, but NO PDF file import capability despite being marked complete

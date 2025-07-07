@@ -28,13 +28,15 @@ coverage report          # Show coverage report
 
 ### Application Commands
 ```bash
-python src/app.py        # Start Flask web server (port 8080)
+python run_app.py        # Start Flask web server (port 8085) - RECOMMENDED
+python start_server.py   # Alternative startup method (port 8085)
+# Note: Do NOT use "python src/web_interface/app.py" - has import path issues
 ```
 
 ## Project Architecture
 
 ### Core Components
-- **src/web_interface/** - Flask web server providing localhost interface on port 8080
+- **src/web_interface/** - Flask web server providing localhost interface on port 8085
 - **src/scraper/** - Web scraping engine using BeautifulSoup4 and requests-html
 - **src/file_generator/** - Generates text files for RAG systems and PDF documentation
 - **src/config/** - Configuration management and user preferences
