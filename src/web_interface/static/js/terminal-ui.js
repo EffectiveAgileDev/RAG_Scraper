@@ -399,6 +399,16 @@ urlsInput.addEventListener('input', debounce(validateURLsInput, 500));
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
     
+    // Check input mode first - only process URLs in URL mode
+    const inputModeElement = document.querySelector('input[name="input_mode"]:checked');
+    const inputMode = inputModeElement ? inputModeElement.value : 'url';
+    
+    if (inputMode === 'file') {
+        console.log('File upload mode detected in terminal-ui.js - skipping URL processing');
+        updateSystemStatus('FILE_MODE // TERMINAL_UI_HANDLER_SKIPPED');
+        return;
+    }
+    
     // Extract URLs using regex to handle quotes and other text
     const urlPattern = /https?:\/\/[^\s"']+(?:\/[^\s"']*)*\/?/g;
     const urls = urlsInput.value.match(urlPattern) || [];
@@ -447,6 +457,16 @@ form.addEventListener('submit', async (e) => {
 
 // Validate button with terminal feedback
 validateBtn.addEventListener('click', () => {
+    // Check input mode first
+    const inputModeElement = document.querySelector('input[name="input_mode"]:checked');
+    const inputMode = inputModeElement ? inputModeElement.value : 'url';
+    
+    if (inputMode === 'file') {
+        updateSystemStatus('FILE_MODE // VALIDATION_NOT_APPLICABLE_TERMINAL_UI');
+        showTerminalAlert('URL validation is not applicable in file upload mode.');
+        return;
+    }
+    
     updateSystemStatus('VALIDATING_TARGETS // SCANNING_URLs...');
     validateURLsInput();
 });
@@ -471,6 +491,17 @@ clearBtn.addEventListener('click', () => {
  * Validate URLs input field and display results
  */
 async function validateURLsInput() {
+    // Check input mode first - only validate URLs in URL mode
+    const inputModeElement = document.querySelector('input[name="input_mode"]:checked');
+    const inputMode = inputModeElement ? inputModeElement.value : 'url';
+    
+    if (inputMode === 'file') {
+        // In file mode, clear any URL validation and don't validate
+        urlValidation.innerHTML = '';
+        updateSystemStatus('FILE_MODE // URL_VALIDATION_SKIPPED_TERMINAL_UI');
+        return;
+    }
+    
     // Extract URLs using regex to handle quotes and other text
     const urlPattern = /https?:\/\/[^\s"']+(?:\/[^\s"']*)*\/?/g;
     const urls = urlsInput.value.match(urlPattern) || [];

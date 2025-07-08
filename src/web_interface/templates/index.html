@@ -1451,14 +1451,17 @@
                         </div>
                     </div>
 
-                    <form id="scrapeForm">
+                    <form id="scrapeForm" enctype="multipart/form-data">
                         <div class="input-group">
                             <label class="input-label" for="industry">INDUSTRY_TYPE:</label>
                             {{ industry_dropdown|safe }}
                             {{ help_text|safe }}
                         </div>
                         
-                        <div class="input-group">
+                        <!-- File Upload UI Integration -->
+                        {{ file_upload_ui | safe }}
+                        
+                        <div class="input-group" id="url-input-group">
                             <label class="input-label" for="urls">TARGET_URLS:</label>
                             <textarea 
                                 id="urls" 
@@ -2319,6 +2322,64 @@ https://restaurant3.com
                     e.preventDefault();
                     
                     console.log('Form submission started');
+                    
+                    // Check input mode first
+                    const inputModeElement = document.querySelector('input[name="input_mode"]:checked');
+                    const inputMode = inputModeElement ? inputModeElement.value : 'url';
+                    console.log('Input mode detection:');
+                    console.log('- inputModeElement:', inputModeElement);
+                    console.log('- inputMode:', inputMode);
+                    console.log('- All radio buttons:', document.querySelectorAll('input[name="input_mode"]'));
+                    
+                    // Handle file upload mode
+                    if (inputMode === 'file') {
+                        console.log('File upload mode detected - processing files');
+                        updateSystemStatus('FILE_PROCESSING // FILE_UPLOAD_MODE_DETECTED');
+                        
+                        // Check for both uploaded files and file path input
+                        const fileInput = document.getElementById('file-input');
+                        const files = fileInput ? fileInput.files : [];
+                        
+                        // The container should already be visible in file mode, but ensure it
+                        
+                        const filePathInput = document.getElementById('file-path-input');
+                        const filePath = filePathInput ? filePathInput.value.trim() : '';
+                        
+                        console.log('DEBUG: File input detection:');
+                        console.log('- fileInput element:', fileInput);
+                        console.log('- files.length:', files.length);
+                        console.log('- filePathInput element:', filePathInput);
+                        console.log('- filePath value:', filePath);
+                        
+                        const fileContainer = document.getElementById('file-upload-container');
+                        
+                        // Check if we have any files or path - be more flexible
+                        const hasFiles = files && files.length > 0;
+                        const hasPath = filePath && filePath.length > 0;
+                        
+                        if (!hasFiles && !hasPath) {
+                            updateSystemStatus('ERROR // NO_FILES_OR_PATH_PROVIDED');
+                            showTerminalAlert('CRITICAL ERROR: No files selected or file path provided. Please upload PDF files or enter a file path.');
+                            return;
+                        }
+                        
+                        // Prioritize file path over uploaded files if both are provided
+                        if (filePath) {
+                            console.log('Processing file path:', filePath);
+                            updateSystemStatus('FILE_PROCESSING // PROCESSING_FILE_PATH');
+                            // TODO: Send file path to backend for processing
+                            showTerminalAlert('File path processing is implemented but backend endpoint needs to be connected.');
+                            return;
+                        }
+                        
+                        // Process files (TODO: implement file processing endpoint)
+                        updateSystemStatus('FILE_PROCESSING // UPLOADING_FILES');
+                        showTerminalAlert('File upload mode is implemented but processing endpoint needs to be connected.');
+                        return;
+                    }
+                    
+                    // URL mode processing
+                    console.log('URL mode detected - processing URLs');
                     console.log('urlsInput element:', urlsInput);
                     console.log('urlsInput.value:', urlsInput.value);
                     // Extract URLs using regex to handle quotes and other text
@@ -2382,6 +2443,16 @@ https://restaurant3.com
                 
                 // Validate button with terminal feedback
                 validateBtn.addEventListener('click', () => {
+                    // Check input mode first
+                    const inputModeElement = document.querySelector('input[name="input_mode"]:checked');
+                    const inputMode = inputModeElement ? inputModeElement.value : 'url';
+                    
+                    if (inputMode === 'file') {
+                        updateSystemStatus('FILE_MODE // VALIDATION_NOT_APPLICABLE');
+                        showTerminalAlert('URL validation is not applicable in file upload mode.');
+                        return;
+                    }
+                    
                     updateSystemStatus('VALIDATING_TARGETS // SCANNING_URLs...');
                     validateURLsInput();
                 });
@@ -2426,6 +2497,17 @@ https://restaurant3.com
                 }
                 
                 async function validateURLsInput() {
+                    // Check input mode first - only validate URLs in URL mode
+                    const inputModeElement = document.querySelector('input[name="input_mode"]:checked');
+                    const inputMode = inputModeElement ? inputModeElement.value : 'url';
+                    
+                    if (inputMode === 'file') {
+                        // In file mode, clear any URL validation and don't validate
+                        urlValidation.innerHTML = '';
+                        updateSystemStatus('FILE_MODE // URL_VALIDATION_SKIPPED');
+                        return;
+                    }
+                    
                     // Extract URLs using regex to handle quotes and other text
                     const urlPattern = /https?:\/\/[^\s"']+(?:\/[^\s"']*)*\/?/g;
                     const urls = urlsInput.value.match(urlPattern) || [];

@@ -8,6 +8,7 @@ from flask import Flask
 from src.web_interface.application_state import get_app_state
 from src.web_interface.api_routes import register_api_routes
 from src.web_interface.routes.main_routes import main_routes
+from src.web_interface.file_upload_routes import register_file_upload_routes
 from src.file_generator.file_generator_service import FileGeneratorService
 
 
@@ -63,6 +64,7 @@ def create_app(testing=False, upload_folder=None):
     # Register routes
     app.register_blueprint(main_routes)
     register_api_routes(app, app_state.advanced_monitor, app_state.file_generator_service)
+    register_file_upload_routes(app)
     
     # Add security headers
     @app.after_request

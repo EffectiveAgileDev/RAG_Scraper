@@ -4,6 +4,7 @@ from flask import Blueprint, render_template
 from src.config.industry_config import IndustryConfig
 from src.web_interface.session_manager import IndustrySessionManager
 from src.web_interface.ui_components import IndustryDropdown, IndustryHelpText
+from src.web_interface.file_upload_ui import FileUploadUI
 
 
 # Create blueprint for main routes
@@ -25,13 +26,18 @@ def index():
     )
     help_text = IndustryHelpText(industry=current_industry)
     
+    # Create file upload UI component
+    file_upload_ui = FileUploadUI()
+    
     # Render components
     industry_dropdown_html = industry_dropdown.render()
     help_text_html = help_text.render()
+    file_upload_ui_html = file_upload_ui.render()
     
     # Render template with component data
     return render_template(
         'index.html',
         industry_dropdown=industry_dropdown_html,
-        help_text=help_text_html
+        help_text=help_text_html,
+        file_upload_ui=file_upload_ui_html
     )
