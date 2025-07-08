@@ -17,6 +17,7 @@ pytest --cov=src         # Run tests with coverage report
 pytest tests/unit/       # Run unit tests only
 pytest tests/features/   # Run BDD/ATDD tests only
 pytest tests/test_setup.py # Validate project setup
+pytest -xvs tests/path/to/test.py::test_name  # Run single test with verbose output
 ```
 
 ### Code Quality Commands
@@ -24,12 +25,14 @@ pytest tests/test_setup.py # Validate project setup
 black src/ tests/        # Format code
 flake8 src/ tests/       # Lint code
 coverage report          # Show coverage report
+coverage html            # Generate HTML coverage report
 ```
 
 ### Application Commands
 ```bash
 python run_app.py        # Start Flask web server (port 8085) - RECOMMENDED
 python start_server.py   # Alternative startup method (port 8085)
+./start_server.sh        # Shell script startup
 # Note: Do NOT use "python src/web_interface/app.py" - has import path issues
 ```
 
@@ -37,15 +40,22 @@ python start_server.py   # Alternative startup method (port 8085)
 
 ### Core Components
 - **src/web_interface/** - Flask web server providing localhost interface on port 8085
-- **src/scraper/** - Web scraping engine using BeautifulSoup4 and requests-html
+- **src/scraper/** - Web scraping engine using BeautifulSoup4, requests-html, and Playwright
 - **src/file_generator/** - Generates text files for RAG systems and PDF documentation
 - **src/config/** - Configuration management and user preferences
+- **src/ai/** - AI/LLM integration for content enhancement
+- **src/wteg/** - Where To Eat Guide specialized module
+- **src/processors/** - Multi-modal content processors (images, PDFs)
+- **src/semantic/** - Semantic structuring for enhanced RAG output
+- **src/knowledge/** - Industry-specific knowledge database
 
 ### Technology Stack
 - **Backend**: Flask 2.3.3 web framework
-- **Scraping**: BeautifulSoup4 4.12.2, requests-html 0.10.0, html5lib
-- **Testing**: pytest with BDD support (pytest-bdd), comprehensive mocking
+- **Scraping**: BeautifulSoup4 4.12.2, requests-html 0.10.0, Playwright (JS rendering)
+- **Testing**: pytest 7.4.4 with pytest-bdd, pytest-cov (95%+ coverage requirement)
 - **Code Quality**: black formatting, flake8 linting
+- **PDF Generation**: reportlab for documentation output
+- **File Processing**: PyPDF2 for PDF import functionality
 
 ## Test-Driven Development Approach
 
@@ -60,7 +70,7 @@ When asked to implement any feature:
 1. **STOP** - Do not write implementation code first
 2. Ask for clarification on acceptance criteria if unclear
 3. Write acceptance test at user function level that FAILS
-4. Make sure that you run the acceptance tests that FAILS
+4. Run the acceptance tests to confirm they FAIL
 5. Write unit tests for supporting components that FAIL
 6. Run tests to confirm they fail (RED phase)
 7. Write minimal implementation to make tests pass (GREEN phase)
@@ -71,7 +81,9 @@ When asked to implement any feature:
 - **tests/features/** - Gherkin BDD scenarios for user stories
 - **tests/step_definitions/** - pytest-bdd step implementations
 - **tests/unit/** - Unit tests for individual components
-- **tests/test_data/** - Mock HTML samples for scraper testing
+- **tests/test_data/** - Mock HTML samples and test fixtures
+- **tests/features/pdf_import.feature** - PDF import acceptance tests
+- **tests/features/manual_test_defects.feature** - Defect resolution tests
 
 ### Development Workflow
 1. **Red Phase**: Write failing tests first (ATDD then unit tests)
@@ -90,16 +102,25 @@ RAG_Scraper is a localhost web application that scrapes restaurant websites and 
 - Dual output: text files for RAG systems, PDF for documentation
 - Rate limiting and ethical scraping compliance
 - **Phase 4.1A**: JavaScript rendering and restaurant popup handling
+- **Phase 4.3W**: WTEG (Where To Eat Guide) implementation with specialized extraction
+- **Phase 4.3W.1**: Local file upload and PDF import capabilities
+- Multi-modal processing for images and visual content
+- Semantic structuring for enhanced RAG compatibility
 
 ### Development Status
-- **Current**: Initial setup complete, ready for development
+- **Current Phase**: 4.3W.1 - Local file upload implementation complete
 - **Framework**: Goal-based Scrum sprints with Claude Code assistance
-- **Target**: 1-2 days total development time
+- **Coverage**: Maintaining 95%+ test coverage across all modules
+- **Recent Achievements**: WTEG implementation, PDF processing, file upload UI
 
 ## Important Notes
 
 - Always run tests before committing changes
 - Follow TDD workflow: write tests first, then implement
-- Use mocking extensively for external dependencies (web requests)
+- Use mocking extensively for external dependencies (web requests, file I/O)
 - Maintain test coverage targets (100% ATDD, 95%+ unit tests)
 - Implement ethical scraping practices with proper rate limiting
+- When working with new features, check existing sprint documentation in docs/sprints/
+- Configuration files are in both src/config/ and root (file_generator_config.json)
+- The project uses comprehensive error handling with custom exception classes
+- All UI components must integrate with the existing Flask templates in src/web_interface/templates/
