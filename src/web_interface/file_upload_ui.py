@@ -34,11 +34,11 @@ class InputModeToggle:
         
         html = f"""
         <div id="input-mode-toggle" class="{self.css_class}" role="radiogroup" aria-label="Input mode selection">
-            <label class="mode-option" for="input-mode-url">
+            <label class="input-mode-option" for="input-mode-url" data-input-mode="url">
                 <input type="radio" id="input-mode-url" name="input_mode" value="url" {url_checked} onchange="window.toggleFileUploadMode('url')">
                 <span>URL Mode</span>
             </label>
-            <label class="mode-option" for="input-mode-file">
+            <label class="input-mode-option" for="input-mode-file" data-input-mode="file">
                 <input type="radio" id="input-mode-file" name="input_mode" value="file" {file_checked} onchange="window.toggleFileUploadMode('file')">
                 <span>File Upload Mode</span>
             </label>
@@ -94,7 +94,7 @@ class FileUploadArea:
                 </button>
             </div>
             <input type="file" id="file-input" accept="{accept_attr}" {multiple_attr} 
-                   style="display: none;" onchange="handleFileSelect(event)">
+                   style="display: none;">
         </div>
         
         <div id="upload-queue" class="upload-queue">
@@ -124,13 +124,15 @@ class FileUploadArea:
             const uploadArea = document.getElementById('file-upload-area');
             const fileInput = document.getElementById('file-input');
             
-            if (uploadArea) {
+            if (uploadArea && !uploadArea.dataset.eventsSetup) {
                 uploadArea.addEventListener('dragover', handleDragOver);
                 uploadArea.addEventListener('drop', handleDrop);
+                uploadArea.dataset.eventsSetup = 'true';
             }
             
-            if (fileInput) {
+            if (fileInput && !fileInput.dataset.eventsSetup) {
                 fileInput.addEventListener('change', handleFileSelect);
+                fileInput.dataset.eventsSetup = 'true';
             }
         });
         
@@ -143,6 +145,12 @@ class FileUploadArea:
             event.preventDefault();
             event.currentTarget.classList.remove('drag-over');
             const files = event.dataTransfer.files;
+            
+            // Auto-switch to file mode when files are dropped
+            if (files && files.length > 0) {
+                autoSwitchToFileMode();
+            }
+            
             processFiles(files);
         }
         
@@ -150,8 +158,31 @@ class FileUploadArea:
             document.getElementById('file-input').click();
         }
         
+        function autoSwitchToFileMode() {
+            // Check if we're not already in file mode
+            const currentMode = document.querySelector('input[name="input_mode"]:checked');
+            if (!currentMode || currentMode.value !== 'file') {
+                // Switch to file mode
+                const fileRadio = document.getElementById('input-mode-file');
+                if (fileRadio) {
+                    fileRadio.checked = true;
+                    // Trigger the mode change
+                    if (window.toggleFileUploadMode) {
+                        window.toggleFileUploadMode('file');
+                    }
+                    console.log('Auto-switched to file mode due to file upload');
+                }
+            }
+        }
+        
         function handleFileSelect(event) {
             const files = event.target.files;
+            
+            // Auto-switch to file mode when files are selected
+            if (files && files.length > 0) {
+                autoSwitchToFileMode();
+            }
+            
             processFiles(files);
         }
         
@@ -404,6 +435,130 @@ class FileUploadArea:
         return css
 
 
+def get_file_upload_scripts():
+    """Get standalone JavaScript for file upload functionality.
+    
+    Returns:
+        JavaScript code as string including toggle functionality
+    """
+    # Get the JavaScript from FileUploadArea
+    upload_area = FileUploadArea()
+    area_js = upload_area.get_javascript()
+    
+    # Add the toggle functionality
+    toggle_js = """
+    // Define toggle function globally to avoid conflicts
+    window.toggleFileUploadMode = function(mode) {
+        const urlContainer = document.getElementById('url-input-group');
+        const fileContainer = document.getElementById('file-upload-container');
+        
+        if (urlContainer && fileContainer) {
+            if (mode === 'url') {
+                urlContainer.style.display = 'block';
+                fileContainer.style.display = 'none';
+                const urlsInput = document.getElementById('urls');
+                if (urlsInput) {
+                    urlsInput.required = true;
+                }
+            } else {
+                urlContainer.style.display = 'none';
+                fileContainer.style.display = 'block';
+                const urlsInput = document.getElementById('urls');
+                if (urlsInput) {
+                    urlsInput.required = false;
+                }
+            }
+        }
+    }
+    
+    // Keep backward compatibility
+    function toggleInputMode(mode) {
+        return window.toggleFileUploadMode(mode);
+    }
+    """
+    
+    # Fix radio button event handling
+    radio_fix_js = """
+    // Fix radio button event handling
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileRadio = document.getElementById('input-mode-file');
+        const urlRadio = document.getElementById('input-mode-url');
+        
+        if (fileRadio) {
+            fileRadio.addEventListener('click', function() {
+                console.log('File mode clicked');
+                window.toggleFileUploadMode('file');
+            });
+        }
+        
+        if (urlRadio) {
+            urlRadio.addEventListener('click', function() {
+                console.log('URL mode clicked');
+                window.toggleFileUploadMode('url');
+            });
+        }
+    });
+    """
+    
+    return toggle_js + "\n" + area_js + "\n" + radio_fix_js
+
+
+def get_file_upload_styles():
+    """Get standalone CSS for file upload functionality.
+    
+    Returns:
+        CSS code as string including toggle styles
+    """
+    # Get the CSS from FileUploadArea
+    upload_area = FileUploadArea()
+    area_css = upload_area.get_css()
+    
+    # Add the toggle specific CSS
+    toggle_css = """
+    #input-mode-toggle {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding: 0.5rem;
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        border: 1px solid var(--border-glow);
+    }
+    
+    .input-mode-option {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 4px;
+        transition: background 0.3s ease;
+    }
+    
+    .input-mode-option:hover {
+        background: var(--bg-tertiary);
+    }
+    
+    .input-mode-option input[type="radio"] {
+        accent-color: var(--accent-green);
+    }
+    
+    .input-mode-option span {
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+    
+    @media (max-width: 768px) {
+        #input-mode-toggle {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
+    """
+    
+    return area_css + "\n" + toggle_css
+
+
 class FileUploadUI:
     """Main file upload UI component that combines toggle and upload area."""
     
@@ -508,7 +663,7 @@ class FileUploadUI:
             border: 1px solid var(--border-glow);
         }
         
-        .mode-option {
+        .input-mode-option {
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -518,15 +673,15 @@ class FileUploadUI:
             transition: background 0.3s ease;
         }
         
-        .mode-option:hover {
+        .input-mode-option:hover {
             background: var(--bg-tertiary);
         }
         
-        .mode-option input[type="radio"] {
+        .input-mode-option input[type="radio"] {
             accent-color: var(--accent-green);
         }
         
-        .mode-option span {
+        .input-mode-option span {
             color: var(--text-primary);
             font-weight: 500;
         }

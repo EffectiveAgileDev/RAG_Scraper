@@ -4,11 +4,19 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 
-from reportlab.lib.pagesizes import letter, A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
-from reportlab.lib.colors import black, blue, gray
+try:
+    from reportlab.lib.pagesizes import letter, A4
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+    from reportlab.lib.colors import black, blue, gray
+    REPORTLAB_AVAILABLE = True
+except ImportError:
+    # Reportlab not available - PDF generation will be disabled
+    REPORTLAB_AVAILABLE = False
+    # Set dummy values to prevent import errors
+    letter = A4 = inch = black = blue = gray = None
+    SimpleDocTemplate = Paragraph = Spacer = PageBreak = ParagraphStyle = getSampleStyleSheet = None
 
 from src.scraper.multi_strategy_scraper import RestaurantData
 from src.config.file_permission_validator import FilePermissionValidator
@@ -42,7 +50,16 @@ class PDFGenerator:
 
         Args:
             config: PDF generation configuration
+            
+        Raises:
+            ImportError: If reportlab is not available
         """
+        if not REPORTLAB_AVAILABLE:
+            raise ImportError(
+                "PDF generation requires the 'reportlab' package. "
+                "Please install it with: pip install reportlab"
+            )
+            
         self.config = config
         self.permission_validator = FilePermissionValidator()
 

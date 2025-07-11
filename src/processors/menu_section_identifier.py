@@ -120,8 +120,13 @@ class MenuSectionIdentifier:
             return None
         
         # Skip restaurant names (usually contain restaurant, cafe, etc.)
-        restaurant_keywords = ['restaurant', 'cafe', 'diner', 'bistro', 'kitchen', 'grill', 'bar', 'pizza', 'place']
+        # But be more selective - only skip if it looks like a restaurant name, not a menu section
+        restaurant_keywords = ['restaurant', 'cafe', 'diner', 'bistro', 'kitchen', 'grill', 'bar', 'place']
         if any(keyword in line.lower() for keyword in restaurant_keywords):
+            return None
+        
+        # Special handling for "pizza" - only skip if it's a restaurant name, not a menu section
+        if 'pizza' in line.lower() and not any(food_keyword in line.lower() for food_keyword in ['pasta', 'food', 'menu']):
             return None
         
         # Check for all caps section headers
@@ -153,6 +158,15 @@ class MenuSectionIdentifier:
                     return {
                         'name': line,
                         'confidence': 0.8
+                    }
+        
+        # Check for lowercase section headers (case-insensitive)
+        if line.islower() and len(line) > 3:
+            for pattern in self.section_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    return {
+                        'name': line,
+                        'confidence': 0.7
                     }
         
         return None

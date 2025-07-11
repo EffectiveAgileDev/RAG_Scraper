@@ -1,0 +1,39 @@
+Web URL Scraping (Much Better Results)
+
+  ✅ Advantages:
+  1. Complete Menu Extraction: 150+ menu items extracted, including full categories
+  (breakfast, lunch, dinner, cocktails, appetizers, desserts)
+  2. Proper Restaurant Name: "Metropolitan Tavern" (complete and accurate)
+  3. Rich Data Sources: Access to live website with structured HTML, JSON-LD metadata,
+  and microdata
+  4. Social Media Links: Found Facebook and Instagram URLs
+  5. Multiple Cuisine Types: "Bbq, French, Seafood"
+  6. Comprehensive Coverage: Captures entire menu across all sections
+
+  PDF Upload Processing (Limited Results)
+
+  ❌ Limitations:
+  1. Missing Menu Items: Often empty menu_items arrays
+  2. Incomplete Names: "Coffee Shop" instead of "Fuller's Coffee Shop"
+  3. Limited Context: PDFs contain only static text, missing structured web metadata
+  4. Text Extraction Issues: PDF text parsing can miss formatting and context
+  5. No Social Media: PDFs don't contain live web links
+
+  Technical Reasons for the Difference
+
+  Web Scraping Pipeline:
+  - Uses BeautifulSoup4 and requests-html for rich HTML parsing
+  - Extracts JSON-LD structured data directly from websites
+  - Accesses microdata and semantic markup
+  - Can process dynamic content and multiple page sections
+  - Built-in restaurant-specific pattern recognition for web content
+
+  PDF Processing Pipeline:
+  - Relies on PyPDF2 text extraction (limited formatting preservation)
+  - Uses pattern recognizer on plain text (more error-prone)
+  - No access to structured metadata or web context
+  - Text may be fragmented or poorly formatted from PDF conversion
+
+  The web scraping approach leverages the restaurant's live website data structure,
+  while PDF processing works with static, potentially poorly-formatted text extraction.
+   This explains why web scraping produces much richer, more complete results.

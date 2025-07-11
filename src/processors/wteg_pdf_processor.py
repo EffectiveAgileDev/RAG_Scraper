@@ -58,8 +58,8 @@ class WTEGPDFProcessor:
         # Set contact information
         restaurant_data.click_to_call = self._create_contact_from_patterns(patterns)
         
-        # Set menu items
-        restaurant_data.menu_items = self._create_menu_items_from_sections(menu_sections)
+        # Set menu items using improved pattern recognizer instead of menu sections
+        restaurant_data.menu_items = self._create_menu_items_from_patterns(patterns)
         
         # Set services
         restaurant_data.services_offered = services
@@ -141,6 +141,29 @@ class WTEGPDFProcessor:
             contact.clickable_link = contact.format_phone_link()
         
         return contact
+    
+    def _create_menu_items_from_patterns(self, patterns: Dict[str, Any]) -> List[WTEGMenuItem]:
+        """Create menu items from improved pattern recognizer results.
+        
+        Args:
+            patterns: Extracted patterns from PatternRecognizer
+            
+        Returns:
+            List of WTEGMenuItem objects
+        """
+        menu_items = []
+        
+        # Get menu items from improved pattern recognizer
+        extracted_menu_items = patterns.get('menu_items', [])
+        
+        for item_name in extracted_menu_items:
+            menu_item = WTEGMenuItem()
+            menu_item.item_name = item_name
+            menu_item.price = ""  # Price extraction can be added if needed
+            menu_item.category = "Menu"  # Default category
+            menu_items.append(menu_item)
+        
+        return menu_items
     
     def _create_menu_items_from_sections(self, menu_sections: List[Dict[str, Any]]) -> List[WTEGMenuItem]:
         """Create menu items from menu sections.

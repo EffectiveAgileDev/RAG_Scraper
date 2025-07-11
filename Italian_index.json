@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generation_timestamp": "2025-06-24T14:26:10.654169",
+  "generation_timestamp": "2025-07-08T12:59:26.771072",
   "category": "Italian",
   "entity_count": 2,
   "entities": [
@@ -14,9 +14,9 @@
         "json-ld"
       ],
       "search_metadata": [
+        "italian",
         "restaurant",
-        "stats",
-        "italian"
+        "stats"
       ]
     },
     {
@@ -29,9 +29,9 @@
         "json-ld"
       ],
       "search_metadata": [
+        "italian",
         "restaurant",
-        "stats",
-        "italian"
+        "stats"
       ]
     }
   ],

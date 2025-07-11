@@ -143,9 +143,9 @@
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
-                    margin-bottom: 2rem;
+                    margin-bottom: 1.5rem;
                     flex-wrap: wrap;
-                    gap: 1rem;
+                    gap: 0.8rem;
                     opacity: 0.4;
                     transition: all 0.3s ease;
                 }
@@ -178,14 +178,14 @@
                 }
 
                 .flow-icon {
-                    width: 60px;
-                    height: 60px;
-                    margin: 0 auto 0.5rem;
+                    width: 45px;
+                    height: 45px;
+                    margin: 0 auto 0.4rem;
                     border-radius: 50%;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 1.5rem;
+                    font-size: 1.1rem;
                     border: 2px solid;
                     transition: all 0.3s ease;
                 }
@@ -249,6 +249,189 @@
                 .input-group {
                     margin-bottom: 2rem;
                     position: relative;
+                }
+
+                .form-row {
+                    display: flex;
+                    gap: 1rem;
+                    margin-bottom: 1rem;
+                }
+
+                .form-row .input-group {
+                    flex: 1;
+                    margin-bottom: 0;
+                }
+
+                .mode-schema-row {
+                    display: flex;
+                    gap: 1rem;
+                    margin-bottom: 1rem;
+                }
+
+                .mode-toggle-container {
+                    width: 50%;
+                }
+
+                .schema-help-container {
+                    width: 50%;
+                }
+
+                .target-urls-container {
+                    width: 100%; /* Full width within the mode-toggle-container */
+                    margin-top: 1rem; /* Space above TARGET_URLS */
+                    margin-bottom: 0; /* No bottom margin since it's nested */
+                }
+                
+                .output-dir-container {
+                    margin-top: 1rem; /* Space above OUTPUT_DIRECTORY */
+                    width: 100% !important; /* Force full width within schema-help-container */
+                }
+                
+                .output-dir-container .input-group {
+                    width: 100% !important;
+                    margin-bottom: 0 !important;
+                }
+                
+                .output-dir-container .terminal-input {
+                    width: 100% !important; /* Force full width input field */
+                    box-sizing: border-box !important;
+                    min-width: 100% !important;
+                    max-width: 100% !important;
+                }
+                
+                /* Override any flex or width constraints */
+                .schema-help-container .output-dir-container {
+                    flex: 1 1 100% !important;
+                    width: 100% !important;
+                }
+
+                .analysis-output-row {
+                    display: flex;
+                    gap: 1rem;
+                    margin-bottom: 1rem;
+                }
+                
+                /* Save Settings Styles */
+                .save-settings-row {
+                    margin: 1rem 0;
+                    padding: 1rem;
+                    background: rgba(0, 255, 136, 0.05);
+                    border: 1px solid rgba(0, 255, 136, 0.2);
+                    border-radius: 4px;
+                }
+                
+                .save-settings-toggle {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                }
+                
+                .save-settings-toggle .toggle-label {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    cursor: pointer;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.875rem;
+                    color: var(--accent-green);
+                }
+                
+                .save-settings-toggle input[type="checkbox"] {
+                    width: 20px;
+                    height: 20px;
+                    accent-color: var(--accent-green);
+                    cursor: pointer;
+                }
+                
+                .save-settings-toggle .toggle-text {
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+                
+                .save-settings-help {
+                    font-size: 0.75rem;
+                    color: var(--text-muted);
+                    line-height: 1.4;
+                }
+                
+                .save-settings-help strong {
+                    color: var(--text-secondary);
+                }
+
+                .target-analysis-container {
+                    width: 50%; /* Same level as OUTPUT_DIRECTORY */
+                }
+
+                .output-dir-container {
+                    width: 50%; /* Same level as Target Analysis */
+                }
+
+                .target-analysis-container .validation-output {
+                    margin-top: 0; /* Remove extra spacing */
+                }
+
+                .output-dir-container .input-group {
+                    margin-bottom: 0; /* Remove extra spacing */
+                }
+
+                /* Help text dropdown styling */
+                .help-header {
+                    cursor: pointer;
+                    padding: 0.5rem;
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 4px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.75rem;
+                    color: var(--text-secondary);
+                    margin-bottom: 0.5rem;
+                }
+
+                .help-header:hover {
+                    background: rgba(255, 255, 255, 0.08);
+                }
+
+                .help-content {
+                    padding: 0.5rem;
+                    background: rgba(0, 0, 0, 0.3);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 4px;
+                    font-size: 0.75rem;
+                    line-height: 1.4;
+                    display: none; /* Start hidden by default */
+                }
+
+                .help-content.hidden {
+                    display: none !important;
+                }
+
+                .help-content.visible {
+                    display: block !important;
+                }
+
+                .toggle-help {
+                    font-weight: bold;
+                    color: var(--accent-green);
+                }
+
+                /* Compact layout adjustments */
+                .mode-schema-row {
+                    margin-bottom: 1rem; /* Reduced from 2rem */
+                }
+
+                .analysis-output-row {
+                    margin-bottom: 1rem; /* Reduced from 2rem */
+                }
+
+                .input-group {
+                    margin-bottom: 1rem; /* Reduced from 2rem */
+                }
+
+                .extraction-panel {
+                    padding: 1.5rem; /* Reduced from 2rem */
                 }
 
                 .input-label {
@@ -793,11 +976,34 @@
                 }
 
                 .config-panel {
-                    overflow: hidden;
+                    overflow-y: auto;
+                    overflow-x: hidden;
                     transition: all 0.4s ease;
                     border: 1px solid rgba(255, 170, 0, 0.2);
                     border-top: none;
                     background: var(--bg-tertiary);
+                    /* Custom scrollbar for terminal theme */
+                    scrollbar-width: thin;
+                    scrollbar-color: var(--accent-green) var(--bg-secondary);
+                }
+                
+                /* Custom scrollbar styling for config panel */
+                .config-panel::-webkit-scrollbar {
+                    width: 8px;
+                }
+                
+                .config-panel::-webkit-scrollbar-track {
+                    background: var(--bg-secondary);
+                    border: 1px solid rgba(0, 255, 136, 0.1);
+                }
+                
+                .config-panel::-webkit-scrollbar-thumb {
+                    background: var(--accent-green);
+                    border: 1px solid rgba(0, 255, 136, 0.3);
+                }
+                
+                .config-panel::-webkit-scrollbar-thumb:hover {
+                    background: rgba(0, 255, 136, 0.8);
                 }
 
                 .config-panel.collapsed {
@@ -816,12 +1022,35 @@
                 .advanced-options-panel {
                     max-height: 600px;
                     opacity: 1;
-                    overflow: hidden;
+                    overflow-y: auto;
+                    overflow-x: hidden;
                     transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
                     padding: 1.5rem;
                     border: 1px solid rgba(255, 170, 0, 0.2);
                     border-top: none;
                     background: var(--bg-tertiary);
+                    /* Custom scrollbar for terminal theme */
+                    scrollbar-width: thin;
+                    scrollbar-color: var(--accent-amber) var(--bg-secondary);
+                }
+                
+                /* Custom scrollbar styling for webkit browsers */
+                .advanced-options-panel::-webkit-scrollbar {
+                    width: 8px;
+                }
+                
+                .advanced-options-panel::-webkit-scrollbar-track {
+                    background: var(--bg-secondary);
+                    border: 1px solid rgba(255, 170, 0, 0.1);
+                }
+                
+                .advanced-options-panel::-webkit-scrollbar-thumb {
+                    background: var(--accent-amber);
+                    border: 1px solid rgba(255, 170, 0, 0.3);
+                }
+                
+                .advanced-options-panel::-webkit-scrollbar-thumb:hover {
+                    background: rgba(255, 170, 0, 0.8);
                 }
 
                 .advanced-options-panel.collapsed {
@@ -1421,6 +1650,9 @@
                     opacity: 1;
                     box-shadow: 0 0 10px rgba(0, 204, 255, 0.3);
                 }
+                
+                /* File Upload Styles */
+                {{ file_upload_styles | safe }}
             </style>
         </head>
         <body>
@@ -1452,41 +1684,85 @@
                     </div>
 
                     <form id="scrapeForm" enctype="multipart/form-data">
-                        <div class="input-group">
-                            <label class="input-label" for="industry">INDUSTRY_TYPE:</label>
-                            {{ industry_dropdown|safe }}
-                            {{ help_text|safe }}
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label class="input-label" for="industry">INDUSTRY_TYPE:</label>
+                                {{ industry_dropdown|safe }}
+                                {{ help_text|safe }}
+                            </div>
+                            
+                            <!-- Restaurant Schema Type Selection -->
+                            <div class="input-group" id="restaurant-schema-type-group">
+                                {{ restaurant_schema_type_dropdown|safe }}
+                            </div>
                         </div>
                         
-                        <!-- File Upload UI Integration -->
-                        {{ file_upload_ui | safe }}
-                        
-                        <div class="input-group" id="url-input-group">
-                            <label class="input-label" for="urls">TARGET_URLS:</label>
-                            <textarea 
-                                id="urls" 
-                                name="urls" 
-                                class="terminal-input url-textarea"
-                                placeholder="https://restaurant1.com
+                        <!-- Mode selector and Schema help text on same row -->
+                        <div class="mode-schema-row">
+                            <div class="mode-toggle-container">
+                                {{ input_mode_toggle | safe }}
+                                
+                                <!-- TARGET_URLS on the left -->
+                                <div class="target-urls-container">
+                                    <div class="input-group" id="url-input-group">
+                                        <label class="input-label" for="urls">TARGET_URLS:</label>
+                                        <textarea 
+                                            id="urls" 
+                                            name="urls" 
+                                            class="terminal-input url-textarea"
+                                            placeholder="https://restaurant1.com
 https://restaurant2.com
 https://restaurant3.com
 // Enter restaurant URLs to extract..."
-                                required></textarea>
-                            <div id="urlValidation" class="validation-output"></div>
+                                            required></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="schema-help-container">
+                                {{ restaurant_schema_type_help_text|safe }}
+                                
+                                <!-- OUTPUT_DIRECTORY under Schema Type Information -->
+                                <div class="output-dir-container">
+                                    <div class="input-group">
+                                        <label class="input-label" for="outputDir">OUTPUT_DIRECTORY:</label>
+                                        <input 
+                                            type="text" 
+                                            id="outputDir" 
+                                            name="outputDir" 
+                                            class="terminal-input"
+                                            placeholder="~/Downloads // Leave empty for default">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
-                        <div class="input-group">
-                            <label class="input-label" for="outputDir">OUTPUT_DIRECTORY:</label>
-                            <input 
-                                type="text" 
-                                id="outputDir" 
-                                name="outputDir" 
-                                class="terminal-input"
-                                placeholder="~/Downloads // Leave empty for default">
+                        <!-- Target analysis container -->
+                        <div class="analysis-output-row">
+                            <div class="target-analysis-container">
+                                <div id="urlValidation" class="validation-output"></div>
+                            </div>
                         </div>
+                        
+                        <!-- File Upload Area (initially hidden) -->
+                        <div id="file-upload-container" style="display: none;">
+                            {{ file_upload_area | safe }}
+                        </div>
+                        
+                        <!-- Action Bar -->
+                        <div class="action-bar">
+                            <button type="submit" form="scrapeForm" id="submitBtn" class="cmd-button primary">EXECUTE_EXTRACTION</button>
+                            <button type="button" id="validateBtn" class="cmd-button">VALIDATE_TARGETS</button>
+                            <button type="button" id="clearBtn" class="cmd-button">RESET_TERMINAL</button>
+                        </div>
+                        
+                        <!-- Save Settings Toggle -->
+                        <div class="save-settings-row">
+                            {{ save_settings_toggle | safe }}
+                        </div>
+                        
 
                         <!-- Multi-Page Configuration Panel -->
-                        <div class="input-group">
+                        <div class="input-group" data-section="scraping-mode">
                             <div class="scraping-mode-selector">
                                 <label class="input-label">SCRAPING_MODE:</label>
                                 <div class="mode-toggle-group">
@@ -1502,6 +1778,117 @@ https://restaurant3.com
                                         <span class="mode-title">MULTI_PAGE</span>
                                         <span class="mode-desc">Discover and crawl related pages</span>
                                     </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Single Page Configuration Panel -->
+                            <div class="config-panel-header" onclick="toggleSinglePageConfig()" id="singlePageHeader" style="display: block;">
+                                <label class="input-label config-toggle">
+                                    <span class="config-icon">⚙️</span>
+                                    SINGLE_PAGE_CONFIG
+                                    <span class="expand-icon" id="singleConfigExpandIcon">▼</span>
+                                </label>
+                            </div>
+                            <div id="singlePageConfig" class="config-panel collapsed">
+                                <div class="config-grid">
+                                    <!-- JavaScript Rendering Options -->
+                                    <div class="config-item">
+                                        <label class="config-label">
+                                            <input 
+                                                type="checkbox" 
+                                                id="singleEnableJavaScript" 
+                                                name="enableJavaScript" 
+                                                class="terminal-checkbox" />
+                                            ENABLE_JAVASCRIPT_RENDERING
+                                        </label>
+                                        <div class="config-desc">Enable JavaScript rendering for dynamic content</div>
+                                    </div>
+                                    
+                                    <div class="config-item">
+                                        <label class="config-label" for="singleJsTimeout">JS_TIMEOUT_SECONDS:</label>
+                                        <input 
+                                            type="range" 
+                                            id="singleJsTimeout" 
+                                            name="jsTimeout" 
+                                            class="terminal-slider"
+                                            value="30"
+                                            min="10"
+                                            max="120"
+                                            step="10" />
+                                        <div class="slider-value">Timeout: <span id="singleJsTimeoutValue">30s</span></div>
+                                        <div class="config-desc">Maximum time to wait for JavaScript content</div>
+                                    </div>
+                                    
+                                    <!-- Popup Handling -->
+                                    <div class="config-item">
+                                        <label class="config-label">
+                                            <input 
+                                                type="checkbox" 
+                                                id="singleEnablePopupHandling" 
+                                                name="enablePopupHandling" 
+                                                class="terminal-checkbox" 
+                                                checked />
+                                            ENABLE_POPUP_HANDLING
+                                        </label>
+                                        <div class="config-desc">Auto-handle restaurant popups (age verification, location, etc.)</div>
+                                    </div>
+                                    
+                                    <!-- Advanced Options Section -->
+                                    <div class="config-section-divider"></div>
+                                    <div class="config-item advanced-options-header">
+                                        <div class="config-toggle-header" onclick="toggleSinglePageAdvancedOptions()">
+                                            <span class="config-label">🔧 ADVANCED_OPTIONS</span>
+                                            <span class="expand-icon" id="singleAdvancedOptionsIcon">▼</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="singleAdvancedOptionsPanel" class="advanced-options-panel collapsed">
+                                        <!-- Request Timeout -->
+                                        <div class="config-item">
+                                            <label class="config-label" for="singleRequestTimeout">REQUEST_TIMEOUT_SECONDS:</label>
+                                            <input 
+                                                type="number" 
+                                                id="singleRequestTimeout" 
+                                                name="requestTimeout" 
+                                                class="terminal-input config-input"
+                                                value="30"
+                                                min="5"
+                                                max="300"
+                                                step="5" />
+                                            <div class="config-range-indicator">Range: 5-300 seconds</div>
+                                            <div class="config-desc">Maximum time to wait for each page request</div>
+                                        </div>
+                                        
+                                        <!-- Concurrent Requests -->
+                                        <div class="config-item">
+                                            <label class="config-label" for="singleConcurrentRequests">CONCURRENT_REQUESTS:</label>
+                                            <input 
+                                                type="range" 
+                                                id="singleConcurrentRequests" 
+                                                name="concurrentRequests" 
+                                                class="terminal-slider"
+                                                value="5"
+                                                min="1"
+                                                max="10"
+                                                step="1" />
+                                            <div class="slider-value">Concurrent: <span id="singleConcurrentRequestsValue">5</span></div>
+                                            <div class="config-desc">Number of simultaneous requests (be respectful to servers)</div>
+                                        </div>
+                                        
+                                        <!-- Follow Redirects -->
+                                        <div class="config-item">
+                                            <label class="config-label">
+                                                <input 
+                                                    type="checkbox" 
+                                                    id="singleFollowRedirects" 
+                                                    name="followRedirects" 
+                                                    class="terminal-checkbox" 
+                                                    checked />
+                                                FOLLOW_REDIRECTS
+                                            </label>
+                                            <div class="config-desc">Follow HTTP redirects to final destination</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -1777,12 +2164,6 @@ https://restaurant3.com
                                 </label>
                             </div>
                         </div>
-                        
-                        <div class="action-bar">
-                            <button type="submit" id="submitBtn" class="cmd-button primary">EXECUTE_EXTRACTION</button>
-                            <button type="button" id="validateBtn" class="cmd-button">VALIDATE_TARGETS</button>
-                            <button type="button" id="clearBtn" class="cmd-button">RESET_TERMINAL</button>
-                        </div>
                     </form>
                 </div>
                 
@@ -1907,7 +2288,25 @@ https://restaurant3.com
                     
                     // Force dropdown styling
                     forceDropdownStyling();
+                    
+                    // Initialize help text to be hidden
+                    initializeHelpText();
                 });
+                
+                function initializeHelpText() {
+                    const schemaHelpStatic = document.getElementById('schema-type-help-static');
+                    if (schemaHelpStatic) {
+                        const helpContent = schemaHelpStatic.querySelector('.help-content');
+                        const toggleArrow = schemaHelpStatic.querySelector('.toggle-help');
+                        
+                        if (helpContent && toggleArrow) {
+                            helpContent.style.display = 'none'; // Force hidden with inline style
+                            helpContent.classList.add('hidden');
+                            helpContent.classList.remove('visible');
+                            toggleArrow.textContent = '▶';
+                        }
+                    }
+                }
 
                 function forceDropdownStyling() {
                     // Force all select elements to have dark background
@@ -2123,6 +2522,34 @@ https://restaurant3.com
                         display.textContent = slider.value;
                     }
                 }
+                
+                // Toggle help text visibility for schema type information
+                function toggleHelpText() {
+                    console.log('toggleHelpText called');
+                    const schemaHelpStatic = document.getElementById('schema-type-help-static');
+                    console.log('schemaHelpStatic element:', schemaHelpStatic);
+                    if (schemaHelpStatic) {
+                        const helpContent = schemaHelpStatic.querySelector('.help-content');
+                        const toggleArrow = schemaHelpStatic.querySelector('.toggle-help');
+                        console.log('helpContent:', helpContent, 'toggleArrow:', toggleArrow);
+                        
+                        if (helpContent && toggleArrow) {
+                            if (helpContent.style.display === 'none' || helpContent.classList.contains('hidden')) {
+                                console.log('Showing help content');
+                                helpContent.style.display = 'block';
+                                helpContent.classList.remove('hidden');
+                                helpContent.classList.add('visible');
+                                toggleArrow.textContent = '▼';
+                            } else {
+                                console.log('Hiding help content');
+                                helpContent.style.display = 'none';
+                                helpContent.classList.add('hidden');
+                                helpContent.classList.remove('visible');
+                                toggleArrow.textContent = '▶';
+                            }
+                        }
+                    }
+                }
 
                 function getAdvancedOptionsConfig() {
                     return {
@@ -2268,6 +2695,8 @@ https://restaurant3.com
                     const modeOptions = document.querySelectorAll('.mode-option');
                     const multiPageHeader = document.getElementById('multiPageHeader');
                     const multiPageConfig = document.getElementById('multiPageConfig');
+                    const singlePageHeader = document.getElementById('singlePageHeader');
+                    const singlePageConfig = document.getElementById('singlePageConfig');
                     
                     modeOptions.forEach(option => {
                         option.addEventListener('click', function() {
@@ -2279,18 +2708,33 @@ https://restaurant3.com
                             const radio = this.querySelector('input[type="radio"]');
                             radio.checked = true;
                             
-                            // Show/hide multi-page configuration
+                            // Show/hide configuration panels based on mode
                             const mode = radio.value;
                             if (mode === 'multi') {
+                                // Show multi-page config, hide single-page config
                                 multiPageHeader.style.display = 'block';
+                                singlePageHeader.style.display = 'none';
+                                
+                                // Collapse single-page config if it was expanded
+                                if (singlePageConfig) {
+                                    singlePageConfig.classList.add('collapsed');
+                                    const singleExpandIcon = document.getElementById('singleConfigExpandIcon');
+                                    if (singleExpandIcon) singleExpandIcon.classList.remove('expanded');
+                                }
+                                
                                 updateSystemStatus('MULTI_PAGE_MODE // ADVANCED_CRAWLING_ENABLED');
                             } else {
+                                // Show single-page config, hide multi-page config
+                                singlePageHeader.style.display = 'block';
                                 multiPageHeader.style.display = 'none';
+                                
+                                // Collapse multi-page config if it was expanded
                                 if (multiPageConfig) {
                                     multiPageConfig.classList.add('collapsed');
                                     const expandIcon = document.getElementById('configExpandIcon');
                                     if (expandIcon) expandIcon.classList.remove('expanded');
                                 }
+                                
                                 updateSystemStatus('SINGLE_PAGE_MODE // DIRECT_URL_PROCESSING');
                             }
                         });
@@ -2367,14 +2811,52 @@ https://restaurant3.com
                         if (filePath) {
                             console.log('Processing file path:', filePath);
                             updateSystemStatus('FILE_PROCESSING // PROCESSING_FILE_PATH');
-                            // TODO: Send file path to backend for processing
-                            showTerminalAlert('File path processing is implemented but backend endpoint needs to be connected.');
+                            
+                            // Process file path directly (simulate file upload for backend)
+                            const filePathData = {
+                                file_paths: [filePath],
+                                industry: getSelectedIndustry()
+                            };
+                            
+                            fetch('/api/process-file-path', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(filePathData)
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    showTerminalAlert('File path processing completed successfully.');
+                                    updateSystemStatus('FILE_PROCESSING // COMPLETED');
+                                } else {
+                                    showTerminalAlert('File path processing failed: ' + data.error);
+                                    updateSystemStatus('FILE_PROCESSING // ERROR');
+                                }
+                            })
+                            .catch(error => {
+                                showTerminalAlert('File path processing failed: ' + error.message);
+                                updateSystemStatus('FILE_PROCESSING // ERROR');
+                            });
                             return;
                         }
                         
-                        // Process files (TODO: implement file processing endpoint)
+                        // Process uploaded files using existing API endpoints
                         updateSystemStatus('FILE_PROCESSING // UPLOADING_FILES');
-                        showTerminalAlert('File upload mode is implemented but processing endpoint needs to be connected.');
+                        
+                        // Get uploaded files from queue
+                        const uploadQueue = document.getElementById('upload-queue');
+                        const fileItems = uploadQueue.querySelectorAll('.file-item');
+                        
+                        if (fileItems.length === 0) {
+                            showTerminalAlert('No files selected for processing.');
+                            updateSystemStatus('FILE_PROCESSING // NO_FILES');
+                            return;
+                        }
+                        
+                        // Upload files first, then process them
+                        processUploadedFiles();
                         return;
                     }
                     
@@ -2496,6 +2978,127 @@ https://restaurant3.com
                     }, 4000);
                 }
                 
+                async function processUploadedFiles() {
+                    try {
+                        // Get file input element
+                        const fileInput = document.getElementById('file-input');
+                        if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                            showTerminalAlert('No files selected for upload.');
+                            return;
+                        }
+                        
+                        // Create FormData for file upload
+                        const formData = new FormData();
+                        const files = Array.from(fileInput.files);
+                        
+                        // Add files to FormData
+                        files.forEach(file => {
+                            formData.append('files', file);
+                        });
+                        
+                        updateSystemStatus('FILE_PROCESSING // UPLOADING_FILES');
+                        
+                        // Upload files first
+                        const uploadResponse = await fetch('/api/upload/batch', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const uploadResult = await uploadResponse.json();
+                        
+                        if (!uploadResult.success) {
+                            showTerminalAlert('File upload failed: ' + uploadResult.error);
+                            updateSystemStatus('FILE_PROCESSING // UPLOAD_ERROR');
+                            return;
+                        }
+                        
+                        updateSystemStatus('FILE_PROCESSING // PROCESSING_FILES');
+                        
+                        // Process uploaded files
+                        const processResponse = await fetch('/api/process-uploaded-files-for-rag', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                file_ids: uploadResult.file_ids,
+                                file_paths: [],
+                                output_dir: '',
+                                file_mode: 'single',
+                                file_format: document.querySelector('input[name="fileFormat"]:checked').value,
+                                json_field_selections: (() => {
+                                    const fileFormat = document.querySelector('input[name="fileFormat"]:checked').value;
+                                    if (fileFormat === 'json') {
+                                        const selectedFields = Array.from(document.querySelectorAll('input[name="jsonFields"]:checked'))
+                                            .map(input => input.value);
+                                        return selectedFields.length > 0 ? selectedFields : null;
+                                    }
+                                    return null;
+                                })(),
+                                scraping_mode: 'single',
+                                multi_page_config: {},
+                                industry: getSelectedIndustry(),
+                                schema_type: getSelectedSchemaType()
+                            })
+                        });
+                        
+                        const processResult = await processResponse.json();
+                        
+                        if (processResult.success) {
+                            showTerminalAlert(`Successfully processed ${processResult.processed_count} files.`);
+                            updateSystemStatus('FILE_PROCESSING // COMPLETED');
+                            
+                            
+                            // Show processing results using the same function as URL scraping
+                            showResults(processResult, true);
+                        } else {
+                            showTerminalAlert('File processing failed: ' + processResult.error);
+                            updateSystemStatus('FILE_PROCESSING // PROCESSING_ERROR');
+                        }
+                        
+                    } catch (error) {
+                        showTerminalAlert('File processing failed: ' + error.message);
+                        updateSystemStatus('FILE_PROCESSING // ERROR');
+                    }
+                }
+                
+                function showFileProcessingResults(data) {
+                    const resultsContainer = document.getElementById('results-container');
+                    const noResults = document.getElementById('no-results');
+                    
+                    if (resultsContainer) {
+                        resultsContainer.style.display = 'block';
+                        noResults.style.display = 'none';
+                        
+                        let html = `
+                            <div class="results-header">
+                                <h3>File Processing Results</h3>
+                                <p>Processed ${data.processed_count} files successfully</p>
+                            </div>
+                        `;
+                        
+                        if (data.results) {
+                            data.results.forEach((result, index) => {
+                                const status = result.success ? 'SUCCESS' : 'FAILED';
+                                const statusClass = result.success ? 'success' : 'error';
+                                
+                                html += `
+                                    <div class="file-result ${statusClass}">
+                                        <h4>File ${index + 1} - ${status}</h4>
+                                        ${result.success ? 
+                                            `<p>Method: ${result.method_used}</p>
+                                             <p>Pages: ${result.page_count}</p>` :
+                                            `<p>Error: ${result.error}</p>`
+                                        }
+                                    </div>
+                                `;
+                            });
+                        }
+                        
+                        resultsContainer.innerHTML = html;
+                    }
+                }
+                
                 async function validateURLsInput() {
                     // Check input mode first - only validate URLs in URL mode
                     const inputModeElement = document.querySelector('input[name="input_mode"]:checked');
@@ -2598,7 +3201,9 @@ https://restaurant3.com
                                 multi_page_config: multiPageConfig,
                                 enableJavaScript: document.getElementById('enableJavaScript')?.checked || false,
                                 jsTimeout: parseInt(document.getElementById('jsTimeout')?.value || '30'),
-                                enablePopupHandling: document.getElementById('enablePopupHandling')?.checked || true
+                                enablePopupHandling: document.getElementById('enablePopupHandling')?.checked || true,
+                                schema_type: getSelectedSchemaType(),
+                                restw_schema: getSelectedSchemaType() === 'RestW'  // Backwards compatibility
                             })
                         });
                         
@@ -2610,6 +3215,7 @@ https://restaurant3.com
                         console.log('API Response:', data);
                         console.log('Processed count:', data.processed_count);
                         console.log('Sites data:', data.sites_data);
+                        console.log('Output files:', data.output_files);
                         
                         if (data.success) {
                             updateSystemStatus(`EXTRACTION_COMPLETE // ${data.processed_count || 0}_TARGETS_PROCESSED`);
@@ -2805,6 +3411,27 @@ https://restaurant3.com
                     
                     let html = '';
                     
+                    // Add output files section if available
+                    if (data.output_files && data.output_files.length > 0) {
+                        html += `<div style="margin-bottom: 1rem;">${terminalLog('Generated output files:', 'info')}</div>`;
+                        html += '<div class="file-links" style="margin-bottom: 1.5rem;">';
+                        data.output_files.forEach(file => {
+                            const fileName = file.split('/').pop();
+                            const fileExtension = fileName.split('.').pop().toLowerCase();
+                            
+                            // For text files, create a view link that opens in browser
+                            // For PDF files, create a download link
+                            if (fileExtension === 'txt' || fileExtension === 'json') {
+                                const viewUrl = `/api/view-file/${encodeURIComponent(fileName)}`;
+                                html += `<a href="${viewUrl}" target="_blank" class="file-link">${fileName}</a>`;
+                            } else {
+                                const downloadUrl = `/api/download/${encodeURIComponent(fileName)}`;
+                                html += `<a href="${downloadUrl}" target="_blank" class="file-link">${fileName}</a>`;
+                            }
+                        });
+                        html += '</div>';
+                    }
+                    
                     sitesData.forEach((siteData, index) => {
                         html += generateSiteResultHTML(siteData, index, scrapingMode);
                     });
@@ -2833,8 +3460,17 @@ https://restaurant3.com
                         html += '<div class="file-links">';
                         data.output_files.forEach(file => {
                             const fileName = file.split('/').pop();
-                            const downloadUrl = `/api/download/${encodeURIComponent(fileName)}`;
-                            html += `<a href="${downloadUrl}" target="_blank" class="file-link">${fileName}</a>`;
+                            const fileExtension = fileName.split('.').pop().toLowerCase();
+                            
+                            // For text files, create a view link that opens in browser
+                            // For PDF files, create a download link
+                            if (fileExtension === 'txt' || fileExtension === 'json') {
+                                const viewUrl = `/api/view-file/${encodeURIComponent(fileName)}`;
+                                html += `<a href="${viewUrl}" target="_blank" class="file-link">${fileName}</a>`;
+                            } else {
+                                const downloadUrl = `/api/download/${encodeURIComponent(fileName)}`;
+                                html += `<a href="${downloadUrl}" target="_blank" class="file-link">${fileName}</a>`;
+                            }
                         });
                         html += '</div>';
                     }
@@ -3178,6 +3814,86 @@ https://restaurant3.com
                     const modeInput = document.querySelector('input[name="scrapingMode"]:checked');
                     return modeInput ? modeInput.value : 'single';
                 }
+                
+                function getSelectedIndustry() {
+                    const industrySelect = document.getElementById('industry');
+                    return industrySelect ? industrySelect.value : 'restaurant';
+                }
+                
+                function getSelectedSchemaType() {
+                    const schemaTypeDropdown = document.getElementById('schema-type-dropdown');
+                    return schemaTypeDropdown ? schemaTypeDropdown.value : 'Restaurant';
+                }
+                
+                function handleSchemaTypeChange(schemaType) {
+                    console.log('Schema type changed to:', schemaType);
+                    
+                    // Update help text based on schema type
+                    const helpTextElement = document.getElementById('schema-type-help-static');
+                    if (helpTextElement) {
+                        // Update help text content dynamically
+                        updateSchemaTypeHelpText(schemaType);
+                    }
+                    
+                    // Show/hide RestW-specific options if they exist
+                    const restwOptions = document.querySelectorAll('.restw-specific');
+                    restwOptions.forEach(option => {
+                        if (schemaType === 'RestW') {
+                            option.style.display = 'block';
+                        } else {
+                            option.style.display = 'none';
+                        }
+                    });
+                    
+                    // Update dropdown selection (for consistency)
+                    const dropdown = document.getElementById('schema-type-dropdown');
+                    if (dropdown && dropdown.value !== schemaType) {
+                        dropdown.value = schemaType;
+                    }
+                }
+                
+                function updateSchemaTypeHelpText(schemaType) {
+                    const helpTextElement = document.getElementById('schema-type-help-static');
+                    if (!helpTextElement) return;
+                    
+                    // Find the content div inside the static element
+                    const contentDiv = helpTextElement.querySelector('.help-content');
+                    if (!contentDiv) return;
+                    
+                    let content = '';
+                    if (schemaType === 'Restaurant') {
+                        content = `
+                            <h4>Restaurant Schema - Standard Extraction</h4>
+                            <p>Standard restaurant data extraction provides comprehensive information about restaurants including:</p>
+                            <ul>
+                                <li><strong>Basic Information:</strong> Restaurant name, description, and cuisine type</li>
+                                <li><strong>Menu Information:</strong> Menu items, prices, and categories</li>
+                                <li><strong>Location and Contact:</strong> Address, phone number, and website</li>
+                                <li><strong>Business Hours:</strong> Operating hours and special schedules</li>
+                                <li><strong>Services:</strong> Available services like delivery, takeout, and reservations</li>
+                            </ul>
+                            <p>This schema provides reliable extraction for most restaurant websites and documents.</p>
+                        `;
+                    } else if (schemaType === 'RestW') {
+                        content = `
+                            <h4>RestW Schema - Enhanced Restaurant Data</h4>
+                            <p>Enhanced restaurant data extraction with specialized fields and advanced processing:</p>
+                            <ul>
+                                <li><strong>Structured Location Data:</strong> Detailed address formatting with neighborhood information</li>
+                                <li><strong>Advanced Menu Item Extraction:</strong> Menu items with detailed categorization and pricing</li>
+                                <li><strong>Service Offerings:</strong> Comprehensive service information including delivery zones</li>
+                                <li><strong>Enhanced Contact Info:</strong> Multiple contact methods with formatted display</li>
+                                <li><strong>Web Links:</strong> Social media links, online menus, and reservation systems</li>
+                            </ul>
+                            <p>This schema provides enhanced extraction capabilities for complex restaurant data.</p>
+                        `;
+                    }
+                    
+                    const helpContent = helpTextElement.querySelector('.help-content');
+                    if (helpContent) {
+                        helpContent.innerHTML = content;
+                    }
+                }
 
                 // Page Relationship Functions
                 function generateRelationshipTree(pages, siteIndex) {
@@ -3339,6 +4055,24 @@ https://restaurant3.com
                         timeout = setTimeout(later, wait);
                     };
                 }
+                
+                function toggleSinglePageConfig() {
+                    const configPanel = document.getElementById('singlePageConfig');
+                    const expandIcon = document.getElementById('singleConfigExpandIcon');
+                    const header = document.getElementById('singlePageHeader');
+                    
+                    if (configPanel.classList.contains('collapsed')) {
+                        configPanel.classList.remove('collapsed');
+                        expandIcon.classList.add('expanded');
+                        if (header) header.setAttribute('aria-expanded', 'true');
+                        console.log('Single page config expanded');
+                    } else {
+                        configPanel.classList.add('collapsed');
+                        expandIcon.classList.remove('expanded');
+                        if (header) header.setAttribute('aria-expanded', 'false');
+                        console.log('Single page config collapsed');
+                    }
+                }
 
                 // Add CSS animations for terminal effects
                 const styleSheet = document.createElement('style');
@@ -3359,6 +4093,12 @@ https://restaurant3.com
                     }
                 `;
                 document.head.appendChild(styleSheet);
+                
+                // File Upload Scripts
+                {{ file_upload_scripts | safe }}
+                
+                // Save Settings Scripts
+                {{ save_settings_javascript | safe }}
             </script>
         </body>
         </html>

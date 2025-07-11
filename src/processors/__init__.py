@@ -1,1 +1,1 @@
-"""PDF processing components for restaurant data extraction."""
+"""Import processing components for restaurant data extraction from various sources."""

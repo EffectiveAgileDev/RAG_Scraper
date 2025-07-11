@@ -57,6 +57,15 @@ class ScrapingConfig:
     enable_browser_automation: bool = False  # Enable Playwright browser automation
     browser_type: str = "chromium"  # 'chromium', 'firefox', 'webkit'
     headless_browser: bool = True
+    
+    # Schema type configuration
+    schema_type: str = "Restaurant"  # 'Restaurant' or 'RestW'
+    
+    # RestW schema configuration (deprecated - use schema_type instead)
+    enable_restw_schema: bool = False
+    
+    # Batch processing configuration
+    force_batch_processing: bool = False
 
     # Default fields that are always extracted
     default_fields: List[str] = field(
@@ -127,6 +136,16 @@ class ScrapingConfig:
         # Validate rate limit
         if self.rate_limit_delay < 0:
             raise ValueError("rate_limit_delay cannot be negative")
+        
+        # Validate schema type
+        if self.schema_type not in ["Restaurant", "RestW"]:
+            raise ValueError("schema_type must be 'Restaurant' or 'RestW'")
+        
+        # Backwards compatibility: sync enable_restw_schema with schema_type
+        if self.schema_type == "RestW":
+            self.enable_restw_schema = True
+        else:
+            self.enable_restw_schema = False
 
         # Validate multi-page configuration
         if self.max_pages_per_site <= 0:
@@ -212,6 +231,9 @@ class ScrapingConfig:
             "enable_browser_automation": self.enable_browser_automation,
             "browser_type": self.browser_type,
             "headless_browser": self.headless_browser,
+            "schema_type": self.schema_type,
+            "enable_restw_schema": self.enable_restw_schema,
+            "force_batch_processing": self.force_batch_processing,
         }
 
         # Add optional fields if set

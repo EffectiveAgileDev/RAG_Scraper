@@ -11,16 +11,16 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 # Mock reportlab to avoid import issues
-with patch.dict('sys.modules', {
-    'reportlab': MagicMock(),
-    'reportlab.lib': MagicMock(),
-    'reportlab.lib.pagesizes': MagicMock(),
-    'reportlab.platypus': MagicMock(),
-    'reportlab.lib.styles': MagicMock(),
-    'reportlab.lib.units': MagicMock()
-}):
-    from web_interface.app import app
-    from scraper.restaurant_scraper import RestaurantScraper
+import sys
+sys.modules['reportlab'] = MagicMock()
+sys.modules['reportlab.lib'] = MagicMock()
+sys.modules['reportlab.lib.pagesizes'] = MagicMock()
+sys.modules['reportlab.platypus'] = MagicMock()
+sys.modules['reportlab.lib.styles'] = MagicMock()
+sys.modules['reportlab.lib.units'] = MagicMock()
+
+from web_interface.app_factory import create_app
+from scraper.restaurant_scraper import RestaurantScraper
 
 
 class TestEnhancedPageStatusDisplay:
@@ -28,7 +28,7 @@ class TestEnhancedPageStatusDisplay:
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.app = app
+        self.app = create_app()
         self.app.config['TESTING'] = True
         self.client = self.app.test_client()
         

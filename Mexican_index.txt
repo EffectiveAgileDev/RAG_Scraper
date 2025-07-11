@@ -1,7 +1,7 @@
 Mexican Category Index
 ======================
 
-Generated: 2025-06-24T14:26:10.654755
+Generated: 2025-07-08T12:59:26.771711
 Category: Mexican
 Entity Count: 1
 

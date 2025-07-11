@@ -103,6 +103,15 @@ class EnhancedTextFileGenerator(BaseFileGenerator):
             semantic_chunker=self.semantic_chunker,
             content_formatter=self.content_formatter,
         )
+        
+        # Ensure orchestrator has access to proper file handling methods
+        self._setup_orchestrator_file_handling()
+
+    def _setup_orchestrator_file_handling(self):
+        """Set up orchestrator with proper file handling methods from base class."""
+        self.orchestrator._generate_output_path = self._generate_output_path
+        self.orchestrator._handle_file_exists = self._handle_file_exists
+        self.orchestrator._write_with_error_handling = self._write_with_error_handling
 
     def generate_file(self, restaurant_data: List[RestaurantData], **kwargs) -> str:
         """Generate enhanced text files from restaurant data."""
@@ -133,21 +142,14 @@ class EnhancedTextFileGenerator(BaseFileGenerator):
         self, restaurant_data: List[RestaurantData]
     ) -> List[str]:
         """Generate files with hierarchical document structure."""
-        # Delegate to orchestrator with file handling setup
-        self.orchestrator._generate_output_path = self._generate_output_path
-        self.orchestrator._handle_file_exists = self._handle_file_exists
-        self.orchestrator._write_with_error_handling = self._write_with_error_handling
-        
+        # Orchestrator already has file handling methods from constructor
         return self.orchestrator.generate_hierarchical_files(restaurant_data, self.config)
 
     def generate_entity_based_files(
         self, restaurant_data: List[RestaurantData]
     ) -> Dict[str, List[str]]:
         """Generate files organized by entity type."""
-        # Delegate to orchestrator with file handling setup
-        self.orchestrator._handle_file_exists = self._handle_file_exists
-        self.orchestrator._write_with_error_handling = self._write_with_error_handling
-        
+        # Orchestrator already has file handling methods from constructor
         return self.orchestrator.generate_entity_based_files(restaurant_data, self.config)
 
     def generate_with_cross_references(

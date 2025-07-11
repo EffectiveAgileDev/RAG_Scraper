@@ -31,6 +31,60 @@ const dataFlow = document.querySelector('.data-flow');
 
 let progressInterval;
 let terminalEffects = true;
+let isActivelyProcessing = false;
+let scrapingStartTime = null;
+
+// =============================================================================
+// Help Text Functions
+// =============================================================================
+
+/**
+ * Initialize help text to be collapsed by default
+ */
+window.initializeHelpText = function() {
+    const schemaHelpStatic = document.getElementById('schema-type-help-static');
+    if (schemaHelpStatic) {
+        const helpContent = schemaHelpStatic.querySelector('.help-content');
+        const toggleArrow = schemaHelpStatic.querySelector('.toggle-help');
+        
+        if (helpContent && toggleArrow) {
+            helpContent.style.display = 'none'; // Force hidden with inline style
+            helpContent.classList.add('hidden');
+            helpContent.classList.remove('visible');
+            toggleArrow.textContent = '▶';
+        }
+    }
+};
+
+/**
+ * Toggle help text visibility for schema type information
+ */
+window.toggleHelpText = function() {
+    console.log('toggleHelpText called');
+    const schemaHelpStatic = document.getElementById('schema-type-help-static');
+    console.log('schemaHelpStatic element:', schemaHelpStatic);
+    if (schemaHelpStatic) {
+        const helpContent = schemaHelpStatic.querySelector('.help-content');
+        const toggleArrow = schemaHelpStatic.querySelector('.toggle-help');
+        console.log('helpContent:', helpContent, 'toggleArrow:', toggleArrow);
+        
+        if (helpContent && toggleArrow) {
+            if (helpContent.style.display === 'none' || helpContent.classList.contains('hidden')) {
+                console.log('Showing help content');
+                helpContent.style.display = 'block';
+                helpContent.classList.remove('hidden');
+                helpContent.classList.add('visible');
+                toggleArrow.textContent = '▼';
+            } else {
+                console.log('Hiding help content');
+                helpContent.style.display = 'none';
+                helpContent.classList.add('hidden');
+                helpContent.classList.remove('visible');
+                toggleArrow.textContent = '▶';
+            }
+        }
+    }
+};
 
 // =============================================================================
 // Initialization and Setup Functions
@@ -44,7 +98,9 @@ document.addEventListener('DOMContentLoaded', function() {
     setupFormatSelection();
     setupSliderUpdates();
     setupModeSelection();
+    setupConfigDropdownHandlers();
     fixSelectDropdownStyles();
+    initializeHelpText(); // Initialize help text to be collapsed by default
     
     // Also fix styles after a short delay to catch any async changes
     setTimeout(fixSelectDropdownStyles, 100);
@@ -196,6 +252,8 @@ function setupFormatSelection() {
  */
 function setupModeSelection() {
     const modeOptions = document.querySelectorAll('.mode-option');
+    const singlePageHeader = document.getElementById('singlePageHeader');
+    const singlePageConfig = document.getElementById('singlePageConfig');
     const multiPageHeader = document.getElementById('multiPageHeader');
     const multiPageConfig = document.getElementById('multiPageConfig');
     
@@ -209,22 +267,206 @@ function setupModeSelection() {
             const radio = this.querySelector('input[type="radio"]');
             radio.checked = true;
             
-            // Show/hide multi-page configuration
+            // Show/hide configuration panels based on mode
             const mode = radio.value;
             if (mode === 'multi') {
+                // Show multi-page configuration
                 multiPageHeader.style.display = 'block';
+                singlePageHeader.style.display = 'none';
+                // Collapse single page config
+                if (singlePageConfig) {
+                    singlePageConfig.classList.add('collapsed');
+                    const singleExpandIcon = document.getElementById('singleConfigExpandIcon');
+                    if (singleExpandIcon) singleExpandIcon.classList.remove('expanded');
+                }
+                // Clear single page selections to prevent cross-contamination
+                clearSinglePageSelections();
                 updateSystemStatus('MULTI_PAGE_MODE // ADVANCED_CRAWLING_ENABLED');
+                // Update schema type display for multi-page mode
+                updateSchemaTypeForMode('multi');
             } else {
+                // Show single-page configuration
+                singlePageHeader.style.display = 'block';
                 multiPageHeader.style.display = 'none';
+                // Collapse multi-page config
                 if (multiPageConfig) {
                     multiPageConfig.classList.add('collapsed');
-                    const expandIcon = document.getElementById('configExpandIcon');
-                    if (expandIcon) expandIcon.classList.remove('expanded');
+                    const multiExpandIcon = document.getElementById('configExpandIcon');
+                    if (multiExpandIcon) multiExpandIcon.classList.remove('expanded');
                 }
+                // Clear multi-page selections to prevent cross-contamination
+                clearMultiPageSelections();
                 updateSystemStatus('SINGLE_PAGE_MODE // DIRECT_URL_PROCESSING');
+                // Update schema type display for single-page mode
+                updateSchemaTypeForMode('single');
             }
         });
     });
+}
+
+// =============================================================================
+// Helper Functions for Mode Selection
+// =============================================================================
+
+/**
+ * Clear all single page selections
+ */
+function clearSinglePageSelections() {
+    // Clear single page specific inputs
+    const singlePageInputs = document.querySelectorAll('#singlePageConfig input[type="checkbox"]');
+    singlePageInputs.forEach(input => input.checked = false);
+    
+    const singlePageSelects = document.querySelectorAll('#singlePageConfig select');
+    singlePageSelects.forEach(select => select.value = '');
+}
+
+/**
+ * Clear all multi-page selections
+ */
+function clearMultiPageSelections() {
+    // Clear multi-page specific inputs
+    const multiPageInputs = document.querySelectorAll('#multiPageConfig input[type="checkbox"]');
+    multiPageInputs.forEach(input => input.checked = false);
+    
+    const multiPageSelects = document.querySelectorAll('#multiPageConfig select');
+    multiPageSelects.forEach(select => select.value = '');
+    
+    // Reset numeric inputs to defaults
+    const maxPages = document.getElementById('maxPages');
+    if (maxPages) maxPages.value = '50';
+    
+    const crawlDepth = document.getElementById('crawlDepth');
+    if (crawlDepth) crawlDepth.value = '2';
+}
+
+/**
+ * Update schema type display based on extraction mode
+ */
+function updateSchemaTypeForMode(mode) {
+    const schemaDropdown = document.getElementById('schema-type-dropdown');
+    const schemaHelp = document.getElementById('schema-type-help-dynamic');
+    
+    if (!schemaDropdown) return;
+    
+    // Update help text based on mode
+    if (schemaHelp) {
+        if (mode === 'single') {
+            schemaHelp.textContent = 'Single page extraction uses focused schema for specific page content';
+        } else {
+            schemaHelp.textContent = 'Multi-page extraction uses comprehensive schema for entire website';
+        }
+    }
+    
+    // Trigger change event to update any dependent UI
+    const event = new Event('change');
+    schemaDropdown.dispatchEvent(event);
+}
+
+/**
+ * Update schema type help text dynamically
+ */
+function updateSchemaTypeHelpText(schemaType) {
+    const helpTextElement = document.getElementById('schema-type-help-dynamic');
+    if (!helpTextElement) return;
+    
+    const mode = getSelectedScrapingMode();
+    
+    // Define help text based on schema type and mode
+    const helpTexts = {
+        'Restaurant': {
+            'single': 'Standard restaurant schema - Extracts basic restaurant information from a single page',
+            'multi': 'Standard restaurant schema - Comprehensive extraction across multiple pages'
+        },
+        'RestW': {
+            'single': 'Enhanced RestW schema - Detailed extraction with location, menu, and service data from a single page',
+            'multi': 'Enhanced RestW schema - Complete website analysis with structured data extraction'
+        }
+    };
+    
+    const helpText = helpTexts[schemaType]?.[mode] || 'Select a schema type for extraction';
+    helpTextElement.textContent = helpText;
+}
+
+// Make function globally available
+window.updateSchemaTypeHelpText = updateSchemaTypeHelpText;
+
+/**
+ * Setup configuration dropdown keyboard and click handlers
+ */
+function setupConfigDropdownHandlers() {
+    const singlePageHeader = document.getElementById('singlePageHeader');
+    const multiPageHeader = document.getElementById('multiPageHeader');
+    
+    // Add keyboard support for single page config
+    if (singlePageHeader) {
+        singlePageHeader.setAttribute('tabindex', '0');
+        singlePageHeader.setAttribute('role', 'button');
+        singlePageHeader.setAttribute('aria-expanded', 'false');
+        
+        singlePageHeader.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                toggleSinglePageConfig();
+            }
+        });
+    }
+    
+    // Add keyboard support for multi page config
+    if (multiPageHeader) {
+        multiPageHeader.setAttribute('tabindex', '0');
+        multiPageHeader.setAttribute('role', 'button');
+        multiPageHeader.setAttribute('aria-expanded', 'false');
+        
+        multiPageHeader.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                toggleMultiPageConfig();
+            }
+        });
+    }
+}
+
+// =============================================================================
+// Single Page Configuration Panel Functions
+// =============================================================================
+
+/**
+ * Toggle single-page configuration panel expansion
+ */
+function toggleSinglePageConfig() {
+    const configPanel = document.getElementById('singlePageConfig');
+    const expandIcon = document.getElementById('singleConfigExpandIcon');
+    const header = document.getElementById('singlePageHeader');
+    
+    if (configPanel.classList.contains('collapsed')) {
+        configPanel.classList.remove('collapsed');
+        expandIcon.classList.add('expanded');
+        if (header) header.setAttribute('aria-expanded', 'true');
+        updateSystemStatus('SINGLE_PAGE_CONFIG // PANEL_EXPANDED');
+    } else {
+        configPanel.classList.add('collapsed');
+        expandIcon.classList.remove('expanded');
+        if (header) header.setAttribute('aria-expanded', 'false');
+        updateSystemStatus('SINGLE_PAGE_CONFIG // PANEL_COLLAPSED');
+    }
+}
+
+/**
+ * Toggle single-page advanced options panel expansion
+ */
+function toggleSinglePageAdvancedOptions() {
+    const advancedPanel = document.getElementById('singleAdvancedOptionsPanel');
+    const expandIcon = document.getElementById('singleAdvancedOptionsIcon');
+    
+    if (advancedPanel.classList.contains('collapsed')) {
+        advancedPanel.classList.remove('collapsed');
+        expandIcon.classList.add('expanded');
+        updateSystemStatus('SINGLE_PAGE_ADVANCED_OPTIONS // PANEL_EXPANDED');
+    } else {
+        advancedPanel.classList.add('collapsed');
+        expandIcon.classList.remove('expanded');
+        updateSystemStatus('SINGLE_PAGE_ADVANCED_OPTIONS // PANEL_COLLAPSED');
+    }
 }
 
 // =============================================================================
@@ -237,14 +479,17 @@ function setupModeSelection() {
 function toggleMultiPageConfig() {
     const configPanel = document.getElementById('multiPageConfig');
     const expandIcon = document.getElementById('configExpandIcon');
+    const header = document.getElementById('multiPageHeader');
     
     if (configPanel.classList.contains('collapsed')) {
         configPanel.classList.remove('collapsed');
         expandIcon.classList.add('expanded');
+        if (header) header.setAttribute('aria-expanded', 'true');
         updateSystemStatus('MULTI_PAGE_CONFIG // PANEL_EXPANDED');
     } else {
         configPanel.classList.add('collapsed');
         expandIcon.classList.remove('expanded');
+        if (header) header.setAttribute('aria-expanded', 'false');
         updateSystemStatus('MULTI_PAGE_CONFIG // PANEL_COLLAPSED');
     }
 }
@@ -329,6 +574,64 @@ function setupSliderUpdates() {
             updateSystemStatus(`EXCLUDE_PATTERNS_SET // ${patterns}_FILTERS_ACTIVE`);
         });
     }
+
+    // Single Page Configuration Sliders
+    // Single page JavaScript timeout slider
+    const singleJsTimeoutSlider = document.getElementById('singleJsTimeout');
+    const singleJsTimeoutValue = document.getElementById('singleJsTimeoutValue');
+    
+    if (singleJsTimeoutSlider && singleJsTimeoutValue) {
+        singleJsTimeoutSlider.addEventListener('input', function() {
+            singleJsTimeoutValue.textContent = this.value + 's';
+            updateSystemStatus(`SINGLE_JS_TIMEOUT_SET // ${this.value}S_LIMIT`);
+        });
+    }
+
+    // Single page concurrent requests slider
+    const singleConcurrentRequestsSlider = document.getElementById('singleConcurrentRequests');
+    const singleConcurrentRequestsValue = document.getElementById('singleConcurrentRequestsValue');
+    
+    if (singleConcurrentRequestsSlider && singleConcurrentRequestsValue) {
+        singleConcurrentRequestsSlider.addEventListener('input', function() {
+            singleConcurrentRequestsValue.textContent = this.value;
+            updateSystemStatus(`SINGLE_CONCURRENT_REQUESTS_SET // ${this.value}_PARALLEL`);
+        });
+    }
+
+    // Single page JavaScript rendering checkbox
+    const singleEnableJavaScript = document.getElementById('singleEnableJavaScript');
+    if (singleEnableJavaScript) {
+        singleEnableJavaScript.addEventListener('change', function() {
+            const status = this.checked ? 'ENABLED' : 'DISABLED';
+            updateSystemStatus(`SINGLE_JAVASCRIPT_RENDERING // ${status}`);
+        });
+    }
+
+    // Single page popup handling checkbox
+    const singleEnablePopupHandling = document.getElementById('singleEnablePopupHandling');
+    if (singleEnablePopupHandling) {
+        singleEnablePopupHandling.addEventListener('change', function() {
+            const status = this.checked ? 'ENABLED' : 'DISABLED';
+            updateSystemStatus(`SINGLE_POPUP_HANDLING // ${status}`);
+        });
+    }
+
+    // Single page follow redirects checkbox
+    const singleFollowRedirects = document.getElementById('singleFollowRedirects');
+    if (singleFollowRedirects) {
+        singleFollowRedirects.addEventListener('change', function() {
+            const status = this.checked ? 'ENABLED' : 'DISABLED';
+            updateSystemStatus(`SINGLE_FOLLOW_REDIRECTS // ${status}`);
+        });
+    }
+
+    // Single page request timeout input
+    const singleRequestTimeout = document.getElementById('singleRequestTimeout');
+    if (singleRequestTimeout) {
+        singleRequestTimeout.addEventListener('input', function() {
+            updateSystemStatus(`SINGLE_REQUEST_TIMEOUT_SET // ${this.value}S_LIMIT`);
+        });
+    }
 }
 
 // =============================================================================
@@ -404,8 +707,9 @@ form.addEventListener('submit', async (e) => {
     const inputMode = inputModeElement ? inputModeElement.value : 'url';
     
     if (inputMode === 'file') {
-        console.log('File upload mode detected in terminal-ui.js - skipping URL processing');
-        updateSystemStatus('FILE_MODE // TERMINAL_UI_HANDLER_SKIPPED');
+        console.log('File upload mode detected in terminal-ui.js - processing uploaded files');
+        updateSystemStatus('FILE_MODE // PROCESSING_UPLOADED_FILES');
+        await processUploadedFiles(outputDir, fileMode, fileFormat, jsonFieldSelections, scrapingMode, multiPageConfig);
         return;
     }
     
@@ -565,6 +869,173 @@ function displayValidationResults(results) {
 }
 
 // =============================================================================
+// File Upload Processing Functions
+// =============================================================================
+
+/**
+ * Process uploaded files through the scraping pipeline
+ */
+async function processUploadedFiles(outputDir, fileMode, fileFormat, jsonFieldSelections, scrapingMode, multiPageConfig) {
+    try {
+        // Get uploaded files or file paths
+        const uploadedFiles = getUploadedFiles();
+        const filePaths = getEnteredFilePaths();
+        
+        if (uploadedFiles.length === 0 && filePaths.length === 0) {
+            updateSystemStatus('ERROR // NO_FILES_DETECTED');
+            showTerminalAlert('CRITICAL ERROR: No files uploaded or paths entered. Please upload PDF files or enter file paths.');
+            return;
+        }
+        
+        // Disable submit button and show progress
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'PROCESSING_FILES...';
+        isActivelyProcessing = true;
+        scrapingStartTime = Date.now();
+        showProgress();
+        hideResults();
+        
+        updateSystemStatus(`FILE_PROCESSING_INITIATED // ${uploadedFiles.length + filePaths.length}_FILES_QUEUED`);
+        
+        // First, handle file uploads if any
+        let fileIds = [];
+        if (uploadedFiles.length > 0) {
+            const uploadResults = await uploadFiles(uploadedFiles);
+            fileIds = uploadResults.filter(result => result.success).map(result => result.file_id);
+        }
+        
+        // Process uploaded files and/or file paths through scraping pipeline
+        const response = await fetch('/api/process-uploaded-files-for-rag', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                file_ids: fileIds,
+                file_paths: filePaths,
+                output_dir: outputDir,
+                file_mode: fileMode,
+                file_format: fileFormat,
+                json_field_selections: jsonFieldSelections,
+                scraping_mode: scrapingMode,
+                multi_page_config: multiPageConfig,
+                industry: 'Restaurant'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            updateSystemStatus(`FILE_PROCESSING_COMPLETE // ${data.processed_count || 0}_FILES_PROCESSED`);
+            showResults(data, true);
+            // Clear the file upload area after successful processing
+            clearFileUploadArea();
+        } else {
+            updateSystemStatus('FILE_PROCESSING_FAILED // SYSTEM_ERROR');
+            showResults(data, false);
+        }
+        
+    } catch (error) {
+        console.error('File processing error:', error);
+        
+        let errorMessage = 'Unknown error during file processing';
+        let statusMessage = 'CRITICAL_ERROR // UNKNOWN_FAILURE';
+        
+        if (error.message && error.message.includes('fetch')) {
+            errorMessage = 'Network connection failure during file processing';
+            statusMessage = 'NETWORK_ERROR // CONNECTION_FAILURE';
+        } else if (error.message) {
+            errorMessage = error.message;
+            statusMessage = 'REQUEST_ERROR // ' + error.name;
+        }
+        
+        updateSystemStatus(statusMessage);
+        showResults({ error: errorMessage }, false);
+    } finally {
+        isActivelyProcessing = false;
+        scrapingStartTime = null;
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'EXECUTE_EXTRACTION';
+        hideProgress();
+    }
+}
+
+/**
+ * Get uploaded files from the file upload area
+ */
+function getUploadedFiles() {
+    const fileInput = document.getElementById('file-input');
+    if (fileInput && fileInput.files) {
+        return Array.from(fileInput.files);
+    }
+    return [];
+}
+
+/**
+ * Get entered file paths from the file path input
+ */
+function getEnteredFilePaths() {
+    const filePathInput = document.getElementById('file-path-input');
+    if (filePathInput && filePathInput.value.trim()) {
+        return [filePathInput.value.trim()];
+    }
+    return [];
+}
+
+/**
+ * Upload files to the server
+ */
+async function uploadFiles(files) {
+    const results = [];
+    
+    for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        try {
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            results.push(result);
+            
+        } catch (error) {
+            console.error('Upload error for file:', file.name, error);
+            results.push({
+                success: false,
+                error: `Upload failed for ${file.name}: ${error.message}`,
+                filename: file.name
+            });
+        }
+    }
+    
+    return results;
+}
+
+/**
+ * Clear the file upload area
+ */
+function clearFileUploadArea() {
+    const fileInput = document.getElementById('file-input');
+    const filePathInput = document.getElementById('file-path-input');
+    const uploadQueue = document.getElementById('upload-queue');
+    
+    if (fileInput) {
+        fileInput.value = '';
+    }
+    
+    if (filePathInput) {
+        filePathInput.value = '';
+    }
+    
+    if (uploadQueue) {
+        uploadQueue.innerHTML = '';
+    }
+}
+
+// =============================================================================
 // Scraping and API Functions
 // =============================================================================
 
@@ -574,6 +1045,8 @@ function displayValidationResults(results) {
 async function startScraping(urls, outputDir, fileMode, fileFormat, jsonFieldSelections, scrapingMode, multiPageConfig) {
     submitBtn.disabled = true;
     submitBtn.textContent = 'EXTRACTION_IN_PROGRESS...';
+    isActivelyProcessing = true;
+    scrapingStartTime = Date.now();
     showProgress();
     hideResults();
     
@@ -600,7 +1073,8 @@ async function startScraping(urls, outputDir, fileMode, fileFormat, jsonFieldSel
                 multi_page_config: multiPageConfig,
                 enableJavaScript: document.getElementById('enableJavaScript')?.checked || false,
                 jsTimeout: parseInt(document.getElementById('jsTimeout')?.value || '30'),
-                enablePopupHandling: document.getElementById('enablePopupHandling')?.checked || true
+                enablePopupHandling: document.getElementById('enablePopupHandling')?.checked || true,
+                industry: 'Restaurant'
             })
         });
         
@@ -637,6 +1111,8 @@ async function startScraping(urls, outputDir, fileMode, fileFormat, jsonFieldSel
         updateSystemStatus(statusMessage);
         showResults({ error: errorMessage }, false);
     } finally {
+        isActivelyProcessing = false;
+        scrapingStartTime = null;
         submitBtn.disabled = false;
         submitBtn.textContent = 'EXECUTE_EXTRACTION';
         hideProgress();
@@ -694,7 +1170,29 @@ async function updateProgress() {
         
         if (data.progress_percentage !== undefined) {
             progressFill.style.width = data.progress_percentage + '%';
-            progressText.textContent = terminalLog(`Extraction progress: ${data.progress_percentage}% (${data.urls_completed}/${data.urls_total})`, 'info');
+            
+            // Show meaningful message based on the situation
+            const isRecentlyStarted = scrapingStartTime && (Date.now() - scrapingStartTime < 30000); // Within 30 seconds
+            
+            
+            if (data.progress_percentage === 0 && data.urls_total > 1) {
+                // Multi-page or batch processing with known total
+                progressText.textContent = terminalLog(`Processing pages: ${data.urls_completed}/${data.urls_total}`, 'info');
+            } else if (data.progress_percentage === 0 && (data.urls_total === 1 || data.status === 'processing' || isActivelyProcessing || isRecentlyStarted)) {
+                // Single URL processing with no progress tracking or recently started
+                const elapsed = scrapingStartTime ? Math.floor((Date.now() - scrapingStartTime) / 1000) : 0;
+                if (elapsed > 0) {
+                    progressText.textContent = terminalLog(`Processing extraction... (${elapsed}s)`, 'info');
+                } else {
+                    progressText.textContent = terminalLog(`Processing extraction...`, 'info');
+                }
+            } else if (data.progress_percentage === 0) {
+                // No active processing
+                progressText.textContent = terminalLog(`Ready for extraction`, 'info');
+            } else {
+                // Normal progress display
+                progressText.textContent = terminalLog(`Extraction progress: ${data.progress_percentage}% (${data.urls_completed}/${data.urls_total})`, 'info');
+            }
             
             if (data.current_url) {
                 currentUrl.textContent = terminalLog(`Processing target: ${data.current_url}`, 'info');
@@ -712,7 +1210,7 @@ async function updateProgress() {
                 memoryUsage.textContent = terminalLog(`Memory usage: ${data.memory_usage_mb.toFixed(1)} MB`, 'info');
             }
             
-            if (data.current_operation) {
+            if (data.current_operation && data.current_operation.trim() !== '') {
                 progressText.textContent = terminalLog(data.current_operation, 'info');
             }
         }
@@ -731,6 +1229,9 @@ async function updateProgress() {
 function showResults(data, success) {
     resultsContainer.style.display = 'block';
     
+    // Get current scraping mode
+    const scrapingMode = getSelectedScrapingMode();
+    
     if (success && data.sites_data) {
         // Show enhanced results display
         showEnhancedResults(data);
@@ -740,6 +1241,12 @@ function showResults(data, success) {
     } else {
         // Show error results
         showErrorResults(data);
+    }
+    
+    // Ensure results are visible for single page mode
+    if (scrapingMode === 'single') {
+        // Scroll to results for better visibility
+        resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 }
 
@@ -757,6 +1264,13 @@ function showEnhancedResults(data) {
     window.currentSitesData = sitesData;
     
     let html = '';
+    
+    // Add mode-specific header
+    if (scrapingMode === 'single') {
+        html += '<div class="results-header single-page-header">';
+        html += '<h3>SINGLE PAGE EXTRACTION RESULTS</h3>';
+        html += '</div>';
+    }
     
     sitesData.forEach((siteData, index) => {
         html += generateSiteResultHTML(siteData, index, scrapingMode);
@@ -789,8 +1303,17 @@ function showLegacyResults(data, success) {
         html += '<div class="file-links">';
         data.output_files.forEach(file => {
             const fileName = file.split('/').pop();
-            const downloadUrl = `/api/download/${encodeURIComponent(fileName)}`;
-            html += `<a href="${downloadUrl}" target="_blank" class="file-link">${fileName}</a>`;
+            const fileExtension = fileName.split('.').pop().toLowerCase();
+            
+            // For text files, create a view link that opens in browser
+            // For PDF files, create a download link
+            if (fileExtension === 'txt' || fileExtension === 'json') {
+                const viewUrl = `/api/view-file/${encodeURIComponent(fileName)}`;
+                html += `<a href="${viewUrl}" target="_blank" class="file-link">${fileName}</a>`;
+            } else {
+                const downloadUrl = `/api/download/${encodeURIComponent(fileName)}`;
+                html += `<a href="${downloadUrl}" target="_blank" class="file-link">${fileName}</a>`;
+            }
         });
         html += '</div>';
     }

@@ -606,10 +606,37 @@ class HeuristicExtractor:
 
     def normalize_address(self, address: str) -> str:
         """Normalize address format."""
+        # First, clean up the address
+        address = address.strip()
+        
+        # Fix common spacing issues
+        # Add space before city name (e.g., "AvenuePortland" -> "Avenue Portland")
+        address = re.sub(r'([a-z])([A-Z])', r'\1 \2', address)
+        
+        # Add space before state abbreviation (e.g., "Portland, OR97232" -> "Portland, OR 97232")
+        address = re.sub(r',\s*([A-Z]{2})(\d{5})', r', \1 \2', address)
+        
+        # Ensure proper spacing after commas
+        address = re.sub(r',\s*', ', ', address)
+        
+        # Clean up multiple spaces
+        address = re.sub(r'\s+', ' ', address)
+        
         return address.strip()
 
     def normalize_hours(self, hours: str) -> str:
         """Normalize hours format."""
+        hours = hours.strip()
+        
+        # Fix common truncation issues where first letter is missing or prefix remains
+        if hours and hours.startswith('Hours'):
+            # Remove "Hours" prefix if present
+            hours = re.sub(r'^Hours\s*', '', hours)
+        
+        # Clean up spacing around day ranges and times
+        hours = re.sub(r'([A-Za-z]+day)\s*-\s*([A-Za-z]+day)', r'\1-\2', hours)
+        hours = re.sub(r'(\d+:\d+)(am|pm)\s*-\s*(\d+:\d+)(am|pm)', r'\1\2-\3\4', hours)
+        
         return hours.strip()
 
     def normalize_price_range(self, price_range: str) -> str:

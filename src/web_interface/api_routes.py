@@ -16,11 +16,27 @@ from src.file_generator.file_generator_service import (
     FileGenerationRequest,
 )
 from src.web_interface.session_manager import IndustrySessionManager
-from src.web_interface.validators import validate_industry_selection
+from src.web_interface.handlers import (
+    ScrapingRequestHandler,
+    FileGenerationHandler,
+    ValidationHandler
+)
+from src.web_interface.validators.industry_validator import IndustryValidator
+from src.web_interface.settings_storage import SettingsStorage
 
 
 def register_api_routes(app, advanced_monitor, file_generator_service):
     """Register all API routes with the Flask app."""
+    
+    # Initialize validators and handlers
+    industry_validator = IndustryValidator()
+    validation_handler = ValidationHandler()
+    file_generation_handler = FileGenerationHandler(file_generator_service)
+    scraping_handler = ScrapingRequestHandler(
+        validation_handler=validation_handler,
+        file_generation_handler=file_generation_handler,
+        upload_folder=app.config["UPLOAD_FOLDER"]
+    )
     
     # Global scraper instance for progress tracking
     active_scraper = None
@@ -69,33 +85,20 @@ def register_api_routes(app, advanced_monitor, file_generator_service):
         try:
             form_data = request.form.to_dict()
             
-            # Validate industry selection
-            session_manager = IndustrySessionManager()
-            
-            # Add industry from session if not in form data
-            if 'industry' not in form_data or not form_data['industry']:
-                session_industry = session_manager.get_industry()
-                if session_industry:
-                    form_data['industry'] = session_industry
-            
-            # Validate industry
-            is_valid, error_message = validate_industry_selection(form_data)
-            if not is_valid:
-                return f"<html><body><h1>Error</h1><p>{error_message}</p></body></html>", 400
-            
-            # Store industry in session
-            if 'industry' in form_data:
-                session_manager.store_industry(form_data['industry'])
+            # Validate industry using centralized validator
+            industry_result = industry_validator.validate_and_store_industry(form_data)
+            if not industry_result.is_valid:
+                return f"<html><body><h1>Error</h1><p>{industry_result.error_message}</p></body></html>", 400
             
             # Redirect to API endpoint with JSON data
             import json
             json_data = {
                 "url": form_data.get("url"),
-                "industry": form_data.get("industry")
+                "industry": industry_result.industry
             }
             
             # For now, return success - full implementation would redirect to API
-            return jsonify({"success": True, "industry": form_data.get("industry")})
+            return jsonify({"success": True, "industry": industry_result.industry})
             
         except Exception as e:
             return f"<html><body><h1>Error</h1><p>{str(e)}</p></body></html>", 500
@@ -106,26 +109,13 @@ def register_api_routes(app, advanced_monitor, file_generator_service):
         try:
             form_data = request.form.to_dict()
             
-            # Validate industry selection
-            session_manager = IndustrySessionManager()
-            
-            # Add industry from session if not in form data
-            if 'industry' not in form_data or not form_data['industry']:
-                session_industry = session_manager.get_industry()
-                if session_industry:
-                    form_data['industry'] = session_industry
-            
-            # Validate industry
-            is_valid, error_message = validate_industry_selection(form_data)
-            if not is_valid:
-                return f"<html><body><h1>Error</h1><p>{error_message}</p></body></html>", 400
-            
-            # Store industry in session
-            if 'industry' in form_data:
-                session_manager.store_industry(form_data['industry'])
+            # Validate industry using centralized validator
+            industry_result = industry_validator.validate_and_store_industry(form_data)
+            if not industry_result.is_valid:
+                return f"<html><body><h1>Error</h1><p>{industry_result.error_message}</p></body></html>", 400
             
             # For now, return success - full implementation would process batch
-            return jsonify({"success": True, "industry": form_data.get("industry")})
+            return jsonify({"success": True, "industry": industry_result.industry})
             
         except Exception as e:
             return f"<html><body><h1>Error</h1><p>{str(e)}</p></body></html>", 500
@@ -174,229 +164,24 @@ def register_api_routes(app, advanced_monitor, file_generator_service):
         
         try:
             data = request.get_json()
-            if not data:
-                return jsonify({"success": False, "error": "No data provided"}), 400
-
-            # Extract URLs
-            urls = []
-            if "url" in data:
-                urls = [data["url"]]
-            elif "urls" in data:
-                urls = data["urls"]
-            else:
-                return jsonify({"success": False, "error": "No URLs provided"}), 400
-
-            # Validate URLs first
-            validator = URLValidator()
-            validation_results = validator.validate_urls(urls)
-
-            invalid_urls = [
-                result for result in validation_results if not result.is_valid
-            ]
-            if invalid_urls:
-                return (
-                    jsonify(
-                        {
-                            "success": False,
-                            "error": f"Invalid URLs provided: {len(invalid_urls)} of {len(urls)} URLs are invalid",
-                        }
-                    ),
-                    400,
-                )
-
-            # Validate industry selection
-            session_manager = IndustrySessionManager()
-            form_data = data.copy()
             
-            # Add industry from session if not in form data
-            if 'industry' not in form_data or not form_data['industry']:
-                session_industry = session_manager.get_industry()
-                if session_industry:
-                    form_data['industry'] = session_industry
+            # Use handler to process the request
+            response = scraping_handler.handle_scraping_request(data)
             
-            # Validate industry
-            is_valid, error_message = validate_industry_selection(form_data)
-            if not is_valid:
-                return jsonify({"success": False, "error": error_message}), 400
+            # Update active_scraper for progress tracking compatibility
+            active_scraper = scraping_handler.active_scraper
             
-            # Store industry in session
-            if 'industry' in form_data:
-                session_manager.store_industry(form_data['industry'])
-
-            # Configure scraping
-            output_dir = data.get("output_dir") or app.config["UPLOAD_FOLDER"]
-            file_mode = data.get("file_mode", "single")
-            file_format = data.get("file_format", "text")  # text, pdf, or both
-            scraping_mode = data.get("scraping_mode", "single")  # single or multi
-            multi_page_config = data.get("multi_page_config", {})
-
-            # Extract JavaScript rendering configuration
-            enable_javascript = data.get("enableJavaScript", False)
-            js_timeout = data.get("jsTimeout", 30)
-            enable_popup_handling = data.get("enablePopupHandling", True)
-            
-            config = ScrapingConfig(
-                urls=urls, 
-                output_directory=output_dir, 
-                file_mode=file_mode,
-                enable_javascript_rendering=enable_javascript,
-                javascript_timeout=js_timeout,
-                enable_popup_detection=enable_popup_handling
-            )
-
-            # Simple progress callback for basic functionality
-            def progress_callback(message, percentage=None, time_estimate=None):
-                pass
-
-            # Create and run scraper with progress tracking
-            enable_multi_page = (scraping_mode == "multi")
-            
-            # Configure multi-page scraper with UI settings
-            max_pages = 10  # default
-            if enable_multi_page and multi_page_config:
-                max_pages = multi_page_config.get("maxPages", 50)
-                
-            scraper = RestaurantScraper(enable_multi_page=enable_multi_page, config=config)
-            
-            # Update the multi-page scraper with UI configuration
-            if enable_multi_page and scraper.multi_page_scraper and multi_page_config:
-                # Update the max_pages setting
-                scraper.multi_page_scraper.max_pages = max_pages
-                # Update the crawl depth setting
-                scraper.multi_page_scraper.max_crawl_depth = multi_page_config.get("crawlDepth", 2)
-                # Update the page discovery max_pages as well
-                if hasattr(scraper.multi_page_scraper, 'page_discovery') and scraper.multi_page_scraper.page_discovery:
-                    scraper.multi_page_scraper.page_discovery.max_pages = max_pages
-            
-            active_scraper = scraper
-
-            # Set multi-page mode on config for RestaurantScraper logic
-            config.enable_multi_page = enable_multi_page
-            
-            # Add multi-page config to the scraping config if available
-            if enable_multi_page and multi_page_config:
-                config.max_crawl_depth = multi_page_config.get("crawlDepth", 2)
-                config.max_pages_per_site = multi_page_config.get("maxPages", 50)
-                config.rate_limit_delay = multi_page_config.get("rateLimit", 1000) / 1000.0  # Convert ms to seconds
-                
-                # Set link patterns
-                include_patterns = multi_page_config.get("includePatterns", "").split(",")
-                exclude_patterns = multi_page_config.get("excludePatterns", "").split(",") 
-                config.link_patterns = {
-                    "include": [p.strip() for p in include_patterns if p.strip()],
-                    "exclude": [p.strip() for p in exclude_patterns if p.strip()]
-                }
-            
-            # Only force batch processing for single-page mode with multiple URLs
-            if scraping_mode == "single" and len(urls) > 5:
-                config.force_batch_processing = True
-
-            result = scraper.scrape_restaurants(
-                config, progress_callback=progress_callback
-            )
-
-            # Disable Advanced Progress Monitor updates to avoid interference
-            # successful_urls = set()
-            # if result.successful_extractions:
-            #     successful_count = min(len(result.successful_extractions), len(urls))
-            #     successful_urls = set(urls[:successful_count])
-            # for i, url in enumerate(urls):
-            #     if url in successful_urls:
-            #         processing_time = 3.0 + (i * 0.5)
-            #         advanced_monitor.update_url_completion(url, processing_time, success=True)
-            #     elif url in result.failed_urls:
-            #         error_msg = "Failed to extract data"
-            #         advanced_monitor.add_error_notification(url, "extraction_error", error_msg)
-            #         advanced_monitor.update_url_completion(url, 1.0, success=False)
-            #     else:
-            #         processing_time = 2.0 + (i * 0.3)
-            #         advanced_monitor.update_url_completion(url, processing_time, success=True)
-
-            # Clear active scraper
-            active_scraper = None
-
-            # Generate files asynchronously to avoid frontend timeout
-            generated_files = []
-            file_generation_errors = []
-
-            if result.successful_extractions:
-                try:
-                    import threading
-                    from src.file_generator.file_generator_service import (
-                        FileGenerationRequest,
-                    )
-
-                    def generate_files_async():
-                        """Generate files in background thread."""
-                        formats_to_generate = [file_format]
-                        
-                        for fmt in formats_to_generate:
-                            try:
-                                file_request = FileGenerationRequest(
-                                    restaurant_data=result.successful_extractions,
-                                    file_format=fmt,
-                                    output_directory=output_dir,
-                                    allow_overwrite=True,
-                                    save_preferences=False,
-                                )
-
-                                file_result = file_generator_service.generate_file(file_request)
-                                # File generation results will be available for next request
-                                
-                            except Exception as e:
-                                # Log error but don't block response
-                                pass
-
-                    # Start file generation in background
-                    file_thread = threading.Thread(target=generate_files_async, daemon=True)
-                    file_thread.start()
-                    
-                    # Generate at least one file synchronously for immediate response
-                    try:
-                        file_request = FileGenerationRequest(
-                            restaurant_data=result.successful_extractions,
-                            file_format=file_format,
-                            output_directory=output_dir,
-                            allow_overwrite=True,
-                            save_preferences=False,
-                        )
-
-                        file_result = file_generator_service.generate_file(file_request)
-
-                        if file_result["success"]:
-                            generated_files.append(file_result["file_path"])
-                        else:
-                            file_generation_errors.append(
-                                f"{file_format.upper()} generation failed: {file_result['error']}"
-                            )
-
-                    except Exception as e:
-                        file_generation_errors.append(
-                            f"{file_format.upper()} generation error: {str(e)}"
-                        )
-                        
-                except Exception as e:
-                    # If threading fails, fall back to synchronous generation
-                    file_generation_errors.append(f"File generation setup error: {str(e)}")
-
-            # Generate enhanced results data for UI display
-            sites_data = generate_sites_data(result, scraping_mode, urls)
-            
-            # Return results with actual file paths
-            response_data = {
-                "success": True,
-                "processed_count": len(result.successful_extractions),
-                "failed_count": len(result.failed_urls),
-                "output_files": generated_files,
-                "processing_time": getattr(result, "processing_time", 0),
-                "sites_data": sites_data,
-            }
-
-            # Include file generation errors if any occurred
-            if file_generation_errors:
-                response_data["file_generation_warnings"] = file_generation_errors
-
-            return jsonify(response_data)
+            # Convert response to JSON format
+            return jsonify({
+                "success": response.success,
+                "processed_count": response.processed_count,
+                "failed_count": response.failed_count,
+                "output_files": response.output_files,
+                "processing_time": response.processing_time,
+                "sites_data": response.sites_data,
+                **({"error": response.error} if response.error else {}),
+                **({"file_generation_warnings": response.warnings} if response.warnings else {})
+            }), (200 if response.success else 400)
 
         except Exception as e:
             return jsonify({"success": False, "error": str(e)}), 500
@@ -513,12 +298,92 @@ def register_api_routes(app, advanced_monitor, file_generator_service):
             if ".." in filename or "/" in filename or "\\" in filename:
                 return jsonify({"error": "Invalid filename"}), 403
 
+            # Try to find the file in the upload folder
             file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-
+            
+            # If file doesn't exist in upload folder, check if it exists elsewhere
+            # This handles cases where files are generated with full paths
             if not os.path.exists(file_path):
-                return jsonify({"error": "File not found"}), 404
+                # Look for files with this filename in the upload folder first
+                for root, dirs, files in os.walk(app.config["UPLOAD_FOLDER"]):
+                    if filename in files:
+                        file_path = os.path.join(root, filename)
+                        break
+                else:
+                    # If still not found, search in common output directories
+                    search_paths = [
+                        "/tmp/test_output",
+                        "/tmp/output",
+                        os.path.expanduser("~/Downloads"),
+                        tempfile.gettempdir()
+                    ]
+                    
+                    for search_path in search_paths:
+                        if os.path.exists(search_path):
+                            for root, dirs, files in os.walk(search_path):
+                                if filename in files:
+                                    file_path = os.path.join(root, filename)
+                                    break
+                            if os.path.exists(file_path):
+                                break
+                    else:
+                        return jsonify({"error": "File not found"}), 404
 
             return send_file(file_path, as_attachment=True)
+
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    @app.route("/api/view-file/<filename>")
+    def view_file(filename):
+        """View generated text file in browser."""
+        try:
+            # Security: ensure filename is safe
+            if ".." in filename or "/" in filename or "\\" in filename:
+                return jsonify({"error": "Invalid filename"}), 403
+
+            # Try to find the file in the upload folder
+            file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            
+            # If file doesn't exist in upload folder, check if it exists elsewhere
+            # This handles cases where files are generated with full paths
+            if not os.path.exists(file_path):
+                # Look for files with this filename in the upload folder first
+                for root, dirs, files in os.walk(app.config["UPLOAD_FOLDER"]):
+                    if filename in files:
+                        file_path = os.path.join(root, filename)
+                        break
+                else:
+                    # If still not found, search in common output directories
+                    search_paths = [
+                        "/tmp/test_output",
+                        "/tmp/output",
+                        os.path.expanduser("~/Downloads"),
+                        tempfile.gettempdir()
+                    ]
+                    
+                    for search_path in search_paths:
+                        if os.path.exists(search_path):
+                            for root, dirs, files in os.walk(search_path):
+                                if filename in files:
+                                    file_path = os.path.join(root, filename)
+                                    break
+                            if os.path.exists(file_path):
+                                break
+                    else:
+                        return jsonify({"error": "File not found"}), 404
+
+            # Determine content type based on file extension
+            file_extension = filename.split('.')[-1].lower()
+            if file_extension == 'json':
+                mimetype = 'application/json'
+            elif file_extension == 'txt':
+                mimetype = 'text/plain'
+            else:
+                mimetype = 'text/plain'  # Default to plain text
+
+            # Send file to be displayed in browser (not as attachment)
+            return send_file(file_path, as_attachment=False, mimetype=mimetype)
 
         except Exception as e:
             return jsonify({"error": str(e)}), 500
@@ -693,199 +558,55 @@ def register_api_routes(app, advanced_monitor, file_generator_service):
 
         except Exception as e:
             return jsonify({"success": False, "error": str(e)}), 500
-
-
-def generate_sites_data(result, scraping_mode, urls):
-    """Generate enhanced sites data for results display."""
-    sites_data = []
     
-    if scraping_mode == 'single':
-        # In single-page mode, each URL is treated as a separate site
-        total_time = getattr(result, 'processing_time', 0.0)
-        num_urls = len(urls) if urls else 1
-        avg_time_per_url = total_time / num_urls if num_urls > 0 else 1.0
-        
-        for i, extraction in enumerate(result.successful_extractions):
-            # RestaurantData doesn't have URL, so we use the corresponding URL from input
-            url = urls[i] if i < len(urls) else 'Unknown URL'
-            # Vary timing slightly for each URL
-            processing_time = round(avg_time_per_url * (0.9 + (i % 3) * 0.1), 1)
+    @app.route("/api/save-settings", methods=["POST"])
+    def save_settings():
+        """Save user settings."""
+        try:
+            data = request.get_json(force=True)
+            if not data or 'settings' not in data:
+                return jsonify({"success": False, "error": "No settings provided"}), 400
             
-            sites_data.append({
-                'site_url': url,
-                'pages_processed': 1,
-                'pages': [{
-                    'url': url,
-                    'status': 'success',
-                    'processing_time': processing_time
-                }]
+            settings_storage = SettingsStorage()
+            
+            # Validate settings
+            if not settings_storage.validate_settings(data['settings']):
+                return jsonify({"success": False, "error": "Invalid settings"}), 400
+            
+            # Save to session (for server-side persistence)
+            session['saved_settings'] = data['settings']
+            session['save_enabled'] = data.get('saveEnabled', True)
+            
+            return jsonify({
+                "success": True,
+                "message": "Settings saved successfully"
             })
-        
-        for failed_url in result.failed_urls:
-            # failed_urls is a list of URL strings
-            url = failed_url if isinstance(failed_url, str) else 'Unknown URL'
             
-            sites_data.append({
-                'site_url': url,
-                'pages_processed': 1,
-                'pages': [{
-                    'url': url,
-                    'status': 'failed',
-                    'processing_time': 0.5  # Show minimal time for failed URLs
-                }]
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 500
+    
+    @app.route("/api/get-saved-settings", methods=["GET"])
+    def get_saved_settings():
+        """Get saved user settings."""
+        try:
+            settings_storage = SettingsStorage()
+            
+            # Check if save is enabled
+            if not session.get('save_enabled', False):
+                return jsonify({
+                    "success": True,
+                    "settings": None
+                })
+            
+            # Get settings from session
+            saved_settings = session.get('saved_settings')
+            if not saved_settings:
+                saved_settings = settings_storage.get_default_settings()
+            
+            return jsonify({
+                "success": True,
+                "settings": saved_settings
             })
-    
-    else:  # multi-page mode
-        # Use multi-page results if available
-        if hasattr(result, 'multi_page_results') and result.multi_page_results:
-            # Use actual multi-page scraping results
-            for i, mp_result in enumerate(result.multi_page_results):
-                # Get the correct URL for this result (not always the first one)
-                site_url = urls[i] if i < len(urls) else 'Unknown URL'
-                
-                # If we have pages_processed, try to extract the base URL from the first page
-                if mp_result.pages_processed:
-                    # Use the first processed page as the site URL if available
-                    first_page = mp_result.pages_processed[0]
-                    # Extract base domain from the first page URL
-                    parsed = urlparse(first_page)
-                    site_url = f"{parsed.scheme}://{parsed.netloc}/"
-                
-                pages = []
-                # Calculate approximate per-page timing
-                total_time = getattr(mp_result, 'processing_time', 0.0)
-                num_pages = len(mp_result.pages_processed) if mp_result.pages_processed else 1
-                avg_time_per_page = total_time / num_pages if num_pages > 0 else 0.0
-                
-                for i, page_url in enumerate(mp_result.pages_processed):
-                    status = 'success' if page_url in mp_result.successful_pages else 'failed'
-                    # Vary the time slightly for each page for more realistic display
-                    page_time = avg_time_per_page * (0.8 + (i % 5) * 0.1) if avg_time_per_page > 0 else 0.1
-                    pages.append({
-                        'url': page_url,
-                        'status': status,
-                        'processing_time': round(page_time, 1)
-                    })
-                
-                sites_data.append({
-                    'site_url': site_url,
-                    'pages_processed': len(mp_result.pages_processed),
-                    'pages': pages
-                })
-        else:
-            # Fallback: Group pages by site (original logic)
-            sites = {}
             
-            # Process successful extractions
-            for i, extraction in enumerate(result.successful_extractions):
-                # RestaurantData doesn't have URL, so we use the corresponding URL from input
-                url = urls[i] if i < len(urls) else 'Unknown URL'
-                processing_time = 0.0  # Default processing time
-                
-                # Extract base site URL
-                site_url = extract_site_url(url)
-                
-                if site_url not in sites:
-                    sites[site_url] = {
-                        'site_url': site_url,
-                        'pages_processed': 0,
-                        'pages': []
-                    }
-                
-                # Generate relationship data based on URL patterns (mock implementation)
-                relationship_data = generate_mock_relationship_data(url, site_url)
-                
-                sites[site_url]['pages'].append({
-                    'url': url,
-                    'status': 'success',
-                    'processing_time': processing_time,
-                    'relationship': relationship_data
-                })
-                sites[site_url]['pages_processed'] += 1
-            
-            # Process failed URLs
-            for failed_url in result.failed_urls:
-                # failed_urls is a list of URL strings
-                url = failed_url if isinstance(failed_url, str) else 'Unknown URL'
-                
-                # Extract base site URL
-                site_url = extract_site_url(url)
-                
-                if site_url not in sites:
-                    sites[site_url] = {
-                        'site_url': site_url,
-                        'pages_processed': 0,
-                        'pages': []
-                    }
-                
-                # Generate relationship data for failed URLs too
-                relationship_data = generate_mock_relationship_data(url, site_url)
-                
-                sites[site_url]['pages'].append({
-                    'url': url,
-                    'status': 'failed',
-                    'processing_time': 0.0,
-                    'relationship': relationship_data
-                })
-                sites[site_url]['pages_processed'] += 1
-            
-            sites_data = list(sites.values())
-    
-    return sites_data
-
-
-def generate_mock_relationship_data(url, site_url):
-    """Generate mock relationship data based on URL patterns."""
-    parsed = urlparse(url)
-    path = parsed.path.strip('/')
-    path_parts = path.split('/') if path else []
-    
-    # Determine relationship type based on URL structure
-    if url == site_url or url == site_url + '/' or not path:
-        # Root page
-        return {
-            'type': 'root',
-            'depth': 0,
-            'parent_url': None,
-            'children_count': min(len(path_parts) + 2, 5),  # Mock children count
-            'discovery_method': 'manual'
-        }
-    elif len(path_parts) == 1:
-        # First level child (e.g., /menu, /contact)
-        return {
-            'type': 'child',
-            'depth': 1,
-            'parent_url': site_url,
-            'children_count': 1 if 'menu' in path.lower() else 0,  # Menu might have subpages
-            'discovery_method': 'link'
-        }
-    elif len(path_parts) >= 2:
-        # Deeper child page (e.g., /menu/specials)
-        parent_path = '/'.join(path_parts[:-1])
-        parent_url = f"{site_url}/{parent_path}"
-        
-        return {
-            'type': 'child',
-            'depth': len(path_parts),
-            'parent_url': parent_url,
-            'children_count': 0,
-            'discovery_method': 'link'
-        }
-    else:
-        # Orphaned page (shouldn't happen with current logic, but for completeness)
-        return {
-            'type': 'orphaned',
-            'depth': None,
-            'parent_url': None,
-            'children_count': 0,
-            'discovery_method': 'unknown'
-        }
-
-
-def extract_site_url(page_url):
-    """Extract site URL from page URL."""
-    try:
-        parsed = urlparse(page_url)
-        return f"{parsed.scheme}://{parsed.netloc}"
-    except Exception:
-        return page_url
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 500

@@ -4,6 +4,8 @@ import re
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 
+from .base_import_processor import BasePatternRecognizer
+
 
 @dataclass
 class PatternResult:
@@ -26,7 +28,7 @@ class PatternResult:
     confidence_scores: Dict[str, float] = field(default_factory=dict)
 
 
-class PatternRecognizer:
+class PatternRecognizer(BasePatternRecognizer):
     """Recognizes patterns in restaurant PDF text data."""
     
     def __init__(self):
@@ -93,6 +95,14 @@ class PatternRecognizer:
         
         return result
     
+    def get_supported_patterns(self) -> List[str]:
+        """Get list of supported pattern types.
+        
+        Returns:
+            List of pattern type names
+        """
+        return list(self.patterns.keys())
+    
     def _empty_result(self) -> Dict[str, Any]:
         """Return empty result structure."""
         return {
@@ -118,29 +128,107 @@ class PatternRecognizer:
         """Extract restaurant name from text."""
         lines = text.strip().split('\n')
         
-        # Look for first line that looks like a restaurant name
+        # Write debug info to file for inspection
+        with open('/tmp/pattern_debug.log', 'w') as f:
+            f.write(f"=== RESTAURANT NAME EXTRACTION DEBUG ===\n")
+            f.write(f"Total lines: {len(lines)}\n")
+            f.write(f"Raw text preview: {repr(text[:200])}\n\n")
+            for i, line in enumerate(lines[:15]):  # Debug first 15 lines
+                f.write(f"Line {i}: '{line.strip()}'\n")
+            f.write("\n=== END DEBUG ===\n")
+        
+        # First priority: Look for complete restaurant names with possessive forms or restaurant keywords
+        for i, line in enumerate(lines):
+            line = line.strip()
+            if not line:
+                continue
+                
+            # Skip obvious non-name lines
+            if any(skip in line.lower() for skip in ['address', 'phone', 'hours', 'menu', 'location', 'copyright', 'guide', 'established', 'founded', 'since', 'decades', 'trip', 'norm', 'heart of']):
+                continue
+            
+            # Look for restaurant names with possessive forms (e.g., "Fuller's Coffee Shop")
+            if ("'s" in line and len(line) > 5 and len(line) < 50 and
+                not any(char.isdigit() for char in line) and
+                any(word[0].isupper() for word in line.split())):
+                
+                with open('/tmp/pattern_debug.log', 'a') as f:
+                    f.write(f"Found possessive candidate: '{line}'\n")
+                
+                # Check if followed by address or phone in next few lines
+                next_lines = lines[i+1:i+4]
+                for next_line in next_lines:
+                    next_line = next_line.strip()
+                    if (re.search(r'\d+\s+\w+\s+\w+', next_line) or  # Address pattern
+                        re.search(r'\d{3}[-.\s]?\d{3}[-.\s]?\d{4}', next_line) or  # Phone pattern
+                        'street' in next_line.lower() or 'avenue' in next_line.lower()):
+                        with open('/tmp/pattern_debug.log', 'a') as f:
+                            f.write(f"Confirmed by following line: '{next_line}' -> RETURNING: '{line}'\n")
+                        return line
+            
+            # Look for complete restaurant names with restaurant keywords
+            has_restaurant_keyword = ('restaurant' in line.lower() or 'cafe' in line.lower() or 
+                                     'diner' in line.lower() or 'bistro' in line.lower() or
+                                     'pizza' in line.lower() or 'kitchen' in line.lower() or
+                                     'grill' in line.lower() or 'bar' in line.lower() or
+                                     'tavern' in line.lower() or 'house' in line.lower() or
+                                     'inn' in line.lower() or 'brewery' in line.lower() or
+                                     'coffee shop' in line.lower() or 'coffee house' in line.lower())
+            
+            if (has_restaurant_keyword and len(line) > 3 and len(line) < 50 and
+                not any(char.isdigit() for char in line) and
+                (line.istitle() or line.isupper() or 
+                 (len(line.split()) <= 5 and any(word[0].isupper() for word in line.split())))):
+                
+                # Check if followed by address or phone in next few lines
+                next_lines = lines[i+1:i+4]
+                for next_line in next_lines:
+                    next_line = next_line.strip()
+                    if (re.search(r'\d+\s+\w+\s+\w+', next_line) or  # Address pattern
+                        re.search(r'\d{3}[-.\s]?\d{3}[-.\s]?\d{4}', next_line) or  # Phone pattern
+                        'street' in next_line.lower() or 'avenue' in next_line.lower()):
+                        return line
+        
+        # Second priority: Look for names that appear directly before address information
+        for i, line in enumerate(lines):
+            line = line.strip()
+            if not line:
+                continue
+                
+            # Skip obvious non-restaurant lines (expanded list)
+            skip_words = ['sandwich', 'burger', 'pizza', 'steak', 'chicken', 'fish', 'soup', 'salad', 'appetizer', 'dessert', 'drink', 'beverage', 'special', 'copyright', 'guide', 'hours', 'reservations', 'comfort', 'gluten', 'available', 'crust', 'free', 'click here', 'recommended', 'full menu', 'american', 'pearl district', 'district', 'established', 'founded', 'since', 'decades', 'trip', 'norm', 'heart of', 'located in', 'take a', 'back a', 'lunch bars', 'short stools', 'were', 'when']
+            if any(skip in line.lower() for skip in skip_words):
+                continue
+                
+            # Look for proper names followed by address/phone in next few lines
+            if ((line.istitle() or (line.isupper() and len(line.split()) <= 3)) and 
+                3 < len(line) < 50 and
+                not any(char.isdigit() for char in line) and
+                not line.startswith('*') and not line.startswith('-')):
+                
+                # Check if followed by address or phone in next few lines
+                next_lines = lines[i+1:i+4]
+                for next_line in next_lines:
+                    next_line = next_line.strip()
+                    if (re.search(r'\d+\s+\w+\s+\w+', next_line) or  # Address pattern
+                        re.search(r'\d{3}[-.\s]?\d{3}[-.\s]?\d{4}', next_line) or  # Phone pattern
+                        'street' in next_line.lower() or 'avenue' in next_line.lower()):
+                        return line
+        
+        # Fallback: Look for any reasonable business name
         for line in lines:
             line = line.strip()
             if not line:
                 continue
                 
-            # Skip common non-name lines
-            if any(skip in line.lower() for skip in ['address', 'phone', 'hours', 'menu', 'location']):
+            # Skip obvious non-restaurant content
+            if any(skip in line.lower() for skip in ['sandwich', 'burger', 'pizza', 'steak', 'chicken', 'fish', 'soup', 'salad', 'appetizer', 'dessert', 'drink', 'beverage', 'special', 'copyright', 'guide', 'hours', 'reservations', 'comfort', 'mac', 'cheese', 'halibut', 'ribs', 'gluten', 'available', 'crust', 'free', 'click here', 'established', 'founded', 'since', 'decades', 'trip', 'norm', 'heart of', 'located in', 'take a', 'back a', 'lunch bars', 'short stools', 'were', 'when']):
                 continue
                 
-            # Look for all caps or title case restaurant names
-            if (line.isupper() and len(line) > 3 and 
+            # Look for title case names that are reasonable length
+            if (line.istitle() and 3 < len(line) < 30 and 
                 not any(char.isdigit() for char in line) and
                 not line.startswith('*') and not line.startswith('-')):
-                return line
-            
-            # Look for title case names
-            if (line.istitle() and len(line) > 3 and 
-                not any(char.isdigit() for char in line) and
-                ('restaurant' in line.lower() or 'cafe' in line.lower() or 
-                 'diner' in line.lower() or 'bistro' in line.lower() or
-                 'pizza' in line.lower() or 'kitchen' in line.lower() or
-                 'grill' in line.lower() or 'bar' in line.lower())):
                 return line
         
         return ''
@@ -217,8 +305,23 @@ class PatternRecognizer:
     
     def _extract_website(self, text: str) -> str:
         """Extract website URL from text."""
+        # Look for website patterns but filter out common non-website matches
         matches = self.patterns['website'].findall(text)
-        return matches[0] if matches else ''
+        
+        # Filter out non-website matches and prioritize restaurant websites
+        filtered_matches = []
+        for match in matches:
+            # Skip generic domains that aren't restaurant websites
+            if any(skip in match.lower() for skip in ['copyright', 'guide', 'associates', 'inc']):
+                continue
+            # Prioritize restaurant-specific domains
+            if any(restaurant_word in match.lower() for restaurant_word in ['restaurant', 'cafe', 'diner', 'bistro', 'pizza', 'kitchen', 'grill', 'bar', 'tavern', 'house', 'inn', 'brewery']):
+                filtered_matches.insert(0, match)
+            else:
+                filtered_matches.append(match)
+        
+        # Return first match (prioritized restaurant website)
+        return filtered_matches[0] if filtered_matches else ''
     
     def _extract_prices(self, text: str) -> List[str]:
         """Extract price patterns from text."""
@@ -228,35 +331,157 @@ class PatternRecognizer:
     def _extract_menu_items(self, text: str) -> List[str]:
         """Extract menu items from text."""
         items = []
+        lines = text.strip().split('\n')
         
-        # Pattern: Item Name - $Price
-        dash_pattern = re.compile(r'([A-Za-z][A-Za-z\s&\'-]+)\s*-\s*\$\d+\.\d{2}')
-        matches = dash_pattern.findall(text)
-        items.extend(matches)
+        # Be much more restrictive - only extract clear menu items
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            
+            # Skip all descriptive, marketing, and business information
+            skip_patterns = [
+                # Contact and location info
+                'phone', 'street', 'avenue', 'hours:', 'reservations:', 'www.', 'http', 'email',
+                # Marketing and descriptive text
+                'copyright', 'guide', 'since', 'district', 'click here', 'comfort', 'bustling', 
+                'enduring', 'vibe', 'happy hour', 'established', 'founded', 'decades', 'trip',
+                'norm', 'heart of', 'located in', 'take a', 'back a', 'lunch bars', 'short stools',
+                'were', 'when', 'offers a menu', 'few decades', 'the norm', 'downtown',
+                # Business descriptors
+                'coffee shop', 'restaurant', 'cafe', 'diner', 'bistro', 'tavern', 'bar', 'grill',
+                # Common non-food words that appear in descriptions
+                'location', 'atmosphere', 'experience', 'tradition', 'history', 'story',
+                # Possessive forms that are likely restaurant names
+                "'s coffee", "'s restaurant", "'s cafe", "'s diner"
+            ]
+            
+            # Skip lines containing descriptive or business text
+            if any(skip in line.lower() for skip in skip_patterns):
+                continue
+                
+            # Skip lines that are clearly sentences (contain common sentence words)
+            sentence_indicators = ['the', 'and', 'when', 'were', 'was', 'are', 'is', 'in', 'of', 'to', 'a ', 'an ']
+            if any(f' {word} ' in f' {line.lower()} ' for word in sentence_indicators):
+                continue
+            
+            # Skip lines that are just contact info or addresses
+            if re.search(r'^\d{3}[-.\s]?\d{3}[-.\s]?\d{4}$', line):  # Just phone numbers
+                continue
+            if re.search(r'^\$\d+-\$\d+$', line):  # Just price ranges
+                continue
+            if re.search(r'\d+\s+\w+\s+(street|avenue|road|blvd)', line, re.IGNORECASE):  # Addresses
+                continue
+            
+            # Only include lines that are clearly food items (much more restrictive)
+            # Must contain specific food-related keywords
+            food_keywords = [
+                'sandwich', 'burger', 'pizza', 'steak', 'chicken', 'fish', 'soup', 'salad', 
+                'appetizer', 'dessert', 'drink', 'beverage', 'special', 'mac', 'cheese', 
+                'halibut', 'ribs', 'pork', 'beef', 'pasta', 'noodle', 'rice', 'bread', 'cake', 
+                'pie', 'wings', 'fries', 'tots', 'truffle', 'bacon', 'egg', 'omelet', 'pancake',
+                'waffle', 'toast', 'coffee', 'tea', 'juice', 'soda', 'beer', 'wine', 'cocktail',
+                'salami', 'ham', 'turkey', 'cheese', 'lettuce', 'tomato', 'onion', 'pickle',
+                # Breakfast items
+                'omelette', 'french toast', 'breakfast', 'pancakes', 'waffle', 'hash browns',
+                'scrambled', 'fried', 'poached', 'benedict', 'bagel', 'muffin', 'cereal',
+                'oatmeal', 'yogurt', 'granola', 'fruit', 'berry', 'blueberry', 'strawberry',
+                # Common food preparations and styles
+                'grilled', 'baked', 'roasted', 'fried', 'sauteed', 'braised', 'steamed',
+                'creamy', 'crispy', 'golden', 'fresh', 'homemade', 'house made'
+            ]
+            
+            # Look for food items (all caps or title case)
+            if ((line.isupper() or line.istitle() or 
+                 (len(line.split()) <= 4 and any(word[0].isupper() for word in line.split()))) and 
+                len(line) > 3 and 
+                not any(char.isdigit() for char in line) and
+                not line.startswith('*') and not line.startswith('-') and
+                len(line.split()) <= 6 and  # Reasonable menu item length
+                any(food_word in line.lower() for food_word in food_keywords)):
+                items.append(line)
         
-        # Pattern: * Item Name - $Price
-        bullet_pattern = re.compile(r'[*•-]\s*([A-Za-z][A-Za-z\s&\'-]+)\s*-\s*\$\d+\.\d{2}')
-        matches = bullet_pattern.findall(text)
-        items.extend(matches)
+        # Look for traditional menu item patterns with prices (these are more reliable)
+        price_patterns = [
+            # Pattern: Item Name - $Price
+            re.compile(r'([A-Za-z][A-Za-z\s&\'-]+)\s*-\s*\$\d+\.\d{2}'),
+            # Pattern: * Item Name - $Price
+            re.compile(r'[*•-]\s*([A-Za-z][A-Za-z\s&\'-]+)\s*-\s*\$\d+\.\d{2}'),
+            # Pattern: 1. Item Name - $Price
+            re.compile(r'\d+\.\s*([A-Za-z][A-Za-z\s&\'-]+)\s*-\s*\$\d+\.\d{2}')
+        ]
         
-        # Pattern: 1. Item Name - $Price
-        numbered_pattern = re.compile(r'\d+\.\s*([A-Za-z][A-Za-z\s&\'-]+)\s*-\s*\$\d+\.\d{2}')
-        matches = numbered_pattern.findall(text)
-        items.extend(matches)
+        for pattern in price_patterns:
+            matches = pattern.findall(text)
+            for match in matches:
+                item_name = match if isinstance(match, str) else match[0]
+                # Additional filtering for priced items
+                if (len(item_name.strip()) > 2 and 
+                    not any(skip in item_name.lower() for skip in ['coffee shop', 'restaurant', 'cafe', 'since', 'established', 'located'])):
+                    items.append(item_name.strip())
         
-        return [item.strip() for item in items]
+        # Pattern: * Item Name $Price (no dash) - be very careful with this one
+        bullet_no_dash_pattern = re.compile(r'[*•-]\s*([A-Za-z][A-Za-z\s&\'-]+)\s+(\$\d+\.\d{2})')
+        matches = bullet_no_dash_pattern.findall(text)
+        for match in matches:
+            item_name = match[0].strip()
+            # Only include if it's clearly a food item
+            if (len(item_name) > 2 and 
+                any(food_word in item_name.lower() for food_word in food_keywords) and
+                not any(skip in item_name.lower() for skip in ['coffee shop', 'restaurant', 'cafe', 'since', 'established', 'located'])):
+                items.append(item_name)
+        
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_items = []
+        for item in items:
+            if item.lower() not in seen:
+                seen.add(item.lower())
+                unique_items.append(item)
+        
+        return unique_items
     
     def _extract_hours(self, text: str) -> str:
         """Extract operating hours from text."""
+        lines = text.split('\n')
+        
+        # Look for HOURS: section and get the following lines
+        for i, line in enumerate(lines):
+            if 'HOURS:' in line.upper():
+                hour_lines = []
+                # Get lines after HOURS: until we hit another section or empty line
+                j = i + 1
+                while j < len(lines):
+                    next_line = lines[j].strip()
+                    if not next_line:
+                        break
+                    # Stop if we hit another section (all caps line ending with :)
+                    if next_line.isupper() and next_line.endswith(':'):
+                        break
+                    # Check if this looks like hours
+                    if re.search(r'(Mon|Tue|Wed|Thu|Fri|Sat|Sun)', next_line, re.IGNORECASE):
+                        hour_lines.append(next_line)
+                    j += 1
+                
+                if hour_lines:
+                    return '; '.join(hour_lines)
+        
+        # Look for common hour patterns
         matches = self.patterns['hours'].findall(text)
         if matches:
             return '; '.join(matches)
         
         # Alternative format: Mon-Fri: 10am-11pm
         alt_pattern = re.compile(r'(Mon|Tue|Wed|Thu|Fri|Sat|Sun)(?:day)?(?:\s*-\s*(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)(?:day)?)?\s*:\s*\d{1,2}(?::\d{2})?(?:am|pm)\s*-\s*\d{1,2}(?::\d{2})?(?:am|pm)', re.IGNORECASE)
-        alt_matches = alt_pattern.findall(text)
-        if alt_matches:
-            return text  # Return full text section for now
+        
+        # Find all hour patterns in the text
+        hour_lines = []
+        for line in text.split('\n'):
+            if alt_pattern.search(line):
+                hour_lines.append(line.strip())
+        
+        if hour_lines:
+            return '; '.join(hour_lines)
         
         return ''
     
@@ -267,6 +492,15 @@ class PatternRecognizer:
         for match in self.patterns['service'].finditer(text):
             full_match = match.group(0).strip()  # Get the full match
             matches.append(full_match)
+        
+        # Also look for specific reservation patterns that might be missed
+        if re.search(r'reservations?:\s*(?:recommended|required|accepted|available)', text, re.IGNORECASE):
+            matches.append('Reservations')
+        
+        # Look for "FOR RESERVATIONS" pattern
+        if re.search(r'for\s+reservations?', text, re.IGNORECASE):
+            matches.append('Reservations')
+        
         return list(set(matches))  # Remove duplicates
     
     def _extract_menu_sections(self, text: str) -> List[str]:
@@ -303,7 +537,8 @@ class PatternRecognizer:
     def _extract_cuisine_type(self, text: str) -> str:
         """Extract cuisine type from text."""
         matches = self.patterns['cuisine'].findall(text)
-        return matches[0] if matches else ''
+        # Return title case for consistency
+        return matches[0].title() if matches else ''
     
     def _extract_dietary_info(self, text: str) -> List[str]:
         """Extract dietary information from text."""
@@ -317,8 +552,16 @@ class PatternRecognizer:
     
     def _extract_location_details(self, text: str) -> str:
         """Extract location details from text."""
-        matches = self.patterns['location_detail'].findall(text)
-        return ' '.join(matches) if matches else ''
+        # Look for full lines containing location keywords
+        lines = text.split('\\n')
+        location_details = []
+        
+        for line in lines:
+            line = line.strip()
+            if line and self.patterns['location_detail'].search(line):
+                location_details.append(line)
+        
+        return ' '.join(location_details) if location_details else ''
     
     def _calculate_confidence_scores(self, text: str) -> Dict[str, float]:
         """Calculate confidence scores for each pattern type."""
@@ -331,7 +574,7 @@ class PatternRecognizer:
             scores['restaurant_name'] = 0.0
             
         if self._extract_address(text):
-            scores['address'] = 0.8
+            scores['address'] = 0.85
         else:
             scores['address'] = 0.0
             

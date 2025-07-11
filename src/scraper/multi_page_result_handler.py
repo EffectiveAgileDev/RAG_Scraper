@@ -199,6 +199,7 @@ class MultiPageResultHandler:
             hours=data.hours,
             price_range=data.price_range,
             cuisine=data.cuisine,
+            website=data.website,
             menu_items=data.menu_items,
             social_media=data.social_media,
             confidence=data.confidence,

@@ -1,20 +1,30 @@
 Master Index - All Restaurant Entities
 ========================================
 
-Generated: 2025-06-24T14:26:10.707612
-Total Entities: 1
+Generated: 2025-07-08T12:59:26.756254
+Total Entities: 3
 Schema Version: 1.0.0
 
 Restaurant Listings:
 --------------------
 
-1. Context Restaurant
-   File: Unknown/Context_Restaurant.txt
+1. Stats Restaurant 1
+   Cuisine: Italian
+   File: Italian/Stats_Restaurant_1.txt
+
+2. Stats Restaurant 2
+   Cuisine: Mexican
+   File: Mexican/Stats_Restaurant_2.txt
+
+3. Stats Restaurant 3
+   Cuisine: Italian
+   File: Italian/Stats_Restaurant_3.txt
 
 
 Statistics:
 ------------
-Total Restaurants: 1
+Total Restaurants: 3
 
 Cuisine Breakdown:
-  Unknown: 1
+  Italian: 2
+  Mexican: 1

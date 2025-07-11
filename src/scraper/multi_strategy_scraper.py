@@ -21,6 +21,7 @@ class RestaurantData:
     hours: str = ""
     price_range: str = ""
     cuisine: str = ""
+    website: str = ""
     menu_items: Dict[str, List[str]] = None
     social_media: List[str] = None
     confidence: str = "medium"
@@ -43,6 +44,7 @@ class RestaurantData:
             "hours": self.hours,
             "price_range": self.price_range,
             "cuisine": self.cuisine,
+            "website": self.website,
             "menu_items": self.menu_items,
             "social_media": self.social_media,
             "confidence": self.confidence,
@@ -170,7 +172,7 @@ class MultiStrategyScraper:
 
         # Merge results with priority: JSON-LD > Microdata > Heuristic
         merged_data = self._merge_extraction_results(
-            json_ld_results, microdata_results, heuristic_results
+            json_ld_results, microdata_results, heuristic_results, url
         )
 
         return merged_data
@@ -180,6 +182,7 @@ class MultiStrategyScraper:
         json_ld_results: List[JSONLDExtractionResult],
         microdata_results: List[MicrodataExtractionResult],
         heuristic_results: List[HeuristicExtractionResult],
+        url: Optional[str] = None,
     ) -> Optional[RestaurantData]:
         """Merge results from all extraction strategies."""
 
@@ -208,7 +211,14 @@ class MultiStrategyScraper:
         )
 
         # Create merged restaurant data
-        merged = RestaurantData(name=base_result.name, sources=sources)
+        # Extract base domain for website field
+        website_url = ""
+        if url:
+            from urllib.parse import urlparse
+            parsed = urlparse(url)
+            website_url = f"{parsed.scheme}://{parsed.netloc}/"
+        
+        merged = RestaurantData(name=base_result.name, sources=sources, website=website_url)
 
         # Merge fields with priority order
         self._merge_field(merged, all_results, "address")

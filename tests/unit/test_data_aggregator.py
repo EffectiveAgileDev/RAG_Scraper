@@ -80,7 +80,7 @@ class TestDataAggregator:
         result = aggregator.aggregate()
 
         assert isinstance(result, RestaurantData)
-        assert result.name == "Tony's Italian Restaurant"  # From home page
+        assert result.name == "Tony's Restaurant"  # From menu page (JSON-LD source)
         assert result.cuisine == "Italian"
         assert result.phone == "(503) 555-1234"
         assert result.address == "123 Main St, Portland, OR"

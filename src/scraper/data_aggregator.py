@@ -124,6 +124,7 @@ class PageData:
     hours: str = ""
     price_range: str = ""
     cuisine: str = ""
+    website: str = ""
     menu_items: Dict[str, List[str]] = field(default_factory=dict)
     social_media: List[str] = field(default_factory=list)
     confidence: str = "medium"
@@ -140,6 +141,7 @@ class PageData:
             "hours": self.hours,
             "price_range": self.price_range,
             "cuisine": self.cuisine,
+            "website": self.website,
             "menu_items": self.menu_items,
             "social_media": self.social_media,
             "confidence": self.confidence,
@@ -150,15 +152,15 @@ class DataAggregator:
     """Aggregates restaurant data from multiple pages with conflict resolution."""
 
     # Source priority (higher = more trustworthy)
-    SOURCE_PRIORITY = {"json-ld": 3, "microdata": 2, "heuristic": 1}
+    SOURCE_PRIORITY = {"json-ld": 10, "microdata": 7, "heuristic": 1}
 
     # Page type priority for specific fields
     PAGE_TYPE_PRIORITY = {
-        "contact": {"phone": 10, "address": 10, "hours": 10},
+        "contact": {"phone": 15, "address": 15, "hours": 15},
         "hours": {"hours": 9},
         "about": {"cuisine": 8, "restaurant_name": 7},
-        "menu": {"price_range": 8, "menu_items": 10},
-        "home": {"restaurant_name": 9, "cuisine": 6},
+        "menu": {"price_range": 8, "menu_items": 10, "restaurant_name": 3},
+        "home": {"restaurant_name": 8, "cuisine": 6},
     }
 
     def __init__(self):
@@ -202,10 +204,11 @@ class DataAggregator:
         # Resolve each field using appropriate strategy
         aggregated.name = self._resolve_restaurant_name()
         aggregated.phone = self._resolve_contact_field("phone")
-        aggregated.address = self._resolve_contact_field("address")
-        aggregated.hours = self._resolve_contact_field("hours")
+        aggregated.address = self._clean_address(self._resolve_contact_field("address"))
+        aggregated.hours = self._clean_hours(self._resolve_contact_field("hours"))
         aggregated.price_range = self._resolve_field_by_source("price_range")
         aggregated.cuisine = self._resolve_field_by_source("cuisine")
+        aggregated.website = self._resolve_website()
         aggregated.menu_items = self._merge_menu_items()
         aggregated.social_media = self._merge_social_media()
 
@@ -458,6 +461,62 @@ class DataAggregator:
         summary["fields_found"] = list(summary["fields_found"])
 
         return summary
+    
+    def _clean_address(self, address: str) -> str:
+        """Clean and format address string."""
+        if not address:
+            return address
+            
+        # Fix common spacing issues
+        # Add space before city name (e.g., "AvenuePortland" -> "Avenue Portland")
+        address = re.sub(r'([a-z])([A-Z])', r'\1 \2', address)
+        
+        # Add space before state abbreviation (e.g., "Portland, OR97232" -> "Portland, OR 97232")
+        address = re.sub(r',\s*([A-Z]{2})(\d{5})', r', \1 \2', address)
+        
+        # Ensure proper spacing after commas
+        address = re.sub(r',\s*', ', ', address)
+        
+        # Clean up multiple spaces
+        address = re.sub(r'\s+', ' ', address)
+        
+        return address.strip()
+    
+    def _clean_hours(self, hours: str) -> str:
+        """Clean and format hours string."""
+        if not hours:
+            return hours
+            
+        # Fix common truncation issues where first letter is missing
+        # If hours starts with lowercase letter that should be uppercase
+        if hours and hours[0].islower() and hours.startswith(('erved', 'pen', 'losed')):
+            # Common fixes
+            if hours.startswith('erved'):
+                hours = 'S' + hours
+            elif hours.startswith('pen'):
+                hours = 'O' + hours
+            elif hours.startswith('losed'):
+                hours = 'C' + hours
+                
+        return hours.strip()
+    
+    def _resolve_website(self) -> str:
+        """Resolve website URL from page data."""
+        # First check if any page has explicit website field
+        for page in self.page_data:
+            if hasattr(page, 'website') and page.website:
+                return page.website
+                
+        # Otherwise, use the first page URL as website
+        if self.page_data and hasattr(self.page_data[0], 'url') and self.page_data[0].url:
+            # Extract base URL (domain) from page URL
+            url = self.page_data[0].url
+            from urllib.parse import urlparse
+            parsed = urlparse(url)
+            # Return the base domain URL
+            return f"{parsed.scheme}://{parsed.netloc}/"
+            
+        return ""
 
     # Enhanced methods for entity-based aggregation
 

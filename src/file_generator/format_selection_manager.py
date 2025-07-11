@@ -59,6 +59,11 @@ class FormatSelectionManager:
         self._format_configurations = {}
         self._format_priorities = self.DEFAULT_PRIORITIES.copy()
         self._format_selection_callback = None
+        self._format_preferences = {
+            "text": {"enabled": True, "priority": 1},
+            "pdf": {"enabled": True, "priority": 2}, 
+            "json": {"enabled": True, "priority": 3}
+        }
 
         logger.debug(
             f"FormatSelectionManager initialized with mode: {self._selection_mode.value}"
@@ -78,6 +83,11 @@ class FormatSelectionManager:
     def selection_mode(self) -> SelectionMode:
         """Get current selection mode (read-only)."""
         return self._selection_mode
+
+    @property
+    def format_preferences(self) -> Dict[str, Dict[str, Any]]:
+        """Get format preferences (read-only)."""
+        return self._format_preferences.copy()
 
     def get_available_formats(self) -> List[str]:
         """Get list of available formats."""
@@ -367,7 +377,7 @@ class FormatSelectionManager:
         for field_name, value in field_selection.items():
             if field_name not in self.VALID_JSON_FIELDS:
                 raise FormatSelectionError(
-                    f"Invalid JSON field: {field_name}. "
+                    f"JSON field validation failed: {field_name}. "
                     f"Valid fields: {', '.join(self.VALID_JSON_FIELDS)}"
                 )
 

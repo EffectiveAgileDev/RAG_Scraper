@@ -69,7 +69,7 @@ class AddressPatternMatcher(BasePatternMatcher):
                 address = re.sub(
                     r"^(?:at|located at|address:?)\s*", "", address, flags=re.IGNORECASE
                 ).strip()
-                return self.normalize(address)
+                return self.normalize_address(address)
 
         # Try semantic class names
         address_classes = ["address", "location", "contact-address"]
@@ -78,9 +78,29 @@ class AddressPatternMatcher(BasePatternMatcher):
             for elem in elements:
                 text = elem.get_text().strip()
                 if 10 < len(text) < 200:
-                    return self.normalize(text)
+                    return self.normalize_address(text)
 
         return ""
+
+    def normalize_address(self, address: str) -> str:
+        """Normalize address format."""
+        # First, clean up the address
+        address = address.strip()
+        
+        # Fix common spacing issues
+        # Add space before city name (e.g., "AvenuePortland" -> "Avenue Portland")
+        address = re.sub(r'([a-z])([A-Z])', r'\1 \2', address)
+        
+        # Add space before state abbreviation (e.g., "Portland, OR97232" -> "Portland, OR 97232")
+        address = re.sub(r',\s*([A-Z]{2})(\d{5})', r', \1 \2', address)
+        
+        # Ensure proper spacing after commas
+        address = re.sub(r',\s*', ', ', address)
+        
+        # Clean up multiple spaces
+        address = re.sub(r'\s+', ' ', address)
+        
+        return address.strip()
 
 
 class HoursPatternMatcher(BasePatternMatcher):
@@ -115,7 +135,7 @@ class HoursPatternMatcher(BasePatternMatcher):
                     re.search(r"\d+\s*(?:am|pm)", text, re.IGNORECASE)
                     and len(text) < 200
                 ):
-                    return self.normalize(text)
+                    return self.normalize_hours(text)
 
         # Try patterns on individual elements
         for elem in soup.find_all(["p", "div", "span", "td", "li"]):
@@ -134,9 +154,24 @@ class HoursPatternMatcher(BasePatternMatcher):
                         flags=re.IGNORECASE,
                     ).strip()
                     if hours and len(hours) < 100:
-                        return self.normalize(hours)
+                        return self.normalize_hours(hours)
 
         return ""
+
+    def normalize_hours(self, hours: str) -> str:
+        """Normalize hours format."""
+        hours = hours.strip()
+        
+        # Fix common truncation issues where first letter is missing or prefix remains
+        if hours and hours.startswith('Hours'):
+            # Remove "Hours" prefix if present
+            hours = re.sub(r'^Hours\s*', '', hours)
+        
+        # Clean up spacing around day ranges and times
+        hours = re.sub(r'([A-Za-z]+day)\s*-\s*([A-Za-z]+day)', r'\1-\2', hours)
+        hours = re.sub(r'(\d+:\d+)(am|pm)\s*-\s*(\d+:\d+)(am|pm)', r'\1\2-\3\4', hours)
+        
+        return hours.strip()
 
 
 class RestaurantNameExtractor:

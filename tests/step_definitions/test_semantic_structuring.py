@@ -1,7 +1,10 @@
 """Step definitions for semantic structuring BDD tests."""
 
 import pytest
-from pytest_bdd import scenarios, given, when, then, parsers
+try:
+    from pytest_bdd import scenarios, given, when, then, parsers
+except ImportError:
+    from ..mock_pytest_bdd import scenarios, given, when, then, parsers
 import json
 from datetime import datetime
 

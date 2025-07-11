@@ -12,12 +12,13 @@ from src.config.app_config import get_app_config
 
 if __name__ == '__main__':
     config = get_app_config()
-    config.host = "localhost"  # Local access for production-like usage
+    config.host = "0.0.0.0"  # Listen on all interfaces for network access
     config.debug = False  # Disable debug for production
     
     app = create_app()
     print("🚀 Starting RAG_Scraper web interface...")
-    print(f"📍 Open your browser to: {config.get_server_url()}")
+    print(f"📍 Open your browser to: http://localhost:{config.port}")
+    print(f"📱 Network access: http://192.168.12.187:{config.port}")
     print("   (Make sure to include 'http://' in the URL)")
     print("⏹️  Press Ctrl+C to stop the server")
     

@@ -75,3 +75,160 @@ def progress_context():
 def queue_context():
     """Provide queue context for tracking test state."""
     return {}
+
+
+# RestW-specific fixtures
+from unittest.mock import Mock, MagicMock
+from dataclasses import dataclass
+from typing import Dict, Any, List
+
+
+@dataclass
+class MockWebContext:
+    """Mock web context for testing."""
+    current_page: str = 'main'
+    form_data: Dict[str, Any] = None
+    extraction_performed: bool = False
+    
+    def __post_init__(self):
+        if self.form_data is None:
+            self.form_data = {}
+
+
+@dataclass
+class MockExtractionResult:
+    """Mock extraction result for testing."""
+    success: bool = True
+    schema_type: str = 'RestW'
+    data: Dict[str, Any] = None
+    
+    def __post_init__(self):
+        if self.data is None:
+            self.data = {
+                'location': {
+                    'street_address': '123 Main St',
+                    'city': 'Anytown',
+                    'state': 'CA',
+                    'zip_code': '12345'
+                },
+                'menu_items': [
+                    {'item_name': 'Pizza', 'price': '$10', 'category': 'Main'},
+                    {'item_name': 'Salad', 'price': '$8', 'category': 'Appetizer'}
+                ],
+                'services_offered': {
+                    'delivery_available': True,
+                    'takeout_available': True,
+                    'catering_available': False
+                },
+                'contact_info': {
+                    'primary_phone': '(555) 123-4567',
+                    'secondary_phone': ''
+                },
+                'web_links': {
+                    'official_website': 'https://example-restaurant.com',
+                    'menu_pdf_url': 'https://example-restaurant.com/menu.pdf'
+                }
+            }
+
+
+@pytest.fixture
+def mock_web_context():
+    """Fixture for mock web context."""
+    return MockWebContext()
+
+
+@pytest.fixture
+def mock_extraction_result():
+    """Fixture for mock extraction result."""
+    return MockExtractionResult()
+
+
+@pytest.fixture
+def mock_wteg_data():
+    """Fixture for mock WTEG data."""
+    return {
+        'location': {
+            'street_address': '123 Main St',
+            'city': 'Anytown',
+            'state': 'CA',
+            'zip_code': '12345',
+            'neighborhood': 'Downtown'
+        },
+        'menu_items': [
+            {
+                'item_name': 'Margherita Pizza',
+                'description': 'Fresh mozzarella, tomatoes, basil',
+                'price': '$12.99',
+                'category': 'Pizza'
+            },
+            {
+                'item_name': 'Caesar Salad',
+                'description': 'Romaine lettuce, parmesan, croutons',
+                'price': '$8.99',
+                'category': 'Salads'
+            }
+        ],
+        'services_offered': {
+            'delivery_available': True,
+            'takeout_available': True,
+            'catering_available': False,
+            'reservations_accepted': True,
+            'online_ordering': True
+        },
+        'contact_info': {
+            'primary_phone': '(555) 123-4567',
+            'secondary_phone': '',
+            'formatted_display': '(555) 123-4567',
+            'clickable_link': 'tel:5551234567'
+        },
+        'web_links': {
+            'official_website': 'https://example-restaurant.com',
+            'menu_pdf_url': 'https://example-restaurant.com/menu.pdf',
+            'social_media_links': [
+                'https://facebook.com/example-restaurant',
+                'https://instagram.com/example-restaurant'
+            ]
+        }
+    }
+
+
+# Mock classes for testing
+class MockRestWProcessor:
+    """Mock RestW processor for testing."""
+    
+    def __init__(self, schema_type='RestW'):
+        self.schema_type = schema_type
+        self.obfuscate_terminology = True
+    
+    def process_url(self, url, options=None):
+        """Mock URL processing."""
+        return {
+            'success': True,
+            'data': {
+                'location': {'street_address': '123 Main St'},
+                'menu_items': [{'item_name': 'Pizza'}]
+            }
+        }
+    
+    def process_pdf(self, pdf_path, options=None):
+        """Mock PDF processing."""
+        return {
+            'success': True,
+            'data': {
+                'menu_items': [{'item_name': 'Pizza', 'price': '$10'}]
+            }
+        }
+    
+    def uses_wteg_schema(self):
+        """Mock WTEG schema check."""
+        return True
+    
+    def validate_restw_output(self, output):
+        """Mock output validation."""
+        return 'location' in output or 'menu_items' in output
+
+
+@pytest.fixture
+def mock_restw_processor():
+    """Fixture for mock RestW processor."""
+    return MockRestWProcessor()
