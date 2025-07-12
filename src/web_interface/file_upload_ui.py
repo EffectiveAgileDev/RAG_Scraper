@@ -58,7 +58,7 @@ class FileUploadArea:
             max_file_size: Maximum file size
             enable_multiple: Whether to enable multiple file uploads
         """
-        self.accept_types = accept_types or ["application/pdf"]
+        self.accept_types = accept_types or ["application/pdf", "text/html", ".html", ".pdf"]
         self.max_file_size = max_file_size
         self.enable_multiple = enable_multiple
     
@@ -76,7 +76,7 @@ class FileUploadArea:
         <div class="file-path-section">
             <label for="file-path-input" class="input-label">FILE_PATH:</label>
             <input type="text" id="file-path-input" class="terminal-input" 
-                   placeholder="Enter full path to PDF file (e.g., /home/user/document.pdf)"
+                   placeholder="Enter full path to file (e.g., /home/user/document.pdf or /home/user/page.html)"
                    onchange="handleFilePathInput(event)">
         </div>
         
@@ -87,7 +87,7 @@ class FileUploadArea:
              ondrop="handleDrop(event)">
             <div class="upload-icon">📁</div>
             <div class="upload-text">
-                <p>Drag and drop PDF files here</p>
+                <p>Drag and drop PDF/HTML files here</p>
                 <p>or</p>
                 <button type="button" id="browse-files-btn" onclick="triggerFileInput()" tabindex="0">
                     Browse Files

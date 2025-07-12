@@ -22,7 +22,7 @@ from src.web_interface.handlers import (
     ValidationHandler
 )
 from src.web_interface.validators.industry_validator import IndustryValidator
-from src.web_interface.settings_storage import SettingsStorage
+from src.web_interface.settings_storage import SettingsStorage, SinglePageSettingsStorage, MultiPageSettingsStorage
 
 
 def register_api_routes(app, advanced_monitor, file_generator_service):
@@ -606,6 +606,120 @@ def register_api_routes(app, advanced_monitor, file_generator_service):
             return jsonify({
                 "success": True,
                 "settings": saved_settings
+            })
+            
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 500
+    
+    @app.route("/api/save-single-page-settings", methods=["POST"])
+    def save_single_page_settings():
+        """Save single-page mode settings."""
+        try:
+            data = request.get_json(force=True)
+            if not data or 'settings' not in data:
+                return jsonify({"success": False, "error": "No settings provided"}), 400
+            
+            storage = SinglePageSettingsStorage()
+            
+            # Validate settings
+            if not storage.validate_settings(data['settings']):
+                return jsonify({"success": False, "error": "Invalid single-page settings"}), 400
+            
+            # Save settings
+            if storage.save_settings(data['settings']):
+                # Also save the enabled state
+                session['single_page_save_enabled'] = data.get('saveEnabled', True)
+                
+                return jsonify({
+                    "success": True,
+                    "message": "Single-page settings saved successfully"
+                })
+            else:
+                return jsonify({"success": False, "error": "Failed to save settings"}), 500
+            
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 500
+    
+    @app.route("/api/save-multi-page-settings", methods=["POST"])
+    def save_multi_page_settings():
+        """Save multi-page mode settings."""
+        try:
+            data = request.get_json(force=True)
+            if not data or 'settings' not in data:
+                return jsonify({"success": False, "error": "No settings provided"}), 400
+            
+            storage = MultiPageSettingsStorage()
+            
+            # Validate settings
+            if not storage.validate_settings(data['settings']):
+                return jsonify({"success": False, "error": "Invalid multi-page settings"}), 400
+            
+            # Save settings
+            if storage.save_settings(data['settings']):
+                # Also save the enabled state
+                session['multi_page_save_enabled'] = data.get('saveEnabled', True)
+                
+                return jsonify({
+                    "success": True,
+                    "message": "Multi-page settings saved successfully"
+                })
+            else:
+                return jsonify({"success": False, "error": "Failed to save settings"}), 500
+            
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 500
+    
+    @app.route("/api/get-single-page-settings", methods=["GET"])
+    def get_single_page_settings():
+        """Get saved single-page settings."""
+        try:
+            storage = SinglePageSettingsStorage()
+            
+            # Check if save is enabled
+            if not session.get('single_page_save_enabled', False):
+                return jsonify({
+                    "success": True,
+                    "settings": None,
+                    "saveEnabled": False
+                })
+            
+            # Get settings
+            saved_settings = storage.load_settings()
+            if not saved_settings:
+                saved_settings = storage.get_default_settings()
+            
+            return jsonify({
+                "success": True,
+                "settings": saved_settings,
+                "saveEnabled": True
+            })
+            
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 500
+    
+    @app.route("/api/get-multi-page-settings", methods=["GET"])
+    def get_multi_page_settings():
+        """Get saved multi-page settings."""
+        try:
+            storage = MultiPageSettingsStorage()
+            
+            # Check if save is enabled
+            if not session.get('multi_page_save_enabled', False):
+                return jsonify({
+                    "success": True,
+                    "settings": None,
+                    "saveEnabled": False
+                })
+            
+            # Get settings
+            saved_settings = storage.load_settings()
+            if not saved_settings:
+                saved_settings = storage.get_default_settings()
+            
+            return jsonify({
+                "success": True,
+                "settings": saved_settings,
+                "saveEnabled": True
             })
             
         except Exception as e:

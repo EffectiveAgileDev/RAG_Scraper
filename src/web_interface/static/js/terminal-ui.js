@@ -4,6 +4,7 @@
  * form handling, API calls, and real-time UI interactions.
  */
 
+
 // =============================================================================
 // Global Variables and UI Element References
 // =============================================================================
@@ -454,20 +455,68 @@ function toggleSinglePageConfig() {
 /**
  * Toggle single-page advanced options panel expansion
  */
-function toggleSinglePageAdvancedOptions() {
-    const advancedPanel = document.getElementById('singleAdvancedOptionsPanel');
-    const expandIcon = document.getElementById('singleAdvancedOptionsIcon');
-    
-    if (advancedPanel.classList.contains('collapsed')) {
-        advancedPanel.classList.remove('collapsed');
-        expandIcon.classList.add('expanded');
-        updateSystemStatus('SINGLE_PAGE_ADVANCED_OPTIONS // PANEL_EXPANDED');
-    } else {
-        advancedPanel.classList.add('collapsed');
-        expandIcon.classList.remove('expanded');
-        updateSystemStatus('SINGLE_PAGE_ADVANCED_OPTIONS // PANEL_COLLAPSED');
+window.toggleSinglePageAdvancedOptions = function() {
+    try {
+        console.log('toggleSinglePageAdvancedOptions called');
+        
+        const advancedPanel = document.getElementById('singleAdvancedOptionsPanel');
+        const expandIcon = document.getElementById('singleAdvancedOptionsIcon');
+        
+        if (!advancedPanel) {
+            console.error('Cannot find singleAdvancedOptionsPanel');
+            return;
+        }
+        
+        if (!expandIcon) {
+            console.error('Cannot find singleAdvancedOptionsIcon');
+            return;
+        }
+        
+        console.log('Found elements, toggling...');
+        
+        const isCollapsed = advancedPanel.classList.contains('collapsed');
+        
+        if (isCollapsed) {
+            // EXPAND
+            advancedPanel.classList.remove('collapsed');
+            advancedPanel.style.display = 'block';
+            advancedPanel.style.maxHeight = '600px';
+            advancedPanel.style.opacity = '1';
+            advancedPanel.style.padding = '1.5rem';
+            expandIcon.textContent = '▲';
+            console.log('Panel expanded');
+        } else {
+            // COLLAPSE
+            advancedPanel.classList.add('collapsed');
+            advancedPanel.style.maxHeight = '0px';
+            advancedPanel.style.opacity = '0';
+            advancedPanel.style.padding = '0 1.5rem';
+            expandIcon.textContent = '▼';
+            console.log('Panel collapsed');
+        }
+    } catch (error) {
+        console.error('Error in toggleSinglePageAdvancedOptions:', error);
+        alert('Error: ' + error.message);
     }
 }
+
+// Make sure the function is available globally
+window.toggleSinglePageAdvancedOptions = toggleSinglePageAdvancedOptions;
+
+// Debug function to check if elements exist
+window.checkSinglePageElements = function() {
+    const panel = document.getElementById('singleAdvancedOptionsPanel');
+    const icon = document.getElementById('singleAdvancedOptionsIcon');
+    console.log('Element check:', {
+        panel: panel,
+        icon: icon,
+        panelExists: !!panel,
+        iconExists: !!icon,
+        panelClasses: panel?.className,
+        iconText: icon?.textContent
+    });
+    return {panel, icon};
+};
 
 // =============================================================================
 // Multi-Page Configuration Panel Functions

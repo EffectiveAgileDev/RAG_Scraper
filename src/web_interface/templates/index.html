@@ -1755,12 +1755,22 @@ https://restaurant3.com
                             <button type="button" id="clearBtn" class="cmd-button">RESET_TERMINAL</button>
                         </div>
                         
-                        <!-- Save Settings Toggle -->
-                        <div class="save-settings-row">
-                            {{ save_settings_toggle | safe }}
+                        <!-- Scraping Results - positioned right after action bar -->
+                        <div id="resultsContainer" class="results-container" style="display: none;">
+                            <div class="results-header">
+                                <h3>📊 SCRAPING_RESULTS</h3>
+                            </div>
+                            <div class="results-content" id="resultsContent">
+                                <div class="no-results" id="noResults">
+                                    <div class="status-message">No results available</div>
+                                    <div class="status-subtitle">Complete a scraping operation to see detailed results</div>
+                                </div>
+                                <div class="sites-results" id="sitesResults" style="display: none;">
+                                    <!-- Site results will be populated here -->
+                                </div>
+                            </div>
                         </div>
                         
-
                         <!-- Multi-Page Configuration Panel -->
                         <div class="input-group" data-section="scraping-mode">
                             <div class="scraping-mode-selector">
@@ -1836,7 +1846,7 @@ https://restaurant3.com
                                     <!-- Advanced Options Section -->
                                     <div class="config-section-divider"></div>
                                     <div class="config-item advanced-options-header">
-                                        <div class="config-toggle-header" onclick="toggleSinglePageAdvancedOptions()">
+                                        <div class="config-toggle-header" onclick="toggleSinglePageAdvancedOptions();">
                                             <span class="config-label">🔧 ADVANCED_OPTIONS</span>
                                             <span class="expand-icon" id="singleAdvancedOptionsIcon">▼</span>
                                         </div>
@@ -1887,6 +1897,12 @@ https://restaurant3.com
                                                 FOLLOW_REDIRECTS
                                             </label>
                                             <div class="config-desc">Follow HTTP redirects to final destination</div>
+                                        </div>
+                                        
+                                        <!-- Single Page Save Settings -->
+                                        <div class="config-section-divider"></div>
+                                        <div class="config-item save-settings-section">
+                                            {{ single_page_save_settings_toggle | safe }}
                                         </div>
                                     </div>
                                 </div>
@@ -2105,6 +2121,12 @@ https://restaurant3.com
                                                 🔄 RESET_TO_DEFAULTS
                                             </button>
                                         </div>
+                                        
+                                        <!-- Multi Page Save Settings -->
+                                        <div class="config-section-divider"></div>
+                                        <div class="config-item save-settings-section">
+                                            {{ multi_page_save_settings_toggle | safe }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -2217,21 +2239,6 @@ https://restaurant3.com
                         
                         <div id="discoveryNotifications" class="discovery-notifications">
                             <!-- Discovery notifications will appear here -->
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="resultsContainer" class="results-container" style="display: none;">
-                    <div class="results-header">
-                        <h3>📊 SCRAPING_RESULTS</h3>
-                    </div>
-                    <div class="results-content" id="resultsContent">
-                        <div class="no-results" id="noResults">
-                            <div class="status-message">No results available</div>
-                            <div class="status-subtitle">Complete a scraping operation to see detailed results</div>
-                        </div>
-                        <div class="sites-results" id="sitesResults" style="display: none;">
-                            <!-- Site results will be populated here -->
                         </div>
                     </div>
                 </div>
@@ -2455,7 +2462,14 @@ https://restaurant3.com
                     const advancedPanel = document.getElementById('advancedOptionsPanel');
                     const expandIcon = document.getElementById('advancedOptionsIcon');
                     
-                    if (advancedPanel.classList.contains('collapsed')) {
+                    if (!advancedPanel || !expandIcon) {
+                        console.error('Advanced Options elements not found:', {advancedPanel, expandIcon});
+                        return;
+                    }
+                    
+                    const isCollapsed = advancedPanel.classList.contains('collapsed');
+                    
+                    if (isCollapsed) {
                         advancedPanel.classList.remove('collapsed');
                         expandIcon.classList.add('expanded');
                         expandIcon.textContent = '▲';
@@ -2715,6 +2729,16 @@ https://restaurant3.com
                                 multiPageHeader.style.display = 'block';
                                 singlePageHeader.style.display = 'none';
                                 
+                                // AUTO-EXPAND multi-page config so advanced options are accessible
+                                if (multiPageConfig) {
+                                    multiPageConfig.classList.remove('collapsed');
+                                    const multiExpandIcon = document.getElementById('configExpandIcon');
+                                    if (multiExpandIcon) {
+                                        multiExpandIcon.classList.add('expanded');
+                                        multiExpandIcon.textContent = '▲';
+                                    }
+                                }
+                                
                                 // Collapse single-page config if it was expanded
                                 if (singlePageConfig) {
                                     singlePageConfig.classList.add('collapsed');
@@ -2727,6 +2751,16 @@ https://restaurant3.com
                                 // Show single-page config, hide multi-page config
                                 singlePageHeader.style.display = 'block';
                                 multiPageHeader.style.display = 'none';
+                                
+                                // AUTO-EXPAND single-page config so advanced options are accessible
+                                if (singlePageConfig) {
+                                    singlePageConfig.classList.remove('collapsed');
+                                    const singleExpandIcon = document.getElementById('singleConfigExpandIcon');
+                                    if (singleExpandIcon) {
+                                        singleExpandIcon.classList.add('expanded');
+                                        singleExpandIcon.textContent = '▲';
+                                    }
+                                }
                                 
                                 // Collapse multi-page config if it was expanded
                                 if (multiPageConfig) {
@@ -3063,7 +3097,7 @@ https://restaurant3.com
                 }
                 
                 function showFileProcessingResults(data) {
-                    const resultsContainer = document.getElementById('results-container');
+                    const resultsContainer = document.getElementById('resultsContainer');
                     const noResults = document.getElementById('no-results');
                     
                     if (resultsContainer) {
@@ -4097,8 +4131,35 @@ https://restaurant3.com
                 // File Upload Scripts
                 {{ file_upload_scripts | safe }}
                 
-                // Save Settings Scripts
-                {{ save_settings_javascript | safe }}
+                // Separate Save Settings Scripts
+                {{ single_page_save_settings_javascript | safe }}
+                {{ multi_page_save_settings_javascript | safe }}
+                
+                // Single Page Advanced Options Toggle Function
+                window.toggleSinglePageAdvancedOptions = function() {
+                    const advancedPanel = document.getElementById('singleAdvancedOptionsPanel');
+                    const expandIcon = document.getElementById('singleAdvancedOptionsIcon');
+                    
+                    if (!advancedPanel || !expandIcon) return;
+                    
+                    const isCollapsed = advancedPanel.classList.contains('collapsed');
+                    
+                    if (isCollapsed) {
+                        advancedPanel.classList.remove('collapsed');
+                        advancedPanel.style.display = 'block';
+                        advancedPanel.style.maxHeight = '600px';
+                        advancedPanel.style.opacity = '1';
+                        advancedPanel.style.padding = '1.5rem';
+                        expandIcon.textContent = '▼';
+                    } else {
+                        advancedPanel.classList.add('collapsed');
+                        advancedPanel.style.display = 'none';
+                        advancedPanel.style.maxHeight = '0';
+                        advancedPanel.style.opacity = '0';
+                        advancedPanel.style.padding = '0';
+                        expandIcon.textContent = '▶';
+                    }
+                };
             </script>
         </body>
         </html>

@@ -584,6 +584,259 @@ class RestaurantSchemaTypeHelpText:
         return html
 
 
+class SinglePageSaveSettingsToggle:
+    """UI component for Single Page Save Settings toggle."""
+    
+    def __init__(self, checked: bool = False, css_class: str = "save-settings-toggle", 
+                 label_text: str = "Save Single Page Settings"):
+        """Initialize SinglePageSaveSettingsToggle.
+        
+        Args:
+            checked: Whether the toggle is checked by default
+            css_class: CSS class for styling
+            label_text: Text label for the toggle
+        """
+        self.checked = checked
+        self.css_class = css_class
+        self.label_text = label_text
+    
+    def render(self) -> str:
+        """Render the single page save settings toggle HTML.
+        
+        Returns:
+            HTML string for the toggle component
+        """
+        checked_attr = 'checked' if self.checked else ''
+        
+        html = f"""
+        <div id="single-page-save-settings-toggle" class="save-settings-row">
+            <label class="save-settings-label">
+                <input type="checkbox" 
+                       id="single-page-save-settings-checkbox" 
+                       class="{self.css_class}" 
+                       {checked_attr}
+                       onchange="handleSinglePageSaveSettingsToggle(this)">
+                <span class="save-settings-text">{self.label_text}</span>
+            </label>
+            <div class="save-settings-help" id="single-page-save-settings-help">
+                <span class="help-text">
+                    <strong>ON:</strong> Single page settings persist across sessions<br>
+                    <strong>OFF:</strong> Single page settings reset to defaults on page load
+                </span>
+            </div>
+        </div>
+        """
+        return html
+    
+    def get_javascript(self) -> str:
+        """Get JavaScript for single page save settings functionality.
+        
+        Returns:
+            JavaScript code as string
+        """
+        js = """
+        function handleSinglePageSaveSettingsToggle(checkbox) {
+            const isEnabled = checkbox.checked;
+            
+            if (isEnabled) {
+                // Save current single page settings
+                saveSinglePageSettings();
+                updateSystemStatus('SINGLE_PAGE_SAVE_SETTINGS // ENABLED');
+            } else {
+                // Clear saved single page settings
+                localStorage.removeItem('ragScraperSinglePageSettings');
+                updateSystemStatus('SINGLE_PAGE_SAVE_SETTINGS // DISABLED');
+            }
+        }
+        
+        function saveSinglePageSettings() {
+            const settings = {
+                requestTimeout: document.getElementById('singleRequestTimeout')?.value || 30,
+                enableJavaScript: document.getElementById('singleEnableJavaScript')?.checked || false,
+                followRedirects: document.getElementById('singleFollowRedirects')?.checked || true,
+                concurrentRequests: document.getElementById('singleConcurrentRequests')?.value || 1,
+                jsTimeout: document.getElementById('singleJsTimeout')?.value || 30
+            };
+            
+            localStorage.setItem('ragScraperSinglePageSettings', JSON.stringify(settings));
+        }
+        
+        function loadSinglePageSettings() {
+            try {
+                const saved = localStorage.getItem('ragScraperSinglePageSettings');
+                if (saved) {
+                    const settings = JSON.parse(saved);
+                    
+                    // Apply settings to single page form elements
+                    if (document.getElementById('singleRequestTimeout')) {
+                        document.getElementById('singleRequestTimeout').value = settings.requestTimeout || 30;
+                    }
+                    if (document.getElementById('singleEnableJavaScript')) {
+                        document.getElementById('singleEnableJavaScript').checked = settings.enableJavaScript || false;
+                    }
+                    if (document.getElementById('singleFollowRedirects')) {
+                        document.getElementById('singleFollowRedirects').checked = settings.followRedirects !== false;
+                    }
+                    if (document.getElementById('singleConcurrentRequests')) {
+                        document.getElementById('singleConcurrentRequests').value = settings.concurrentRequests || 1;
+                    }
+                    if (document.getElementById('singleJsTimeout')) {
+                        document.getElementById('singleJsTimeout').value = settings.jsTimeout || 30;
+                    }
+                    
+                    // Enable the toggle
+                    const checkbox = document.getElementById('single-page-save-settings-checkbox');
+                    if (checkbox) checkbox.checked = true;
+                }
+            } catch (error) {
+                console.error('Error loading single page settings:', error);
+            }
+        }
+        """
+        return js
+
+
+class MultiPageSaveSettingsToggle:
+    """UI component for Multi Page Save Settings toggle."""
+    
+    def __init__(self, checked: bool = False, css_class: str = "save-settings-toggle", 
+                 label_text: str = "Save Multi Page Settings"):
+        """Initialize MultiPageSaveSettingsToggle.
+        
+        Args:
+            checked: Whether the toggle is checked by default
+            css_class: CSS class for styling
+            label_text: Text label for the toggle
+        """
+        self.checked = checked
+        self.css_class = css_class
+        self.label_text = label_text
+    
+    def render(self) -> str:
+        """Render the multi page save settings toggle HTML.
+        
+        Returns:
+            HTML string for the toggle component
+        """
+        checked_attr = 'checked' if self.checked else ''
+        
+        html = f"""
+        <div id="multi-page-save-settings-toggle" class="save-settings-row">
+            <label class="save-settings-label">
+                <input type="checkbox" 
+                       id="multi-page-save-settings-checkbox" 
+                       class="{self.css_class}" 
+                       {checked_attr}
+                       onchange="handleMultiPageSaveSettingsToggle(this)">
+                <span class="save-settings-text">{self.label_text}</span>
+            </label>
+            <div class="save-settings-help" id="multi-page-save-settings-help">
+                <span class="help-text">
+                    <strong>ON:</strong> Multi page settings persist across sessions<br>
+                    <strong>OFF:</strong> Multi page settings reset to defaults on page load
+                </span>
+            </div>
+        </div>
+        """
+        return html
+    
+    def get_javascript(self) -> str:
+        """Get JavaScript for multi page save settings functionality.
+        
+        Returns:
+            JavaScript code as string
+        """
+        js = """
+        function handleMultiPageSaveSettingsToggle(checkbox) {
+            const isEnabled = checkbox.checked;
+            
+            if (isEnabled) {
+                // Save current multi page settings
+                saveMultiPageSettings();
+                updateSystemStatus('MULTI_PAGE_SAVE_SETTINGS // ENABLED');
+            } else {
+                // Clear saved multi page settings
+                localStorage.removeItem('ragScraperMultiPageSettings');
+                updateSystemStatus('MULTI_PAGE_SAVE_SETTINGS // DISABLED');
+            }
+        }
+        
+        function saveMultiPageSettings() {
+            const settings = {
+                maxPages: document.getElementById('maxPages')?.value || 50,
+                crawlDepth: document.getElementById('crawlDepth')?.value || 2,
+                rateLimit: document.getElementById('rateLimit')?.value || 1000,
+                enableJavaScript: document.getElementById('enableJavaScript')?.checked || false,
+                enablePageDiscovery: document.getElementById('pageDiscoveryEnabled')?.checked || true,
+                respectRobotsTxt: document.getElementById('respectRobotsTxt')?.checked || true,
+                includePatterns: document.getElementById('includePatterns')?.value || 'menu,food,restaurant',
+                excludePatterns: document.getElementById('excludePatterns')?.value || 'admin,login,cart',
+                concurrentRequests: document.getElementById('concurrentRequests')?.value || 5,
+                requestTimeout: document.getElementById('requestTimeout')?.value || 30
+            };
+            
+            localStorage.setItem('ragScraperMultiPageSettings', JSON.stringify(settings));
+        }
+        
+        function loadMultiPageSettings() {
+            try {
+                const saved = localStorage.getItem('ragScraperMultiPageSettings');
+                if (saved) {
+                    const settings = JSON.parse(saved);
+                    
+                    // Apply settings to multi page form elements
+                    if (document.getElementById('maxPages')) {
+                        document.getElementById('maxPages').value = settings.maxPages || 50;
+                    }
+                    if (document.getElementById('crawlDepth')) {
+                        document.getElementById('crawlDepth').value = settings.crawlDepth || 2;
+                        // Update display value
+                        const depthValue = document.getElementById('depthValue');
+                        if (depthValue) depthValue.textContent = settings.crawlDepth || 2;
+                    }
+                    if (document.getElementById('rateLimit')) {
+                        document.getElementById('rateLimit').value = settings.rateLimit || 1000;
+                        // Update display value
+                        const rateLimitValue = document.getElementById('rateLimitValue');
+                        if (rateLimitValue) rateLimitValue.textContent = (settings.rateLimit || 1000) + 'ms';
+                    }
+                    if (document.getElementById('enableJavaScript')) {
+                        document.getElementById('enableJavaScript').checked = settings.enableJavaScript || false;
+                    }
+                    if (document.getElementById('pageDiscoveryEnabled')) {
+                        document.getElementById('pageDiscoveryEnabled').checked = settings.enablePageDiscovery !== false;
+                    }
+                    if (document.getElementById('respectRobotsTxt')) {
+                        document.getElementById('respectRobotsTxt').checked = settings.respectRobotsTxt !== false;
+                    }
+                    if (document.getElementById('includePatterns')) {
+                        document.getElementById('includePatterns').value = settings.includePatterns || 'menu,food,restaurant';
+                    }
+                    if (document.getElementById('excludePatterns')) {
+                        document.getElementById('excludePatterns').value = settings.excludePatterns || 'admin,login,cart';
+                    }
+                    if (document.getElementById('concurrentRequests')) {
+                        document.getElementById('concurrentRequests').value = settings.concurrentRequests || 5;
+                        // Update display value
+                        const concurrentValue = document.getElementById('concurrentRequestsValue');
+                        if (concurrentValue) concurrentValue.textContent = settings.concurrentRequests || 5;
+                    }
+                    if (document.getElementById('requestTimeout')) {
+                        document.getElementById('requestTimeout').value = settings.requestTimeout || 30;
+                    }
+                    
+                    // Enable the toggle
+                    const checkbox = document.getElementById('multi-page-save-settings-checkbox');
+                    if (checkbox) checkbox.checked = true;
+                }
+            } catch (error) {
+                console.error('Error loading multi page settings:', error);
+            }
+        }
+        """
+        return js
+
+
 class SaveSettingsToggle:
     """UI component for Save Settings toggle."""
     
@@ -784,3 +1037,147 @@ class RestaurantSchemaTypeDropdown:
             html += '<div id="schema-type-help-dynamic" class="schema-type-help"></div>\n'
         
         return html
+
+
+class SinglePageSaveSettingsToggle:
+    """UI component for Single Page Save Settings toggle."""
+    
+    def __init__(self, enabled: bool = False, css_class: str = "save-settings-toggle"):
+        """Initialize single page save settings toggle.
+        
+        Args:
+            enabled: Whether save settings is currently enabled
+            css_class: CSS class for styling
+        """
+        self.enabled = enabled
+        self.css_class = css_class
+        self.label_text = "💾 SAVE_SINGLE_PAGE_SETTINGS"
+    
+    def render(self) -> str:
+        """Render the single page save settings toggle HTML."""
+        checked_attr = ' checked' if self.enabled else ''
+        
+        html = f"""
+        <div id="single-page-save-settings-toggle" class="save-settings-row">
+            <label class="save-settings-label">
+                <input type="checkbox" 
+                       id="single-page-save-settings-checkbox" 
+                       class="{self.css_class}" 
+                       {checked_attr}
+                       onchange="handleSinglePageSaveSettingsToggle(this)">
+                <span class="save-settings-text">{self.label_text}</span>
+            </label>
+        </div>
+        """
+        return html
+    
+    def get_javascript(self) -> str:
+        """Get JavaScript code for single page save settings functionality."""
+        return """
+        function handleSinglePageSaveSettingsToggle(checkbox) {
+            const isEnabled = checkbox.checked;
+            const settings = gatherSinglePageSettings();
+            
+            if (isEnabled) {
+                // Save current settings to localStorage
+                localStorage.setItem('ragScraperSinglePageSettings', JSON.stringify(settings));
+                updateSystemStatus('SINGLE_PAGE_SETTINGS // SAVE_ENABLED');
+            } else {
+                // Remove saved settings from localStorage
+                localStorage.removeItem('ragScraperSinglePageSettings');
+                updateSystemStatus('SINGLE_PAGE_SETTINGS // SAVE_DISABLED');
+            }
+            
+            // Send to server
+            fetch('/api/save-single-page-settings', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({settings: settings, saveEnabled: isEnabled})
+            });
+        }
+        
+        function gatherSinglePageSettings() {
+            return {
+                requestTimeout: parseInt(document.getElementById('singleRequestTimeout')?.value || 30),
+                enableJavaScript: document.getElementById('singleEnableJavaScript')?.checked || false,
+                followRedirects: document.getElementById('singleFollowRedirects')?.checked || true,
+                respectRobotsTxt: document.getElementById('singleRespectRobotsTxt')?.checked || true,
+                concurrentRequests: parseInt(document.getElementById('singleConcurrentRequests')?.value || 1),
+                jsTimeout: parseInt(document.getElementById('singleJsTimeout')?.value || 30)
+            };
+        }
+        """
+
+
+class MultiPageSaveSettingsToggle:
+    """UI component for Multi Page Save Settings toggle."""
+    
+    def __init__(self, enabled: bool = False, css_class: str = "save-settings-toggle"):
+        """Initialize multi page save settings toggle.
+        
+        Args:
+            enabled: Whether save settings is currently enabled
+            css_class: CSS class for styling
+        """
+        self.enabled = enabled
+        self.css_class = css_class
+        self.label_text = "💾 SAVE_MULTI_PAGE_SETTINGS"
+    
+    def render(self) -> str:
+        """Render the multi page save settings toggle HTML."""
+        checked_attr = ' checked' if self.enabled else ''
+        
+        html = f"""
+        <div id="multi-page-save-settings-toggle" class="save-settings-row">
+            <label class="save-settings-label">
+                <input type="checkbox" 
+                       id="multi-page-save-settings-checkbox" 
+                       class="{self.css_class}" 
+                       {checked_attr}
+                       onchange="handleMultiPageSaveSettingsToggle(this)">
+                <span class="save-settings-text">{self.label_text}</span>
+            </label>
+        </div>
+        """
+        return html
+    
+    def get_javascript(self) -> str:
+        """Get JavaScript code for multi page save settings functionality."""
+        return """
+        function handleMultiPageSaveSettingsToggle(checkbox) {
+            const isEnabled = checkbox.checked;
+            const settings = gatherMultiPageSettings();
+            
+            if (isEnabled) {
+                // Save current settings to localStorage
+                localStorage.setItem('ragScraperMultiPageSettings', JSON.stringify(settings));
+                updateSystemStatus('MULTI_PAGE_SETTINGS // SAVE_ENABLED');
+            } else {
+                // Remove saved settings from localStorage
+                localStorage.removeItem('ragScraperMultiPageSettings');
+                updateSystemStatus('MULTI_PAGE_SETTINGS // SAVE_DISABLED');
+            }
+            
+            // Send to server
+            fetch('/api/save-multi-page-settings', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({settings: settings, saveEnabled: isEnabled})
+            });
+        }
+        
+        function gatherMultiPageSettings() {
+            return {
+                maxPages: parseInt(document.getElementById('maxPages')?.value || 50),
+                crawlDepth: parseInt(document.getElementById('crawlDepth')?.value || 2),
+                rateLimit: parseInt(document.getElementById('rateLimit')?.value || 1000),
+                enableJavaScript: document.getElementById('enableJavaScript')?.checked || false,
+                enablePageDiscovery: document.getElementById('enablePageDiscovery')?.checked || true,
+                respectRobotsTxt: document.getElementById('respectRobotsTxt')?.checked || true,
+                includePatterns: document.getElementById('includePatterns')?.value || 'menu,food,restaurant',
+                excludePatterns: document.getElementById('excludePatterns')?.value || 'admin,login,cart',
+                concurrentRequests: parseInt(document.getElementById('concurrentRequests')?.value || 5),
+                requestTimeout: parseInt(document.getElementById('requestTimeout')?.value || 30)
+            };
+        }
+        """
