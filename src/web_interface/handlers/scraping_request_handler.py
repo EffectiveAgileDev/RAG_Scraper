@@ -1,13 +1,18 @@
 """Main handler for scraping requests."""
 
+import logging
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
 from urllib.parse import urlparse
+from datetime import datetime
 
 from src.config.scraping_config import ScrapingConfig
 from src.scraper.restaurant_scraper import RestaurantScraper
 from .validation_handler import ValidationHandler, ValidationResult
 from .file_generation_handler import FileGenerationHandler, FileGenerationResult
+from src.web_interface.ai_config_manager import AIConfigManager
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -37,6 +42,7 @@ class ScrapingResponse:
     sites_data: list
     error: Optional[str] = None
     warnings: list = None
+    ai_analysis: Optional[Dict[str, Any]] = None
     
     def __post_init__(self):
         if self.warnings is None:
@@ -54,6 +60,7 @@ class ScrapingRequestHandler:
         self.file_generation_handler = file_generation_handler
         self.upload_folder = upload_folder
         self.active_scraper = None
+        self.ai_config_manager = AIConfigManager()
     
     def handle_scraping_request(self, data: Dict[str, Any]) -> ScrapingResponse:
         """Process complete scraping request.
@@ -88,11 +95,23 @@ class ScrapingRequestHandler:
             # Execute scraping
             result = self._execute_scraping(scraper, scraper_config)
             
-            # Generate files
+            # Perform AI analysis if enabled (BEFORE file generation)
+            logger.debug(f"About to perform AI analysis with data keys: {list(data.keys())}")
+            if 'ai_config' in data:
+                logger.debug(f"AI config in request: {data['ai_config']}")
+                print(f"DEBUG: AI config found in request: {data['ai_config']}")
+            else:
+                logger.debug("No ai_config in request")
+                print("DEBUG: No ai_config in request data")
+            ai_analysis = self._perform_ai_analysis(result, data)
+            logger.debug(f"AI analysis result: {ai_analysis}")
+            print(f"DEBUG: AI analysis result: {ai_analysis}")
+            
+            # Generate files (AFTER AI analysis so RestaurantData objects have ai_analysis attached)
             file_result = self._generate_files(result, config)
             
-            # Generate response data
-            sites_data = self._generate_sites_data(result, config)
+            # Generate response data with AI enhancements
+            sites_data = self._generate_sites_data(result, config, ai_analysis)
             
             return ScrapingResponse(
                 success=True,
@@ -101,7 +120,8 @@ class ScrapingRequestHandler:
                 output_files=file_result.generated_files,
                 processing_time=getattr(result, "processing_time", 0),
                 sites_data=sites_data,
-                warnings=file_result.errors if file_result.errors else []
+                warnings=file_result.errors if file_result.errors else [],
+                ai_analysis=ai_analysis
             )
             
         except Exception as e:
@@ -219,6 +239,196 @@ class ScrapingRequestHandler:
         
         return scraper.scrape_restaurants(config, progress_callback=progress_callback)
     
+    def _perform_ai_analysis(self, result, request_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Perform AI analysis on scraping results if enabled."""
+        logger.debug("_perform_ai_analysis method called!")
+        print("DEBUG: _perform_ai_analysis method called!")
+        try:
+            # Debug logging
+            logger.debug(f"AI Analysis starting with request_data keys: {list(request_data.keys())}")
+            print(f"DEBUG: AI Analysis starting with request_data keys: {list(request_data.keys())}")
+            
+            # Try to get AI configuration directly from request data first
+            ai_config = request_data.get('ai_config')
+            logger.debug(f"AI config from request: {ai_config}")
+            print(f"DEBUG: AI config from request: {ai_config}")
+            if ai_config and ai_config.get('ai_enhancement_enabled', False):
+                # Use the AI config directly from the request
+                print(f"DEBUG: Using AI config from request: {ai_config}")
+                pass
+            else:
+                # Fallback: Get session ID from request data and try to retrieve saved config
+                session_id = request_data.get('session_id')
+                print(f"DEBUG: session_id: {session_id}")
+                if not session_id:
+                    print("DEBUG: No session_id provided, skipping AI analysis")
+                    return None
+                
+                # Get AI configuration for this session
+                ai_config = self.ai_config_manager.get_session_config(session_id)
+                print(f"DEBUG: Retrieved AI config: {ai_config}")
+                if not ai_config or not ai_config.get('ai_enhancement_enabled', False):
+                    print("DEBUG: AI enhancement not enabled, skipping AI analysis")
+                    return None
+            
+            # Import AI analyzer
+            from src.ai.content_analyzer import AIContentAnalyzer
+            
+            # Create analyzer with session config
+            analyzer = AIContentAnalyzer(api_key=ai_config.get('api_key'))
+            
+            # Configure provider settings
+            provider = ai_config.get('llm_provider', 'openai')
+            provider_config = {
+                'enabled': True,
+                'api_key': ai_config.get('api_key')
+            }
+            
+            # Add custom provider specific settings
+            if provider == 'custom':
+                provider_config.update({
+                    'base_url': ai_config.get('custom_base_url', ''),
+                    'model_name': ai_config.get('custom_model_name', 'gpt-3.5-turbo'),
+                    'provider_name': ai_config.get('custom_provider_name', 'Custom Provider')
+                })
+            
+            # Update analyzer configuration
+            analyzer.update_configuration({
+                'providers': {
+                    provider: provider_config
+                },
+                'default_provider': provider,
+                'multimodal_enabled': ai_config.get('features', {}).get('multimodal_analysis', False),
+                'pattern_learning_enabled': ai_config.get('features', {}).get('pattern_learning', False),
+                'dynamic_prompts_enabled': ai_config.get('features', {}).get('dynamic_prompts', False)
+            })
+            
+            # Analyze successful extractions and attach results to RestaurantData objects
+            analysis_results = {}
+            for i, extraction in enumerate(result.successful_extractions):
+                try:
+                    # Prepare content for analysis
+                    content = getattr(extraction, 'raw_content', '')
+                    menu_items = getattr(extraction, 'menu_items', {})
+                    
+                    logger.debug(f"Content length for AI analysis: {len(content)}")
+                    logger.debug(f"Menu items for AI analysis: {menu_items}")
+                    logger.debug(f"Extraction object attributes: {[attr for attr in dir(extraction) if not attr.startswith('_')]}")
+                    
+                    # Try to get content from alternative sources if raw_content is empty
+                    if not content:
+                        # Check if there's a `content` attribute
+                        if hasattr(extraction, 'content'):
+                            content = extraction.content
+                            logger.debug(f"Using extraction.content: {len(content)} characters")
+                        # Check if there's other content attributes
+                        elif hasattr(extraction, 'website_content'):
+                            content = extraction.website_content
+                            logger.debug(f"Using extraction.website_content: {len(content)} characters")
+                        # Build content from available data
+                        else:
+                            content_parts = []
+                            if hasattr(extraction, 'name') and extraction.name:
+                                content_parts.append(f"Restaurant: {extraction.name}")
+                            if hasattr(extraction, 'address') and extraction.address:
+                                content_parts.append(f"Address: {extraction.address}")
+                            if hasattr(extraction, 'phone') and extraction.phone:
+                                content_parts.append(f"Phone: {extraction.phone}")
+                            if hasattr(extraction, 'hours') and extraction.hours:
+                                content_parts.append(f"Hours: {extraction.hours}")
+                            if hasattr(extraction, 'cuisine') and extraction.cuisine:
+                                content_parts.append(f"Cuisine: {extraction.cuisine}")
+                            content = "\n".join(content_parts)
+                            logger.debug(f"Built content from extraction data: {len(content)} characters")
+                    
+                    # Convert menu_items dict to list format expected by analyzer
+                    menu_items_list = []
+                    if isinstance(menu_items, dict):
+                        for section, items in menu_items.items():
+                            if isinstance(items, list):
+                                for item in items:
+                                    if isinstance(item, str):
+                                        menu_items_list.append({'name': item, 'section': section})
+                                    elif isinstance(item, dict):
+                                        menu_items_list.append(item)
+                    
+                    logger.debug(f"Menu items list for AI analysis: {menu_items_list}")
+                    
+                    # Get custom questions from AI config
+                    custom_questions = ai_config.get('custom_questions', [])
+                    logger.debug(f"Custom questions extracted: {custom_questions}")
+                    print(f"DEBUG: Custom questions for AI analysis: {custom_questions}")
+                    
+                    # Perform AI analysis
+                    ai_result = analyzer.analyze_content(
+                        content=content,
+                        menu_items=menu_items_list,
+                        analysis_type='nutritional',
+                        custom_questions=custom_questions
+                    )
+                    confidence = analyzer.calculate_integrated_confidence(ai_result)
+                    
+                    # Create AI analysis data for this extraction
+                    # Use a more reasonable confidence threshold
+                    effective_threshold = min(ai_config.get('confidence_threshold', 0.7), 0.8)
+                    ai_analysis_data = {
+                        'confidence_score': confidence,
+                        'meets_threshold': confidence >= effective_threshold,
+                        'provider_used': ai_config.get('llm_provider', 'openai'),
+                        'confidence_threshold': effective_threshold,
+                        'analysis_timestamp': datetime.now().isoformat(),
+                        'features_used': ai_config.get('features', {}),
+                        **ai_result  # Include all AI analysis results
+                    }
+                    
+                    logger.debug(f"AI analysis data for extraction {i}: {ai_analysis_data}")
+                    
+                    # Attach AI analysis to the RestaurantData object
+                    extraction.ai_analysis = ai_analysis_data
+                    
+                    # Store for summary reporting
+                    analysis_results[f'extraction_{i}'] = {
+                        'ai_analysis': ai_result,
+                        'confidence_score': confidence,
+                        'meets_threshold': confidence >= ai_config.get('confidence_threshold', 0.7),
+                        'provider_used': ai_config.get('llm_provider', 'openai')
+                    }
+                    
+                except Exception as extraction_error:
+                    # Log error but continue with other extractions
+                    error_analysis = {
+                        'error': str(extraction_error),
+                        'fallback_used': True,
+                        'confidence_score': 0.0,
+                        'provider_used': ai_config.get('llm_provider', 'openai'),
+                        'analysis_timestamp': datetime.now().isoformat()
+                    }
+                    
+                    # Attach error information to RestaurantData object
+                    extraction.ai_analysis = error_analysis
+                    
+                    # Store for summary reporting
+                    analysis_results[f'extraction_{i}'] = error_analysis
+            
+            return {
+                'total_analyzed': len(result.successful_extractions),
+                'successful_analyses': len([r for r in analysis_results.values() if 'error' not in r]),
+                'provider_used': ai_config.get('llm_provider', 'openai'),
+                'confidence_threshold': ai_config.get('confidence_threshold', 0.7),
+                'extraction_analyses': analysis_results
+            }
+            
+        except Exception as e:
+            # Return fallback response if AI analysis fails
+            logger.error(f"AI analysis failed with exception: {e}")
+            import traceback
+            logger.error(f"Full traceback: {traceback.format_exc()}")
+            return {
+                'error': str(e),
+                'fallback_used': True,
+                'message': 'AI analysis failed, using traditional extraction'
+            }
+    
     def _generate_files(self, result, config: ScrapingRequestConfig) -> FileGenerationResult:
         """Generate output files from scraping results."""
         return self.file_generation_handler.generate_files(
@@ -228,18 +438,18 @@ class ScrapingRequestHandler:
             generate_async=True
         )
     
-    def _generate_sites_data(self, result, config: ScrapingRequestConfig) -> list:
+    def _generate_sites_data(self, result, config: ScrapingRequestConfig, ai_analysis: Optional[Dict[str, Any]] = None) -> list:
         """Generate enhanced sites data for results display."""
         sites_data = []
         
         if config.scraping_mode == 'single':
-            sites_data = self._generate_single_page_sites_data(result, config.urls, config)
+            sites_data = self._generate_single_page_sites_data(result, config.urls, config, ai_analysis)
         else:
-            sites_data = self._generate_multi_page_sites_data(result, config.urls, config)
+            sites_data = self._generate_multi_page_sites_data(result, config.urls, config, ai_analysis)
         
         return sites_data
     
-    def _generate_single_page_sites_data(self, result, urls: list, config: ScrapingRequestConfig) -> list:
+    def _generate_single_page_sites_data(self, result, urls: list, config: ScrapingRequestConfig, ai_analysis: Optional[Dict[str, Any]] = None) -> list:
         """Generate sites data for single-page mode."""
         sites_data = []
         total_time = getattr(result, 'processing_time', 0.0)
@@ -257,17 +467,33 @@ class ScrapingRequestHandler:
                     if isinstance(items, list):
                         menu_items_count += len(items)
             
+            # Add AI analysis data if available
+            page_data = {
+                'url': url,
+                'status': 'success',
+                'processing_time': processing_time,
+                'data_extracted': menu_items_count,
+                'http_status': 200,
+                'content_size': menu_items_count * 100  # Rough estimate
+            }
+            
+            # Enhance with AI analysis if available
+            if ai_analysis and 'extraction_analyses' in ai_analysis:
+                extraction_key = f'extraction_{i}'
+                if extraction_key in ai_analysis['extraction_analyses']:
+                    ai_data = ai_analysis['extraction_analyses'][extraction_key]
+                    page_data['ai_analysis'] = {
+                        'confidence_score': ai_data.get('confidence_score', 0),
+                        'meets_threshold': ai_data.get('meets_threshold', False),
+                        'provider_used': ai_data.get('provider_used', 'none'),
+                        'has_nutritional_info': bool(ai_data.get('ai_analysis', {}).get('nutritional_context')),
+                        'error': ai_data.get('error')
+                    }
+            
             sites_data.append({
                 'site_url': url,
                 'pages_processed': 1,
-                'pages': [{
-                    'url': url,
-                    'status': 'success',
-                    'processing_time': processing_time,
-                    'data_extracted': menu_items_count,
-                    'http_status': 200,
-                    'content_size': menu_items_count * 100  # Rough estimate
-                }]
+                'pages': [page_data]
             })
         
         for failed_url in result.failed_urls:
@@ -287,7 +513,7 @@ class ScrapingRequestHandler:
         
         return sites_data
     
-    def _generate_multi_page_sites_data(self, result, urls: list, config: ScrapingRequestConfig) -> list:
+    def _generate_multi_page_sites_data(self, result, urls: list, config: ScrapingRequestConfig, ai_analysis: Optional[Dict[str, Any]] = None) -> list:
         """Generate sites data for multi-page mode."""
         sites_data = []
         
@@ -301,7 +527,7 @@ class ScrapingRequestHandler:
                     parsed = urlparse(first_page)
                     site_url = f"{parsed.scheme}://{parsed.netloc}/"
                 
-                pages = self._generate_page_data(mp_result, config)
+                pages = self._generate_page_data(mp_result, config, ai_analysis)
                 
                 sites_data.append({
                     'site_url': site_url,
@@ -310,11 +536,11 @@ class ScrapingRequestHandler:
                 })
         else:
             # Fallback: Group pages by site
-            sites_data = self._generate_fallback_sites_data(result, urls, config)
+            sites_data = self._generate_fallback_sites_data(result, urls, config, ai_analysis)
         
         return sites_data
     
-    def _generate_page_data(self, mp_result, config: ScrapingRequestConfig) -> list:
+    def _generate_page_data(self, mp_result, config: ScrapingRequestConfig, ai_analysis: Optional[Dict[str, Any]] = None) -> list:
         """Generate page data for multi-page result."""
         pages = []
         total_time = getattr(mp_result, 'processing_time', 0.0)
@@ -372,7 +598,7 @@ class ScrapingRequestHandler:
         
         return pages
     
-    def _generate_fallback_sites_data(self, result, urls: list, config: ScrapingRequestConfig) -> list:
+    def _generate_fallback_sites_data(self, result, urls: list, config: ScrapingRequestConfig, ai_analysis: Optional[Dict[str, Any]] = None) -> list:
         """Generate fallback sites data when multi-page results unavailable."""
         sites = {}
         

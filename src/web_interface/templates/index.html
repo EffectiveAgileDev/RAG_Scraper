@@ -1060,10 +1060,233 @@
                     border-color: transparent;
                 }
 
+                /* AI Enhancement Panel Styling */
+                .ai-enhancement-panel {
+                    max-height: none;
+                    height: auto;
+                    overflow-y: visible;
+                    background: var(--bg-primary);
+                    border: 1px solid var(--border-color);
+                    border-radius: 3px;
+                    padding: 1.5rem;
+                    margin-top: 0.5rem;
+                    transition: all 0.3s ease;
+                    opacity: 1;
+                }
+
+                .ai-enhancement-panel::-webkit-scrollbar {
+                    width: 6px;
+                }
+
+                .ai-enhancement-panel::-webkit-scrollbar-track {
+                    background: var(--bg-secondary);
+                    border-radius: 3px;
+                }
+
+                .ai-enhancement-panel::-webkit-scrollbar-thumb {
+                    background: rgba(0, 255, 136, 0.5);
+                    border-radius: 3px;
+                }
+
+                .ai-enhancement-panel::-webkit-scrollbar-thumb:hover {
+                    background: rgba(0, 255, 136, 0.8);
+                }
+
+                .ai-enhancement-panel.collapsed {
+                    max-height: 0;
+                    opacity: 0;
+                    padding: 0 1.5rem;
+                    border-color: transparent;
+                }
+
+                .ai-config-options {
+                    transition: all 0.3s ease;
+                    opacity: 1;
+                    max-height: none;
+                    height: auto;
+                    overflow: visible;
+                }
+
+                .ai-config-options.collapsed {
+                    opacity: 0;
+                    max-height: 0;
+                    overflow: hidden;
+                }
+
+                .feature-toggles-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 0.75rem;
+                    margin-top: 0.5rem;
+                }
+
+                .feature-toggle {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    padding: 0.5rem;
+                    background: var(--bg-secondary);
+                    border-radius: 3px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    border: 1px solid transparent;
+                }
+
+                .feature-toggle:hover {
+                    background: var(--bg-tertiary);
+                    border-color: var(--accent-cyan);
+                }
+
+                .feature-toggle input[type="checkbox"] {
+                    margin: 0;
+                }
+
+                .feature-name {
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.75rem;
+                    color: var(--text-primary);
+                    font-weight: 500;
+                }
+
+                .service-status {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    padding: 0.5rem;
+                    background: var(--bg-secondary);
+                    border-radius: 3px;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.75rem;
+                }
+
+                .status-dot {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: var(--text-muted);
+                    transition: background 0.3s ease;
+                }
+
+                .status-dot.connected {
+                    background: var(--accent-green);
+                }
+
+                .status-dot.disconnected {
+                    background: var(--accent-red);
+                }
+
+                .status-dot.checking {
+                    background: var(--accent-amber);
+                    animation: pulse 2s infinite;
+                }
+
+                @keyframes pulse {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.5; }
+                }
+
+                .ai-enhancement-header .config-toggle-header {
+                    cursor: pointer;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 0.75rem;
+                    background: var(--bg-secondary);
+                    border-radius: 3px;
+                    transition: all 0.2s ease;
+                    border: 1px solid var(--border-color);
+                }
+                
+                /* Advanced Options Header Left Alignment */
+                .advanced-options-header .config-toggle-header {
+                    cursor: pointer;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 0.75rem;
+                    background: var(--bg-secondary);
+                    border-radius: 3px;
+                    transition: all 0.2s ease;
+                    border: 1px solid var(--border-color);
+                    text-align: left;
+                    margin-left: 0;
+                }
+                
+                .advanced-options-header .config-toggle-header:hover {
+                    background: var(--bg-tertiary);
+                    border-color: var(--accent-amber);
+                }
+                
+                /* Full-width Options Layout */
+                .options-layout-container {
+                    display: block;
+                    width: 100%;
+                    margin-top: 1rem;
+                    margin-left: 0;
+                    margin-right: 0;
+                    grid-column: 1 / -1; /* Span all columns in grid */
+                }
+                
+                .advanced-options-section {
+                    width: 100%;
+                    max-width: 100%;
+                    margin-bottom: 2rem;
+                    margin-left: 0;
+                    margin-right: 0;
+                    float: none;
+                    clear: both;
+                }
+                
+                .ai-enhancement-section {
+                    width: 100%;
+                    max-width: 100%;
+                    margin-bottom: 2rem;
+                    margin-left: 0;
+                    margin-right: 0;
+                    float: none;
+                    clear: both;
+                }
+                
+                .ai-enhancement-section .config-item {
+                    margin-bottom: 1rem;
+                }
+                
+                .ai-enhancement-section .ai-enhancement-header {
+                    margin-bottom: 0;
+                }
+                
+                .ai-enhancement-section .ai-enhancement-panel {
+                    border: 1px solid rgba(0, 170, 255, 0.2);
+                    border-top: none;
+                    background: var(--bg-tertiary);
+                }
+                
+                /* Ensure no conflicting styles */
+                .options-layout-container * {
+                    box-sizing: border-box;
+                }
+                
+                .advanced-options-section *,
+                .ai-enhancement-section * {
+                    box-sizing: border-box;
+                }
+
+                .ai-enhancement-header .config-toggle-header:hover {
+                    background: var(--bg-tertiary);
+                    border-color: var(--accent-cyan);
+                }
+
                 .config-grid {
                     display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                    grid-template-columns: repeat(2, 1fr);
                     gap: 1.5rem;
+                }
+                
+                /* Responsive: single column on smaller screens */
+                @media (max-width: 768px) {
+                    .config-grid {
+                        grid-template-columns: 1fr;
+                    }
                 }
 
                 .config-item {
@@ -1176,11 +1399,14 @@
 
                 /* Enhanced Results Display Styles */
                 .results-container {
-                    margin-top: 1rem;
+                    margin-top: 3rem;
                     border: 1px solid var(--border-color);
                     border-radius: 4px;
                     background: var(--bg-secondary);
                     overflow: hidden;
+                    clear: both;
+                    position: relative;
+                    z-index: 1;
                 }
 
                 .results-header {
@@ -1776,14 +2002,14 @@ https://restaurant3.com
                             <div class="scraping-mode-selector">
                                 <label class="input-label">SCRAPING_MODE:</label>
                                 <div class="mode-toggle-group">
-                                    <label class="mode-option active" data-mode="single">
-                                        <input type="radio" name="scrapingMode" value="single" checked>
+                                    <label class="mode-option" data-mode="single">
+                                        <input type="radio" name="scrapingMode" value="single">
                                         <span class="mode-icon">📄</span>
                                         <span class="mode-title">SINGLE_PAGE</span>
                                         <span class="mode-desc">Process each URL as single page</span>
                                     </label>
-                                    <label class="mode-option" data-mode="multi">
-                                        <input type="radio" name="scrapingMode" value="multi">
+                                    <label class="mode-option active" data-mode="multi">
+                                        <input type="radio" name="scrapingMode" value="multi" checked>
                                         <span class="mode-icon">📚</span>
                                         <span class="mode-title">MULTI_PAGE</span>
                                         <span class="mode-desc">Discover and crawl related pages</span>
@@ -1792,7 +2018,7 @@ https://restaurant3.com
                             </div>
                             
                             <!-- Single Page Configuration Panel -->
-                            <div class="config-panel-header" onclick="toggleSinglePageConfig()" id="singlePageHeader" style="display: block;">
+                            <div class="config-panel-header" onclick="toggleSinglePageConfig()" id="singlePageHeader" style="display: none;">
                                 <label class="input-label config-toggle">
                                     <span class="config-icon">⚙️</span>
                                     SINGLE_PAGE_CONFIG
@@ -1843,16 +2069,27 @@ https://restaurant3.com
                                         <div class="config-desc">Auto-handle restaurant popups (age verification, location, etc.)</div>
                                     </div>
                                     
-                                    <!-- Advanced Options Section -->
+                                    <!-- Single Page Save Settings -->
                                     <div class="config-section-divider"></div>
-                                    <div class="config-item advanced-options-header">
-                                        <div class="config-toggle-header" onclick="toggleSinglePageAdvancedOptions();">
-                                            <span class="config-label">🔧 ADVANCED_OPTIONS</span>
-                                            <span class="expand-icon" id="singleAdvancedOptionsIcon">▼</span>
-                                        </div>
+                                    <div class="config-item save-settings-section">
+                                        {{ single_page_save_settings_toggle | safe }}
                                     </div>
                                     
-                                    <div id="singleAdvancedOptionsPanel" class="advanced-options-panel collapsed">
+                                    <!-- Advanced Options Section -->
+                                    <div class="config-section-divider"></div>
+                                    
+                                    <!-- Full-width Options Layout -->
+                                    <div class="options-layout-container">
+                                        <!-- Advanced Options -->
+                                        <div class="advanced-options-section">
+                                            <div class="config-item advanced-options-header">
+                                                <div class="config-toggle-header" onclick="toggleSinglePageAdvancedOptions();">
+                                                    <span class="config-label">🔧 ADVANCED_OPTIONS</span>
+                                                    <span class="expand-icon" id="singleAdvancedOptionsIcon">▼</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div id="singleAdvancedOptionsPanel" class="advanced-options-panel collapsed">
                                         <!-- Request Timeout -->
                                         <div class="config-item">
                                             <label class="config-label" for="singleRequestTimeout">REQUEST_TIMEOUT_SECONDS:</label>
@@ -1898,6 +2135,242 @@ https://restaurant3.com
                                             </label>
                                             <div class="config-desc">Follow HTTP redirects to final destination</div>
                                         </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- AI Enhancement Options -->
+                                        <div class="ai-enhancement-section">
+                                            <div class="config-item ai-enhancement-header">
+                                                <div class="config-toggle-header" onclick="toggleSinglePageAIEnhancementOptions()">
+                                                    <span class="config-label">🤖 AI_ENHANCEMENT_OPTIONS</span>
+                                                    <span class="expand-icon" id="singleAiEnhancementIcon">▼</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div id="singleAiEnhancementPanel" class="ai-enhancement-panel collapsed">
+                                            <!-- Enable AI Enhancement Toggle -->
+                                            <div class="config-item">
+                                                <label class="config-label toggle-switch-label">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        id="singleAiEnhancementEnabled" 
+                                                        name="aiEnhancementEnabled" 
+                                                        class="terminal-checkbox toggle-switch" 
+                                                        onchange="handleSinglePageAIEnhancementToggle()" />
+                                                    <span class="toggle-slider"></span>
+                                                    ENABLE_AI_ENHANCEMENT
+                                                </label>
+                                                <div class="config-desc">Enable AI-powered content analysis and extraction enhancement (optional)</div>
+                                                <div class="config-warning" style="color: var(--accent-amber); font-size: 0.75rem; margin-top: 0.25rem;">
+                                                    ⚠️ AI features are completely optional. Traditional extraction works without AI.
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- AI Configuration Options (hidden by default) -->
+                                            <div id="singleAiConfigOptions" class="ai-config-options collapsed">
+                                                
+                                                <!-- LLM Provider Selection -->
+                                                <div class="config-item">
+                                                    <label class="config-label" for="singleLlmProvider">LLM_PROVIDER:</label>
+                                                    <select id="singleLlmProvider" name="llmProvider" class="terminal-input config-input" onchange="handleSinglePageProviderChange()">
+                                                        <option value="openai">OpenAI GPT</option>
+                                                        <option value="claude">Anthropic Claude</option>
+                                                        <option value="ollama">Ollama (Local)</option>
+                                                        <option value="llama_cpp">llama.cpp (Local)</option>
+                                                        <option value="custom">Custom OpenAI-Compatible</option>
+                                                    </select>
+                                                    <div class="config-desc">Choose your preferred AI language model provider</div>
+                                                </div>
+                                                
+                                                <!-- Model Selection Dropdown -->
+                                                <div class="config-item" id="singleModelSection" style="display: none;">
+                                                    <label class="config-label" for="singleModelSelect">MODEL:</label>
+                                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                        <select id="singleModelSelect" name="modelSelect" class="terminal-input config-input" style="flex: 1;">
+                                                            <option value="">Select model...</option>
+                                                        </select>
+                                                        <button type="button" 
+                                                                id="refreshSingleModelsButton"
+                                                                class="terminal-button"
+                                                                onclick="refreshSingleModels()"
+                                                                style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
+                                                                title="Refresh available models">
+                                                            🔄
+                                                        </button>
+                                                    </div>
+                                                    <div class="config-desc">Choose specific model for selected provider</div>
+                                                    <div class="config-warning" style="display: none;" id="singleModelWarning">
+                                                        ⚠️ Model selection error
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- API Key Input (for external providers) -->
+                                                <div class="config-item" id="singleApiKeySection">
+                                                    <label class="config-label" for="singleAiApiKey">API_KEY:</label>
+                                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                        <input 
+                                                            type="text" 
+                                                            id="singleAiApiKey" 
+                                                            name="aiApiKey" 
+                                                            class="terminal-input config-input"
+                                                            placeholder="Enter API Key (any format accepted)"
+                                                            style="flex: 1;"
+                                                            autocomplete="off" />
+                                                        <button type="button" 
+                                                                id="toggleSingleApiKeyVisibility"
+                                                                class="terminal-button"
+                                                                onclick="toggleSingleApiKeyVisibility()"
+                                                                style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
+                                                                title="Toggle API key visibility">
+                                                            👁️
+                                                        </button>
+                                                    </div>
+                                                    <div class="config-desc">API key for external AI services (stored securely, optional)</div>
+                                                    <div class="config-warning" style="display: none;" id="singleApiKeyWarning">
+                                                        ⚠️ Invalid API key format
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Custom Provider Configuration -->
+                                                <div class="config-item" id="singleCustomProviderSection" style="display: none;">
+                                                    <label class="config-label">CUSTOM_PROVIDER_CONFIG:</label>
+                                                    
+                                                    <div class="config-subitem">
+                                                        <label class="config-label" for="singleCustomProviderName">Provider Name:</label>
+                                                        <input 
+                                                            type="text" 
+                                                            id="singleCustomProviderName" 
+                                                            name="customProviderName" 
+                                                            class="terminal-input config-input"
+                                                            placeholder="e.g., My Local LLM"
+                                                            style="margin-bottom: 0.5rem;" />
+                                                    </div>
+                                                    
+                                                    <div class="config-subitem">
+                                                        <label class="config-label" for="singleCustomBaseUrl">Base URL:</label>
+                                                        <input 
+                                                            type="text" 
+                                                            id="singleCustomBaseUrl" 
+                                                            name="customBaseUrl" 
+                                                            class="terminal-input config-input"
+                                                            placeholder="https://my-llm.com/v1"
+                                                            style="margin-bottom: 0.5rem;" />
+                                                    </div>
+                                                    
+                                                    <div class="config-subitem">
+                                                        <label class="config-label" for="singleCustomModelName">Model Name:</label>
+                                                        <input 
+                                                            type="text" 
+                                                            id="singleCustomModelName" 
+                                                            name="customModelName" 
+                                                            class="terminal-input config-input"
+                                                            placeholder="gpt-3.5-turbo"
+                                                            style="margin-bottom: 0.5rem;" />
+                                                    </div>
+                                                    
+                                                    <div class="config-desc">Configure custom OpenAI-compatible endpoint</div>
+                                                </div>
+                                                
+                                                <!-- Local Service Status (for local providers) -->
+                                                <div class="config-item" id="singleLocalServiceStatus" style="display: none;">
+                                                    <div class="config-label">SERVICE_STATUS:</div>
+                                                    <div id="singleServiceStatusIndicator" class="service-status">
+                                                        <span class="status-dot" id="singleStatusDot"></span>
+                                                        <span id="singleStatusText">Checking connection...</span>
+                                                    </div>
+                                                    <div class="config-desc">Connection status to local AI service</div>
+                                                </div>
+                                                
+                                                <!-- AI Feature Toggles -->
+                                                <div class="config-item">
+                                                    <div class="config-label">AI_FEATURES:</div>
+                                                    <div class="feature-toggles-grid">
+                                                        <label class="feature-toggle">
+                                                            <input type="checkbox" id="singleNutritionalAnalysis" name="nutritionalAnalysis" checked class="terminal-checkbox" />
+                                                            <span class="feature-name">Nutritional Analysis</span>
+                                                        </label>
+                                                        <label class="feature-toggle">
+                                                            <input type="checkbox" id="singlePriceAnalysis" name="priceAnalysis" checked class="terminal-checkbox" />
+                                                            <span class="feature-name">Price Analysis</span>
+                                                        </label>
+                                                        <label class="feature-toggle">
+                                                            <input type="checkbox" id="singleCuisineClassification" name="cuisineClassification" checked class="terminal-checkbox" />
+                                                            <span class="feature-name">Cuisine Classification</span>
+                                                        </label>
+                                                        <label class="feature-toggle">
+                                                            <input type="checkbox" id="singleMultimodalAnalysis" name="multimodalAnalysis" class="terminal-checkbox" />
+                                                            <span class="feature-name">Multi-modal Analysis</span>
+                                                        </label>
+                                                        <label class="feature-toggle">
+                                                            <input type="checkbox" id="singlePatternLearning" name="patternLearning" class="terminal-checkbox" />
+                                                            <span class="feature-name">Pattern Learning</span>
+                                                        </label>
+                                                        <label class="feature-toggle">
+                                                            <input type="checkbox" id="singleDynamicPrompts" name="dynamicPrompts" class="terminal-checkbox" />
+                                                            <span class="feature-name">Dynamic Prompts</span>
+                                                        </label>
+                                                    </div>
+                                                    <div class="config-desc">Select which AI-powered analysis features to enable</div>
+                                                </div>
+                                                
+                                                <!-- Confidence Threshold Slider -->
+                                                <div class="config-item">
+                                                    <label class="config-label" for="singleConfidenceThreshold">CONFIDENCE_THRESHOLD:</label>
+                                                    <input 
+                                                        type="range" 
+                                                        id="singleConfidenceThreshold" 
+                                                        name="confidenceThreshold" 
+                                                        class="terminal-slider"
+                                                        value="0.7"
+                                                        min="0.1"
+                                                        max="1.0"
+                                                        step="0.1" 
+                                                        oninput="updateSinglePageConfidenceValue(this.value)" />
+                                                    <div class="slider-value">Threshold: <span id="singleConfidenceValue">0.7</span></div>
+                                                    <div class="config-desc">Minimum confidence required for AI predictions (lower = more results, higher = more accurate)</div>
+                                                </div>
+                                                
+                                                <!-- Custom Questions -->
+                                                <div class="config-item">
+                                                    <label class="config-label" for="singleCustomQuestions">CUSTOM_QUESTIONS:</label>
+                                                    <textarea 
+                                                        id="singleCustomQuestions" 
+                                                        name="customQuestions" 
+                                                        class="terminal-input"
+                                                        placeholder="Enter questions (one per line, max 200 chars each)&#10;Example: Are takeout containers eco-friendly?&#10;Example: What's the wifi password policy?"
+                                                        rows="3"
+                                                        style="width: 100%; resize: vertical; font-family: 'Courier New', monospace;"
+                                                        oninput="validateCustomQuestions('single')"
+                                                    ></textarea>
+                                                    <div class="config-desc" id="singleCustomQuestionsDesc">Add custom questions for AI to answer (200 char limit per question)</div>
+                                                </div>
+                                                
+                                                <!-- AI Settings Persistence Controls -->
+                                                <div class="config-section-divider"></div>
+                                                <div class="config-item">
+                                                    <div class="config-label">🔒 AI_SETTINGS_PERSISTENCE</div>
+                                                    <div class="config-desc" style="margin-bottom: 1rem;">Save your AI configuration for future use</div>
+                                                    
+                                                    <div class="ai-persistence-buttons" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                                        <button type="button" class="terminal-button" onclick="saveAISettings()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                            💾 Save Settings
+                                                        </button>
+                                                        <button type="button" class="terminal-button" onclick="loadAISettings()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                            📂 Load Settings
+                                                        </button>
+                                                        <button type="button" class="terminal-button" onclick="clearSavedAISettings()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                            🗑️ Clear Saved
+                                                        </button>
+                                                        <button type="button" class="terminal-button" onclick="makeAISettingsPermanent()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                            📌 Make Permanent
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- End of Full-width Options Layout -->
                                         
                                         <!-- Single Page Save Settings -->
                                         <div class="config-section-divider"></div>
@@ -1908,14 +2381,14 @@ https://restaurant3.com
                                 </div>
                             </div>
                             
-                            <div class="config-panel-header" onclick="toggleMultiPageConfig()" id="multiPageHeader" style="display: none;">
+                            <div class="config-panel-header" onclick="toggleMultiPageConfig()" id="multiPageHeader" style="display: block;">
                                 <label class="input-label config-toggle">
                                     <span class="config-icon">⚙️</span>
                                     MULTI_PAGE_CONFIG
-                                    <span class="expand-icon" id="configExpandIcon">▼</span>
+                                    <span class="expand-icon expanded" id="configExpandIcon">▲</span>
                                 </label>
                             </div>
-                            <div id="multiPageConfig" class="config-panel collapsed">
+                            <div id="multiPageConfig" class="config-panel">
                                 <div class="config-grid">
                                     <div class="config-item">
                                         <label class="config-label" for="maxPages">MAX_PAGES_PER_SITE:</label>
@@ -2026,12 +2499,17 @@ https://restaurant3.com
                                     
                                     <!-- Advanced Options Section -->
                                     <div class="config-section-divider"></div>
-                                    <div class="config-item advanced-options-header">
-                                        <div class="config-toggle-header" onclick="toggleAdvancedOptions()">
-                                            <span class="config-label">🔧 ADVANCED_OPTIONS</span>
-                                            <span class="expand-icon" id="advancedOptionsIcon">▼</span>
-                                        </div>
-                                    </div>
+                                    
+                                    <!-- Full-width Options Layout -->
+                                    <div class="options-layout-container">
+                                        <!-- Advanced Options -->
+                                        <div class="advanced-options-section">
+                                            <div class="config-item advanced-options-header">
+                                                <div class="config-toggle-header" onclick="toggleAdvancedOptions()">
+                                                    <span class="config-label">🔧 ADVANCED_OPTIONS</span>
+                                                    <span class="expand-icon" id="advancedOptionsIcon">▼</span>
+                                                </div>
+                                            </div>
                                     
                                     <div id="advancedOptionsPanel" class="advanced-options-panel collapsed">
                                         <!-- Page Discovery Toggle -->
@@ -2121,13 +2599,259 @@ https://restaurant3.com
                                                 🔄 RESET_TO_DEFAULTS
                                             </button>
                                         </div>
+                                            </div>
+                                        </div>
                                         
-                                        <!-- Multi Page Save Settings -->
-                                        <div class="config-section-divider"></div>
-                                        <div class="config-item save-settings-section">
-                                            {{ multi_page_save_settings_toggle | safe }}
+                                        <!-- AI Enhancement Options -->
+                                        <div class="ai-enhancement-section">
+                                            <div class="config-item ai-enhancement-header">
+                                                <div class="config-toggle-header" onclick="toggleAIEnhancementOptions()">
+                                                    <span class="config-label">🤖 AI_ENHANCEMENT_OPTIONS</span>
+                                                    <span class="expand-icon" id="aiEnhancementIcon">▼</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div id="aiEnhancementPanel" class="ai-enhancement-panel collapsed">
+                                            <!-- Enable AI Enhancement Toggle -->
+                                            <div class="config-item">
+                                                <label class="config-label toggle-switch-label">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        id="aiEnhancementEnabled" 
+                                                        name="aiEnhancementEnabled" 
+                                                        class="terminal-checkbox toggle-switch" 
+                                                        onchange="handleAIEnhancementToggle()" />
+                                                    <span class="toggle-slider"></span>
+                                                    ENABLE_AI_ENHANCEMENT
+                                                </label>
+                                                <div class="config-desc">Enable AI-powered content analysis and extraction enhancement (optional)</div>
+                                                <div class="config-warning" style="color: var(--accent-amber); font-size: 0.75rem; margin-top: 0.25rem;">
+                                                    ⚠️ AI features are completely optional. Traditional extraction works without AI.
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- AI Configuration Options (hidden by default) -->
+                                            <div id="aiConfigOptions" class="ai-config-options collapsed">
+                                                
+                                                <!-- LLM Provider Selection -->
+                                                <div class="config-item">
+                                                    <label class="config-label" for="llmProvider">LLM_PROVIDER:</label>
+                                                    <select id="llmProvider" name="llmProvider" class="terminal-input config-input" onchange="handleProviderChange()">
+                                                        <option value="openai">OpenAI GPT</option>
+                                                        <option value="claude">Anthropic Claude</option>
+                                                        <option value="ollama">Ollama (Local)</option>
+                                                        <option value="llama_cpp">llama.cpp (Local)</option>
+                                                        <option value="custom">Custom OpenAI-Compatible</option>
+                                                    </select>
+                                                    <div class="config-desc">Choose your preferred AI language model provider</div>
+                                                </div>
+                                                
+                                                <!-- Model Selection Dropdown -->
+                                                <div class="config-item" id="modelSection" style="display: none;">
+                                                    <label class="config-label" for="modelSelect">MODEL:</label>
+                                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                        <select id="modelSelect" name="modelSelect" class="terminal-input config-input" style="flex: 1;">
+                                                            <option value="">Select model...</option>
+                                                        </select>
+                                                        <button type="button" 
+                                                                id="refreshModelsButton"
+                                                                class="terminal-button"
+                                                                onclick="refreshModels()"
+                                                                style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
+                                                                title="Refresh available models">
+                                                            🔄
+                                                        </button>
+                                                    </div>
+                                                    <div class="config-desc">Choose specific model for selected provider</div>
+                                                    <div class="config-warning" style="display: none;" id="modelWarning">
+                                                        ⚠️ Model selection error
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- API Key Input (for external providers) -->
+                                                <div class="config-item" id="apiKeySection">
+                                                    <label class="config-label" for="aiApiKey">API_KEY:</label>
+                                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                        <input 
+                                                            type="text" 
+                                                            id="aiApiKey" 
+                                                            name="aiApiKey" 
+                                                            class="terminal-input config-input"
+                                                            placeholder="Enter API Key (any format accepted)"
+                                                            style="flex: 1;"
+                                                        />
+                                                        <button type="button" 
+                                                                id="toggleApiKeyVisibility"
+                                                                class="terminal-button"
+                                                                onclick="toggleApiKeyVisibility()"
+                                                                style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
+                                                                title="Toggle API key visibility">
+                                                            👁️
+                                                        </button>
+                                                    </div>
+                                                        autocomplete="off" />
+                                                    <div class="config-desc">API key for external AI services (stored securely, optional)</div>
+                                                    <div class="config-warning" style="display: none;" id="apiKeyWarning">
+                                                        ⚠️ Invalid API key format
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Custom Provider Configuration -->
+                                                <div class="config-item" id="customProviderSection" style="display: none;">
+                                                    <label class="config-label">CUSTOM_PROVIDER_CONFIG:</label>
+                                                    
+                                                    <div class="config-subitem">
+                                                        <label class="config-label" for="customProviderName">Provider Name:</label>
+                                                        <input 
+                                                            type="text" 
+                                                            id="customProviderName" 
+                                                            name="customProviderName" 
+                                                            class="terminal-input config-input"
+                                                            placeholder="e.g., My Local LLM"
+                                                            style="margin-bottom: 0.5rem;" />
+                                                    </div>
+                                                    
+                                                    <div class="config-subitem">
+                                                        <label class="config-label" for="customBaseUrl">Base URL:</label>
+                                                        <input 
+                                                            type="text" 
+                                                            id="customBaseUrl" 
+                                                            name="customBaseUrl" 
+                                                            class="terminal-input config-input"
+                                                            placeholder="https://my-llm.com/v1"
+                                                            style="margin-bottom: 0.5rem;" />
+                                                    </div>
+                                                    
+                                                    <div class="config-subitem">
+                                                        <label class="config-label" for="customModelName">Model Name:</label>
+                                                        <input 
+                                                            type="text" 
+                                                            id="customModelName" 
+                                                            name="customModelName" 
+                                                            class="terminal-input config-input"
+                                                            placeholder="gpt-3.5-turbo"
+                                                            style="margin-bottom: 0.5rem;" />
+                                                    </div>
+                                                    
+                                                    <div class="config-desc">Configure custom OpenAI-compatible endpoint</div>
+                                                </div>
+                                                
+                                                <!-- Local Service Status (for local providers) -->
+                                                <div class="config-item" id="localServiceStatus" style="display: none;">
+                                                    <div class="config-label">SERVICE_STATUS:</div>
+                                                    <div id="serviceStatusIndicator" class="service-status">
+                                                        <span class="status-dot" id="statusDot"></span>
+                                                        <span id="statusText">Checking connection...</span>
+                                                    </div>
+                                                    <div class="config-desc">Connection status to local AI service</div>
+                                                </div>
+                                                
+                                                <!-- AI Feature Toggles -->
+                                                <div class="config-item">
+                                                    <div class="config-label">AI_FEATURES:</div>
+                                                    <div class="feature-toggles-grid">
+                                                        <label class="feature-toggle">
+                                                            <input type="checkbox" id="nutritionalAnalysis" name="nutritionalAnalysis" checked class="terminal-checkbox" />
+                                                            <span class="feature-name">Nutritional Analysis</span>
+                                                        </label>
+                                                        <label class="feature-toggle">
+                                                            <input type="checkbox" id="priceAnalysis" name="priceAnalysis" checked class="terminal-checkbox" />
+                                                            <span class="feature-name">Price Analysis</span>
+                                                        </label>
+                                                        <label class="feature-toggle">
+                                                            <input type="checkbox" id="cuisineClassification" name="cuisineClassification" checked class="terminal-checkbox" />
+                                                            <span class="feature-name">Cuisine Classification</span>
+                                                        </label>
+                                                        <label class="feature-toggle">
+                                                            <input type="checkbox" id="multimodalAnalysis" name="multimodalAnalysis" class="terminal-checkbox" />
+                                                            <span class="feature-name">Multi-modal Analysis</span>
+                                                        </label>
+                                                        <label class="feature-toggle">
+                                                            <input type="checkbox" id="patternLearning" name="patternLearning" class="terminal-checkbox" />
+                                                            <span class="feature-name">Pattern Learning</span>
+                                                        </label>
+                                                        <label class="feature-toggle">
+                                                            <input type="checkbox" id="dynamicPrompts" name="dynamicPrompts" class="terminal-checkbox" />
+                                                            <span class="feature-name">Dynamic Prompts</span>
+                                                        </label>
+                                                    </div>
+                                                    <div class="config-desc">Select which AI-powered analysis features to enable</div>
+                                                </div>
+                                                
+                                                <!-- Confidence Threshold Slider -->
+                                                <div class="config-item">
+                                                    <label class="config-label" for="confidenceThreshold">CONFIDENCE_THRESHOLD:</label>
+                                                    <input 
+                                                        type="range" 
+                                                        id="confidenceThreshold" 
+                                                        name="confidenceThreshold" 
+                                                        class="terminal-slider"
+                                                        value="0.7"
+                                                        min="0.1"
+                                                        max="1.0"
+                                                        step="0.1" 
+                                                        oninput="updateConfidenceValue(this.value)" />
+                                                    <div class="slider-value">Threshold: <span id="confidenceValue">0.7</span></div>
+                                                    <div class="config-desc">Minimum confidence required for AI predictions (lower = more results, higher = more accurate)</div>
+                                                </div>
+                                                
+                                                <!-- Custom Questions -->
+                                                <div class="config-item">
+                                                    <label class="config-label" for="customQuestions">CUSTOM_QUESTIONS:</label>
+                                                    <textarea 
+                                                        id="customQuestions" 
+                                                        name="customQuestions" 
+                                                        class="terminal-input"
+                                                        placeholder="Enter questions (one per line, max 200 chars each)&#10;Example: Are takeout containers eco-friendly?&#10;Example: What's the wifi password policy?"
+                                                        rows="3"
+                                                        style="width: 100%; resize: vertical; font-family: 'Courier New', monospace;"
+                                                        oninput="validateCustomQuestions('multi')"
+                                                    ></textarea>
+                                                    <div class="config-desc" id="customQuestionsDesc">Add custom questions for AI to answer (200 char limit per question)</div>
+                                                </div>
+                                                
+                                                <!-- AI Settings Persistence Controls -->
+                                                <div class="config-section-divider"></div>
+                                                <div class="config-item">
+                                                    <div class="config-label">🔒 AI_SETTINGS_PERSISTENCE</div>
+                                                    <div class="config-desc" style="margin-bottom: 1rem;">Save your AI configuration for future use</div>
+                                                    
+                                                    <div class="ai-persistence-buttons" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                                        <button type="button" class="terminal-button" onclick="saveAISettings()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                            💾 Save Settings
+                                                        </button>
+                                                        <button type="button" class="terminal-button" onclick="loadAISettings()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                            📂 Load Settings
+                                                        </button>
+                                                        <button type="button" class="terminal-button" onclick="clearSavedAISettings()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                            🗑️ Clear Saved
+                                                        </button>
+                                                        <button type="button" class="terminal-button" onclick="makeAISettingsPermanent()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                            📌 Make Permanent
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Reset Button -->
+                                        <div class="config-item reset-section">
+                                            <button type="button" 
+                                                    class="reset-defaults-btn" 
+                                                    onclick="resetAdvancedOptionsToDefaults()">
+                                                🔄 RESET_TO_DEFAULTS
+                                            </button>
+                                            </div>
                                         </div>
                                     </div>
+                                    <!-- End of Full-width Options Layout -->
+                                </div>
+                                
+                                <!-- Multi Page Save Settings -->
+                                <div class="config-section-divider"></div>
+                                <div class="config-item save-settings-section">
+                                    {{ multi_page_save_settings_toggle | safe }}
                                 </div>
                             </div>
                         </div>
@@ -2143,8 +2867,8 @@ https://restaurant3.com
                         <div class="input-group">
                             <label class="input-label">OUTPUT_FORMAT:</label>
                             <div class="format-grid">
-                                <label class="format-option selected" data-format="text">
-                                    <input type="radio" id="fileFormatText" name="fileFormat" value="text" checked>
+                                <label class="format-option" data-format="text">
+                                    <input type="radio" id="fileFormatText" name="fileFormat" value="text">
                                     <div class="format-title">TEXT</div>
                                     <div class="format-desc">Raw structured data for RAG ingestion</div>
                                 </label>
@@ -2153,15 +2877,15 @@ https://restaurant3.com
                                     <div class="format-title">PDF</div>
                                     <div class="format-desc">Formatted document for human review</div>
                                 </label>
-                                <label class="format-option" data-format="json">
-                                    <input type="radio" id="fileFormatJson" name="fileFormat" value="json">
+                                <label class="format-option selected" data-format="json">
+                                    <input type="radio" id="fileFormatJson" name="fileFormat" value="json" checked>
                                     <div class="format-title">JSON</div>
                                     <div class="format-desc">Structured data for system integration</div>
                                 </label>
                             </div>
                         </div>
                         
-                        <div id="jsonFieldSelection" class="input-group" style="display: none;">
+                        <div id="jsonFieldSelection" class="input-group" style="display: block;">
                             <label class="input-label">JSON_FIELD_SELECTION:</label>
                             <div class="field-selection-grid">
                                 <label class="field-option">
@@ -2180,7 +2904,7 @@ https://restaurant3.com
                                     <div class="field-desc">Email, social media, delivery</div>
                                 </label>
                                 <label class="field-option">
-                                    <input type="checkbox" name="jsonFields" value="descriptive_fields">
+                                    <input type="checkbox" name="jsonFields" value="descriptive_fields" checked>
                                     <div class="field-title">DESCRIPTIVE FIELDS</div>
                                     <div class="field-desc">Ambiance, dietary options</div>
                                 </label>
@@ -2534,6 +3258,793 @@ https://restaurant3.com
                     const display = document.getElementById('concurrentRequestsValue');
                     if (slider && display) {
                         display.textContent = slider.value;
+                    }
+                }
+
+                // AI Enhancement Panel Functions
+                function toggleAIEnhancementOptions() {
+                    const aiPanel = document.getElementById('aiEnhancementPanel');
+                    const expandIcon = document.getElementById('aiEnhancementIcon');
+                    
+                    if (!aiPanel || !expandIcon) {
+                        console.error('AI Enhancement elements not found:', {aiPanel, expandIcon});
+                        return;
+                    }
+                    
+                    const isCollapsed = aiPanel.classList.contains('collapsed');
+                    
+                    if (isCollapsed) {
+                        aiPanel.classList.remove('collapsed');
+                        expandIcon.textContent = '▲';
+                        expandIcon.style.transform = 'rotate(180deg)';
+                        updateSystemStatus('AI_ENHANCEMENT // PANEL_EXPANDED');
+                    } else {
+                        aiPanel.classList.add('collapsed');
+                        expandIcon.textContent = '▼';
+                        expandIcon.style.transform = 'rotate(0deg)';
+                        updateSystemStatus('AI_ENHANCEMENT // PANEL_COLLAPSED');
+                    }
+                }
+
+                function handleAIEnhancementToggle() {
+                    const enabledCheckbox = document.getElementById('aiEnhancementEnabled');
+                    const configOptions = document.getElementById('aiConfigOptions');
+                    
+                    if (!enabledCheckbox || !configOptions) {
+                        console.error('AI Enhancement toggle elements not found');
+                        return;
+                    }
+                    
+                    if (enabledCheckbox.checked) {
+                        configOptions.classList.remove('collapsed');
+                        updateSystemStatus('AI_ENHANCEMENT // ENABLED_CONFIG_VISIBLE');
+                        checkProviderAvailability();
+                    } else {
+                        configOptions.classList.add('collapsed');
+                        updateSystemStatus('AI_ENHANCEMENT // DISABLED_TRADITIONAL_MODE');
+                    }
+                }
+
+                function handleProviderChange() {
+                    const providerSelect = document.getElementById('llmProvider');
+                    const apiKeySection = document.getElementById('apiKeySection');
+                    const localServiceStatus = document.getElementById('localServiceStatus');
+                    const customProviderSection = document.getElementById('customProviderSection');
+                    const modelSection = document.getElementById('modelSection');
+                    const apiKeyInput = document.getElementById('aiApiKey');
+                    
+                    if (!providerSelect) return;
+                    
+                    const selectedProvider = providerSelect.value;
+                    
+                    // Show/hide sections based on provider
+                    if (selectedProvider === 'openai' || selectedProvider === 'claude') {
+                        apiKeySection.style.display = 'block';
+                        localServiceStatus.style.display = 'none';
+                        customProviderSection.style.display = 'none';
+                        
+                        // Show model selection for OpenAI, hide for others
+                        if (selectedProvider === 'openai') {
+                            modelSection.style.display = 'block';
+                            apiKeyInput.placeholder = 'Enter OpenAI API Key (optional)';
+                        } else {
+                            modelSection.style.display = 'none';
+                            apiKeyInput.placeholder = 'Enter Anthropic API Key (optional)';
+                        }
+                    } else if (selectedProvider === 'custom') {
+                        apiKeySection.style.display = 'block';
+                        localServiceStatus.style.display = 'none';
+                        customProviderSection.style.display = 'block';
+                        modelSection.style.display = 'none';
+                        
+                        // Update placeholder text for custom provider
+                        apiKeyInput.placeholder = 'Enter API Key (any format accepted)';
+                    } else {
+                        // Local providers (ollama, llama_cpp)
+                        apiKeySection.style.display = 'none';
+                        localServiceStatus.style.display = 'block';
+                        customProviderSection.style.display = 'none';
+                        modelSection.style.display = 'none';
+                        checkLocalServiceStatus(selectedProvider);
+                    }
+                    
+                    updateSystemStatus(`AI_PROVIDER // ${selectedProvider.toUpperCase()}_SELECTED`);
+                }
+
+                function checkProviderAvailability() {
+                    const providerSelect = document.getElementById('llmProvider');
+                    if (providerSelect) {
+                        handleProviderChange(); // Trigger initial provider setup
+                    }
+                }
+
+                function checkLocalServiceStatus(provider) {
+                    const statusDot = document.getElementById('statusDot');
+                    const statusText = document.getElementById('statusText');
+                    
+                    if (!statusDot || !statusText) return;
+                    
+                    // Set checking state
+                    statusDot.className = 'status-dot checking';
+                    statusText.textContent = 'Checking connection...';
+                    
+                    // Simulate checking local service (in real implementation, this would be an API call)
+                    setTimeout(() => {
+                        if (provider === 'ollama') {
+                            // Check if Ollama is available (placeholder - would be real API call)
+                            fetch('/api/ai/providers', { credentials: 'same-origin' })
+                                .then(response => response.json())
+                                .then(data => {
+                                    const isAvailable = data.ollama?.available || false;
+                                    updateServiceStatus(isAvailable, provider);
+                                })
+                                .catch(() => {
+                                    updateServiceStatus(false, provider);
+                                });
+                        } else {
+                            // For llama_cpp, just show as available (local binary)
+                            updateServiceStatus(true, provider);
+                        }
+                    }, 1000);
+                }
+
+                function updateServiceStatus(isAvailable, provider) {
+                    const statusDot = document.getElementById('statusDot');
+                    const statusText = document.getElementById('statusText');
+                    
+                    if (!statusDot || !statusText) return;
+                    
+                    if (isAvailable) {
+                        statusDot.className = 'status-dot connected';
+                        statusText.textContent = `${provider} service available`;
+                        statusText.style.color = 'var(--accent-green)';
+                    } else {
+                        statusDot.className = 'status-dot disconnected';
+                        statusText.textContent = `${provider} service unavailable`;
+                        statusText.style.color = 'var(--accent-red)';
+                    }
+                }
+
+                function updateConfidenceValue(value) {
+                    const display = document.getElementById('confidenceValue');
+                    if (display) {
+                        display.textContent = value;
+                    }
+                }
+
+                function generateSessionId() {
+                    // Generate a unique session ID for this scraping request
+                    return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                }
+
+                // Model selection dropdown functions
+                async function refreshModels() {
+                    const providerSelect = document.getElementById('llmProvider');
+                    const apiKeyInput = document.getElementById('aiApiKey');
+                    const modelSelect = document.getElementById('modelSelect');
+                    const modelWarning = document.getElementById('modelWarning');
+                    
+                    if (!providerSelect || !apiKeyInput || !modelSelect) return;
+                    
+                    const provider = providerSelect.value;
+                    const apiKey = apiKeyInput.value.trim();
+                    
+                    // Clear previous options
+                    modelSelect.innerHTML = '<option value="">Loading models...</option>';
+                    modelWarning.style.display = 'none';
+                    
+                    try {
+                        const response = await fetch('/api/ai/get-models', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                provider: provider,
+                                api_key: apiKey
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        // Clear loading option
+                        modelSelect.innerHTML = '<option value="">Select model...</option>';
+                        
+                        if (data.success && data.models && data.models.length > 0) {
+                            // Populate with available models
+                            data.models.forEach(model => {
+                                const option = document.createElement('option');
+                                option.value = model.id;
+                                option.textContent = model.name || model.id;
+                                modelSelect.appendChild(option);
+                            });
+                            
+                            // Set default model if specified
+                            if (data.default_model) {
+                                modelSelect.value = data.default_model;
+                            }
+                        } else if (!data.implemented) {
+                            // Provider not implemented
+                            const option = document.createElement('option');
+                            option.value = '';
+                            option.textContent = 'Not Implemented';
+                            option.disabled = true;
+                            modelSelect.appendChild(option);
+                        } else {
+                            // Error occurred
+                            modelWarning.textContent = `⚠️ ${data.message || 'Failed to load models'}`;
+                            modelWarning.style.display = 'block';
+                        }
+                    } catch (error) {
+                        console.error('Error fetching models:', error);
+                        modelSelect.innerHTML = '<option value="">Error loading models</option>';
+                        modelWarning.textContent = '⚠️ Network error loading models';
+                        modelWarning.style.display = 'block';
+                    }
+                }
+
+                async function refreshSingleModels() {
+                    const providerSelect = document.getElementById('singleLlmProvider');
+                    const apiKeyInput = document.getElementById('singleAiApiKey');
+                    const modelSelect = document.getElementById('singleModelSelect');
+                    const modelWarning = document.getElementById('singleModelWarning');
+                    
+                    if (!providerSelect || !apiKeyInput || !modelSelect) return;
+                    
+                    const provider = providerSelect.value;
+                    const apiKey = apiKeyInput.value.trim();
+                    
+                    // Clear previous options
+                    modelSelect.innerHTML = '<option value="">Loading models...</option>';
+                    modelWarning.style.display = 'none';
+                    
+                    try {
+                        const response = await fetch('/api/ai/get-models', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                provider: provider,
+                                api_key: apiKey
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        // Clear loading option
+                        modelSelect.innerHTML = '<option value="">Select model...</option>';
+                        
+                        if (data.success && data.models && data.models.length > 0) {
+                            // Populate with available models
+                            data.models.forEach(model => {
+                                const option = document.createElement('option');
+                                option.value = model.id;
+                                option.textContent = model.name || model.id;
+                                modelSelect.appendChild(option);
+                            });
+                            
+                            // Set default model if specified
+                            if (data.default_model) {
+                                modelSelect.value = data.default_model;
+                            }
+                        } else if (!data.implemented) {
+                            // Provider not implemented
+                            const option = document.createElement('option');
+                            option.value = '';
+                            option.textContent = 'Not Implemented';
+                            option.disabled = true;
+                            modelSelect.appendChild(option);
+                        } else {
+                            // Error occurred
+                            modelWarning.textContent = `⚠️ ${data.message || 'Failed to load models'}`;
+                            modelWarning.style.display = 'block';
+                        }
+                    } catch (error) {
+                        console.error('Error fetching models:', error);
+                        modelSelect.innerHTML = '<option value="">Error loading models</option>';
+                        modelWarning.textContent = '⚠️ Network error loading models';
+                        modelWarning.style.display = 'block';
+                    }
+                }
+                
+                function getAIConfiguration() {
+                    // Check both single-page and multi-page modes
+                    const multiPageEnabled = document.getElementById('aiEnhancementEnabled');
+                    const singlePageEnabled = document.getElementById('singleAiEnhancementEnabled');
+                    
+                    // Determine which scraping mode is currently active
+                    const scrapingMode = document.querySelector('input[name="scrapingMode"]:checked')?.value || 'multi';
+                    
+                    // Determine which mode is active and if AI is enabled
+                    let isEnabled = false;
+                    let activeMode = scrapingMode;
+                    
+                    if (scrapingMode === 'single' && singlePageEnabled && singlePageEnabled.checked) {
+                        isEnabled = true;
+                        activeMode = 'single';
+                    } else if (scrapingMode === 'multi' && multiPageEnabled && multiPageEnabled.checked) {
+                        isEnabled = true;
+                        activeMode = 'multi';
+                    }
+                    
+                    // Debug logging
+                    console.log('AI Configuration Debug:', {
+                        scrapingMode,
+                        singlePageEnabled: singlePageEnabled?.checked,
+                        multiPageEnabled: multiPageEnabled?.checked,
+                        isEnabled,
+                        activeMode
+                    });
+                    
+                    if (!isEnabled) {
+                        return {
+                            ai_enhancement_enabled: false
+                        };
+                    }
+                    
+                    // Get configuration from the active mode
+                    const prefix = activeMode === 'single' ? 'single' : '';
+                    
+                    return {
+                        ai_enhancement_enabled: true,
+                        llm_provider: document.getElementById(`${prefix}LlmProvider`)?.value || 
+                                     document.getElementById('llmProvider')?.value || 'openai',
+                        api_key: document.getElementById(`${prefix}AiApiKey`)?.value || 
+                                 document.getElementById('aiApiKey')?.value || '',
+                        model: document.getElementById(`${prefix}ModelSelect`)?.value || 
+                               document.getElementById('modelSelect')?.value || '',
+                        features: {
+                            nutritional_analysis: document.getElementById(`${prefix}NutritionalAnalysis`)?.checked || 
+                                                  document.getElementById('nutritionalAnalysis')?.checked || false,
+                            price_analysis: document.getElementById(`${prefix}PriceAnalysis`)?.checked || 
+                                           document.getElementById('priceAnalysis')?.checked || false,
+                            cuisine_classification: document.getElementById(`${prefix}CuisineClassification`)?.checked || 
+                                                   document.getElementById('cuisineClassification')?.checked || false,
+                            multimodal_analysis: document.getElementById(`${prefix}MultimodalAnalysis`)?.checked || 
+                                                document.getElementById('multimodalAnalysis')?.checked || false,
+                            pattern_learning: document.getElementById(`${prefix}PatternLearning`)?.checked || 
+                                             document.getElementById('patternLearning')?.checked || false,
+                            dynamic_prompts: document.getElementById(`${prefix}DynamicPrompts`)?.checked || 
+                                            document.getElementById('dynamicPrompts')?.checked || false
+                        },
+                        confidence_threshold: parseFloat(document.getElementById(`${prefix}ConfidenceThreshold`)?.value || 
+                                                        document.getElementById('confidenceThreshold')?.value || 0.7),
+                        // Custom questions
+                        custom_questions: parseCustomQuestions(prefix),
+                        // Custom provider fields
+                        custom_provider_name: document.getElementById(`${prefix}CustomProviderName`)?.value || 
+                                             document.getElementById('customProviderName')?.value || '',
+                        custom_base_url: document.getElementById(`${prefix}CustomBaseUrl`)?.value || 
+                                        document.getElementById('customBaseUrl')?.value || '',
+                        custom_model_name: document.getElementById(`${prefix}CustomModelName`)?.value || 
+                                          document.getElementById('customModelName')?.value || '',
+                        active_mode: activeMode
+                    };
+                }
+
+                // AI Settings Persistence Functions
+                async function saveAISettings() {
+                    try {
+                        const settings = getAIConfiguration();
+                        console.log('AI Configuration to save:', settings);
+                        
+                        if (!settings.ai_enhancement_enabled) {
+                            showTerminalAlert('No AI settings to save (AI enhancement is disabled)');
+                            return;
+                        }
+                        
+                        const url = '/api/ai/save-settings';
+                        console.log('Sending request to:', url);
+                        console.log('Full URL:', window.location.origin + url);
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'same-origin',
+                            body: JSON.stringify({
+                                settings: settings
+                            })
+                        });
+                        
+                        console.log('Response received:', response);
+                        console.log('Response status:', response.status);
+                        console.log('Response ok:', response.ok);
+                        
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            console.error('Response error text:', errorText);
+                            throw new Error(`HTTP ${response.status}: ${errorText}`);
+                        }
+                        
+                        const data = await response.json();
+                        console.log('Response data:', data);
+                        
+                        if (data.success) {
+                            showTerminalAlert('AI settings saved successfully', 'success');
+                            updateSystemStatus('AI_SETTINGS // SAVED_TO_PERSISTENT_STORAGE');
+                        } else {
+                            showTerminalAlert('Failed to save AI settings: ' + data.error, 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error saving AI settings:', error);
+                        console.error('Error details:', {
+                            name: error.name,
+                            message: error.message,
+                            stack: error.stack
+                        });
+                        showTerminalAlert('Error saving AI settings: ' + error.message, 'error');
+                    }
+                }
+                
+                function toggleApiKeyVisibility() {
+                    const apiKeyInput = document.getElementById('aiApiKey');
+                    const toggleButton = document.getElementById('toggleApiKeyVisibility');
+                    
+                    if (apiKeyInput.type === 'password') {
+                        apiKeyInput.type = 'text';
+                        toggleButton.textContent = '🙈';
+                        toggleButton.title = 'Hide API key';
+                    } else {
+                        apiKeyInput.type = 'password';
+                        toggleButton.textContent = '👁️';
+                        toggleButton.title = 'Show API key';
+                    }
+                }
+                
+                function toggleSingleApiKeyVisibility() {
+                    const apiKeyInput = document.getElementById('singleAiApiKey');
+                    const toggleButton = document.getElementById('toggleSingleApiKeyVisibility');
+                    
+                    if (apiKeyInput.type === 'password') {
+                        apiKeyInput.type = 'text';
+                        toggleButton.textContent = '🙈';
+                        toggleButton.title = 'Hide API key';
+                    } else {
+                        apiKeyInput.type = 'password';
+                        toggleButton.textContent = '👁️';
+                        toggleButton.title = 'Show API key';
+                    }
+                }
+                
+                async function loadAISettings() {
+                    try {
+                        const response = await fetch('/api/ai/load-settings', { credentials: 'same-origin' });
+                        const data = await response.json();
+                        
+                        if (data.success && data.has_saved_settings) {
+                            const settings = data.settings;
+                            
+                            // Apply settings to UI
+                            if (settings.ai_enhancement_enabled) {
+                                const activeMode = settings.active_mode || 'multi';
+                                const prefix = activeMode === 'single' ? 'single' : '';
+                                
+                                // Enable AI Enhancement
+                                const enabledCheckbox = document.getElementById(prefix + 'AiEnhancementEnabled');
+                                if (enabledCheckbox) {
+                                    enabledCheckbox.checked = true;
+                                    if (activeMode === 'single') {
+                                        handleSinglePageAIEnhancementToggle();
+                                    } else {
+                                        handleAIEnhancementToggle();
+                                    }
+                                }
+                                
+                                // Set provider
+                                if (settings.llm_provider) {
+                                    const providerSelect = document.getElementById(prefix + 'LlmProvider');
+                                    if (providerSelect) {
+                                        providerSelect.value = settings.llm_provider;
+                                    }
+                                }
+                                
+                                // Set confidence threshold
+                                if (settings.confidence_threshold) {
+                                    const thresholdSlider = document.getElementById(prefix + 'ConfidenceThreshold');
+                                    if (thresholdSlider) {
+                                        thresholdSlider.value = settings.confidence_threshold;
+                                        updateSliderValue(prefix + 'ConfidenceThreshold');
+                                    }
+                                }
+                                
+                                // Set custom questions
+                                if (settings.custom_questions && Array.isArray(settings.custom_questions)) {
+                                    const questionsField = document.getElementById(prefix + 'CustomQuestions');
+                                    if (questionsField) {
+                                        questionsField.value = settings.custom_questions.join('\n');
+                                        validateCustomQuestions(activeMode);
+                                    }
+                                }
+                                
+                                // Set features
+                                if (settings.features) {
+                                    Object.keys(settings.features).forEach(feature => {
+                                        const checkbox = document.getElementById(prefix + feature.charAt(0).toUpperCase() + feature.slice(1).replace(/_/g, ''));
+                                        if (checkbox) {
+                                            checkbox.checked = settings.features[feature];
+                                        }
+                                    });
+                                }
+                                
+                                // Show masked API key if available
+                                if (settings.api_key_masked) {
+                                    const apiKeyInput = document.getElementById(prefix + 'ApiKey');
+                                    if (apiKeyInput) {
+                                        apiKeyInput.placeholder = 'Saved: ' + settings.api_key_masked;
+                                    }
+                                }
+                            }
+                            
+                            showTerminalAlert('AI settings loaded successfully', 'success');
+                            updateSystemStatus('AI_SETTINGS // LOADED_FROM_PERSISTENT_STORAGE');
+                        } else if (data.success && !data.has_saved_settings) {
+                            updateSystemStatus('AI_SETTINGS // NO_SAVED_SETTINGS_FOUND');
+                        } else {
+                            showTerminalAlert('Failed to load AI settings: ' + data.error, 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error loading AI settings:', error);
+                        showTerminalAlert('Error loading AI settings: ' + error.message, 'error');
+                    }
+                }
+                
+                async function clearSavedAISettings() {
+                    if (!confirm('Are you sure you want to clear all saved AI settings? This action cannot be undone.')) {
+                        return;
+                    }
+                    
+                    try {
+                        const response = await fetch('/api/ai/clear-saved-settings', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'same-origin'
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            // Reset UI to defaults
+                            resetAISettingsUI();
+                            showTerminalAlert('Saved AI settings cleared successfully', 'success');
+                            updateSystemStatus('AI_SETTINGS // PERSISTENT_STORAGE_CLEARED');
+                        } else {
+                            showTerminalAlert('Failed to clear saved AI settings: ' + data.error, 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error clearing saved AI settings:', error);
+                        showTerminalAlert('Error clearing saved AI settings: ' + error.message, 'error');
+                    }
+                }
+                
+                async function makeAISettingsPermanent() {
+                    try {
+                        const response = await fetch('/api/ai/migrate-session', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'same-origin'
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            showTerminalAlert('Session settings migrated to permanent storage', 'success');
+                            updateSystemStatus('AI_SETTINGS // SESSION_MIGRATED_TO_PERMANENT');
+                        } else {
+                            showTerminalAlert('Failed to migrate session settings: ' + data.error, 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error migrating session settings:', error);
+                        showTerminalAlert('Error migrating session settings: ' + error.message, 'error');
+                    }
+                }
+                
+                function resetAISettingsUI() {
+                    // Reset both single-page and multi-page AI settings to defaults
+                    ['', 'single'].forEach(prefix => {
+                        const enabledCheckbox = document.getElementById(prefix + 'AiEnhancementEnabled');
+                        if (enabledCheckbox) {
+                            enabledCheckbox.checked = false;
+                        }
+                        
+                        const providerSelect = document.getElementById(prefix + 'LlmProvider');
+                        if (providerSelect) {
+                            providerSelect.value = 'openai';
+                        }
+                        
+                        const apiKeyInput = document.getElementById(prefix + 'ApiKey');
+                        if (apiKeyInput) {
+                            apiKeyInput.value = '';
+                            apiKeyInput.placeholder = 'Enter your API key';
+                        }
+                        
+                        const thresholdSlider = document.getElementById(prefix + 'ConfidenceThreshold');
+                        if (thresholdSlider) {
+                            thresholdSlider.value = 0.7;
+                            updateSliderValue(prefix + 'ConfidenceThreshold');
+                        }
+                        
+                        // Reset custom questions
+                        const questionsField = document.getElementById(prefix + 'CustomQuestions');
+                        if (questionsField) {
+                            questionsField.value = '';
+                            const mode = prefix === 'single' ? 'single' : 'multi';
+                            validateCustomQuestions(mode);
+                        }
+                        
+                        // Reset all feature checkboxes
+                        ['NutritionalAnalysis', 'PriceAnalysis', 'CuisineClassification', 'MultimodalAnalysis', 
+                         'PatternLearning', 'DynamicPrompts'].forEach(feature => {
+                            const checkbox = document.getElementById(prefix + feature);
+                            if (checkbox) {
+                                checkbox.checked = feature === 'NutritionalAnalysis' || feature === 'PriceAnalysis' || feature === 'CuisineClassification';
+                            }
+                        });
+                    });
+                    
+                    // Hide AI config options
+                    const configPanels = ['aiConfigOptions', 'singleAiConfigOptions'];
+                    configPanels.forEach(panelId => {
+                        const panel = document.getElementById(panelId);
+                        if (panel) {
+                            panel.style.display = 'none';
+                        }
+                    });
+                }
+
+                // Single Page AI Enhancement Functions
+                function toggleSinglePageAIEnhancementOptions() {
+                    const aiPanel = document.getElementById('singleAiEnhancementPanel');
+                    const expandIcon = document.getElementById('singleAiEnhancementIcon');
+                    
+                    if (!aiPanel || !expandIcon) {
+                        console.error('Single Page AI Enhancement elements not found:', {aiPanel, expandIcon});
+                        return;
+                    }
+                    
+                    const isCollapsed = aiPanel.classList.contains('collapsed');
+                    
+                    if (isCollapsed) {
+                        aiPanel.classList.remove('collapsed');
+                        expandIcon.textContent = '▲';
+                        expandIcon.style.transform = 'rotate(180deg)';
+                        updateSystemStatus('AI_ENHANCEMENT // SINGLE_PAGE_PANEL_EXPANDED');
+                    } else {
+                        aiPanel.classList.add('collapsed');
+                        expandIcon.textContent = '▼';
+                        expandIcon.style.transform = 'rotate(0deg)';
+                        updateSystemStatus('AI_ENHANCEMENT // SINGLE_PAGE_PANEL_COLLAPSED');
+                    }
+                }
+
+                function handleSinglePageAIEnhancementToggle() {
+                    const enabledCheckbox = document.getElementById('singleAiEnhancementEnabled');
+                    const configOptions = document.getElementById('singleAiConfigOptions');
+                    
+                    if (!enabledCheckbox || !configOptions) {
+                        console.error('Single Page AI Enhancement toggle elements not found');
+                        return;
+                    }
+                    
+                    if (enabledCheckbox.checked) {
+                        configOptions.classList.remove('collapsed');
+                        updateSystemStatus('AI_ENHANCEMENT // SINGLE_PAGE_ENABLED_CONFIG_VISIBLE');
+                        checkSinglePageProviderAvailability();
+                    } else {
+                        configOptions.classList.add('collapsed');
+                        updateSystemStatus('AI_ENHANCEMENT // SINGLE_PAGE_DISABLED_TRADITIONAL_MODE');
+                    }
+                }
+
+                function handleSinglePageProviderChange() {
+                    const providerSelect = document.getElementById('singleLlmProvider');
+                    const apiKeySection = document.getElementById('singleApiKeySection');
+                    const localServiceStatus = document.getElementById('singleLocalServiceStatus');
+                    const customProviderSection = document.getElementById('singleCustomProviderSection');
+                    const modelSection = document.getElementById('singleModelSection');
+                    const apiKeyInput = document.getElementById('singleAiApiKey');
+                    
+                    if (!providerSelect) return;
+                    
+                    const selectedProvider = providerSelect.value;
+                    
+                    // Show/hide sections based on provider
+                    if (selectedProvider === 'openai' || selectedProvider === 'claude') {
+                        apiKeySection.style.display = 'block';
+                        localServiceStatus.style.display = 'none';
+                        customProviderSection.style.display = 'none';
+                        
+                        // Show model selection for OpenAI, hide for others
+                        if (selectedProvider === 'openai') {
+                            modelSection.style.display = 'block';
+                            apiKeyInput.placeholder = 'Enter OpenAI API Key (optional)';
+                        } else {
+                            modelSection.style.display = 'none';
+                            apiKeyInput.placeholder = 'Enter Anthropic API Key (optional)';
+                        }
+                    } else if (selectedProvider === 'custom') {
+                        apiKeySection.style.display = 'block';
+                        localServiceStatus.style.display = 'none';
+                        customProviderSection.style.display = 'block';
+                        modelSection.style.display = 'none';
+                        
+                        // Update placeholder text for custom provider
+                        apiKeyInput.placeholder = 'Enter API Key (any format accepted)';
+                    } else {
+                        // Local providers (ollama, llama_cpp)
+                        apiKeySection.style.display = 'none';
+                        localServiceStatus.style.display = 'block';
+                        customProviderSection.style.display = 'none';
+                        modelSection.style.display = 'none';
+                        checkSinglePageLocalServiceStatus(selectedProvider);
+                    }
+                    
+                    updateSystemStatus(`AI_PROVIDER // SINGLE_PAGE_${selectedProvider.toUpperCase()}_SELECTED`);
+                }
+
+                function checkSinglePageProviderAvailability() {
+                    const providerSelect = document.getElementById('singleLlmProvider');
+                    if (providerSelect) {
+                        handleSinglePageProviderChange(); // Trigger initial provider setup
+                    }
+                }
+
+                function checkSinglePageLocalServiceStatus(provider) {
+                    const statusDot = document.getElementById('singleStatusDot');
+                    const statusText = document.getElementById('singleStatusText');
+                    
+                    if (!statusDot || !statusText) return;
+                    
+                    // Set checking state
+                    statusDot.className = 'status-dot checking';
+                    statusText.textContent = 'Checking connection...';
+                    
+                    // Simulate checking local service (in real implementation, this would be an API call)
+                    setTimeout(() => {
+                        if (provider === 'ollama') {
+                            // Check if Ollama is available (placeholder - would be real API call)
+                            fetch('/api/ai/providers', { credentials: 'same-origin' })
+                                .then(response => response.json())
+                                .then(data => {
+                                    const isAvailable = data.ollama?.available || false;
+                                    updateSinglePageServiceStatus(isAvailable, provider);
+                                })
+                                .catch(() => {
+                                    updateSinglePageServiceStatus(false, provider);
+                                });
+                        } else {
+                            // For llama_cpp, just show as available (local binary)
+                            updateSinglePageServiceStatus(true, provider);
+                        }
+                    }, 1000);
+                }
+
+                function updateSinglePageServiceStatus(isAvailable, provider) {
+                    const statusDot = document.getElementById('singleStatusDot');
+                    const statusText = document.getElementById('singleStatusText');
+                    
+                    if (!statusDot || !statusText) return;
+                    
+                    if (isAvailable) {
+                        statusDot.className = 'status-dot connected';
+                        statusText.textContent = `${provider} service available`;
+                        statusText.style.color = 'var(--accent-green)';
+                    } else {
+                        statusDot.className = 'status-dot disconnected';
+                        statusText.textContent = `${provider} service unavailable`;
+                        statusText.style.color = 'var(--accent-red)';
+                    }
+                }
+
+                function updateSinglePageConfidenceValue(value) {
+                    const display = document.getElementById('singleConfidenceValue');
+                    if (display) {
+                        display.textContent = value;
                     }
                 }
                 
@@ -2951,6 +4462,13 @@ https://restaurant3.com
                                 ...advancedOptions
                             };
                         }
+                        
+                        // Add AI configuration
+                        const aiConfig = getAIConfiguration();
+                        multiPageConfig = {
+                            ...multiPageConfig,
+                            ai_config: aiConfig
+                        };
                     }
                     
                     updateSystemStatus(`INITIATING_EXTRACTION // ${urls.length}_TARGETS_QUEUED // ${scrapingMode.toUpperCase()}_MODE`);
@@ -3048,6 +4566,9 @@ https://restaurant3.com
                         
                         updateSystemStatus('FILE_PROCESSING // PROCESSING_FILES');
                         
+                        // Get AI configuration
+                        const aiConfig = getAIConfiguration();
+                        
                         // Process uploaded files
                         const processResponse = await fetch('/api/process-uploaded-files-for-rag', {
                             method: 'POST',
@@ -3069,10 +4590,17 @@ https://restaurant3.com
                                     }
                                     return null;
                                 })(),
-                                scraping_mode: 'single',
+                                scraping_mode: 'multi',
                                 multi_page_config: {},
                                 industry: getSelectedIndustry(),
-                                schema_type: getSelectedSchemaType()
+                                schema_type: getSelectedSchemaType(),
+                                // Add AI configuration to the request
+                                ai_enhancement_enabled: aiConfig.ai_enhancement_enabled,
+                                llm_provider: aiConfig.llm_provider,
+                                api_key: aiConfig.api_key,
+                                ai_features: aiConfig.ai_features,
+                                confidence_threshold: aiConfig.confidence_threshold,
+                                custom_questions: aiConfig.custom_questions
                             })
                         });
                         
@@ -3237,7 +4765,9 @@ https://restaurant3.com
                                 jsTimeout: parseInt(document.getElementById('jsTimeout')?.value || '30'),
                                 enablePopupHandling: document.getElementById('enablePopupHandling')?.checked || true,
                                 schema_type: getSelectedSchemaType(),
-                                restw_schema: getSelectedSchemaType() === 'RestW'  // Backwards compatibility
+                                restw_schema: getSelectedSchemaType() === 'RestW',  // Backwards compatibility
+                                session_id: generateSessionId(),  // Generate session ID for AI analysis
+                                ai_config: getAIConfiguration()  // Include AI configuration
                             })
                         });
                         
@@ -3707,6 +5237,40 @@ https://restaurant3.com
                                 ${formatProcessingTime(page.processing_time || 0)}
                                 <span class="performance-indicator ${getPerformanceRating(page.processing_time || 0)}"></span>
                             </div>
+                            ${generateAIAnalysisDisplay(page)}
+                        </div>
+                    `;
+                }
+
+                function generateAIAnalysisDisplay(page) {
+                    if (!page.ai_analysis) {
+                        return '';
+                    }
+                    
+                    const ai = page.ai_analysis;
+                    console.log('AI Analysis Data:', ai);
+                    const confidencePercentage = Math.round(ai.confidence_score * 100);
+                    const confidenceColor = ai.meets_threshold ? 'var(--accent-green)' : 'var(--accent-amber)';
+                    const thresholdIcon = ai.meets_threshold ? '✓' : '⚠';
+                    
+                    return `
+                        <div class="ai-analysis-container" style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(0, 255, 136, 0.1); border-left: 2px solid var(--accent-green); border-radius: 3px;">
+                            <div class="ai-header" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                <span class="ai-icon">🤖</span>
+                                <span class="ai-provider" style="font-size: 0.75rem; color: var(--text-secondary);">
+                                    ${ai.provider_used || 'AI'} Enhanced
+                                </span>
+                                <span class="ai-confidence" style="font-size: 0.75rem; color: ${confidenceColor};">
+                                    ${thresholdIcon} ${confidencePercentage}%
+                                </span>
+                            </div>
+                            <div class="ai-features" style="display: flex; flex-wrap: wrap; gap: 0.25rem; font-size: 0.7rem;">
+                                ${ai.has_nutritional_info ? '<span class="ai-feature" style="background: rgba(0, 255, 136, 0.2); padding: 0.1rem 0.3rem; border-radius: 2px;">🥗 Nutrition</span>' : ''}
+                                ${ai.has_price_info ? '<span class="ai-feature" style="background: rgba(255, 170, 0, 0.2); padding: 0.1rem 0.3rem; border-radius: 2px;">💰 Pricing</span>' : ''}
+                                ${ai.has_cuisine_info ? '<span class="ai-feature" style="background: rgba(0, 170, 255, 0.2); padding: 0.1rem 0.3rem; border-radius: 2px;">🍽️ Cuisine</span>' : ''}
+                                ${ai.confidence_score > 0 ? '<span class="ai-feature" style="background: rgba(0, 255, 136, 0.2); padding: 0.1rem 0.3rem; border-radius: 2px;">🤖 Enhanced</span>' : ''}
+                            </div>
+                            ${ai.error ? `<div class="ai-error" style="color: var(--accent-amber); font-size: 0.7rem; margin-top: 0.25rem;">⚠ ${ai.error}</div>` : ''}
                         </div>
                     `;
                 }
@@ -4160,6 +5724,53 @@ https://restaurant3.com
                         expandIcon.textContent = '▶';
                     }
                 };
+                
+                function validateCustomQuestions(mode) {
+                    const prefix = mode === 'single' ? 'single' : '';
+                    const fieldId = prefix ? 'singleCustomQuestions' : 'customQuestions';
+                    const descId = prefix ? 'singleCustomQuestionsDesc' : 'customQuestionsDesc';
+                    
+                    const textarea = document.getElementById(fieldId);
+                    const desc = document.getElementById(descId);
+                    
+                    if (!textarea || !desc) return;
+                    
+                    const text = textarea.value;
+                    const lines = text.split('\n').filter(line => line.trim().length > 0);
+                    
+                    let hasError = false;
+                    let errorCount = 0;
+                    
+                    lines.forEach(line => {
+                        if (line.trim().length > 200) {
+                            hasError = true;
+                            errorCount++;
+                        }
+                    });
+                    
+                    if (hasError) {
+                        desc.textContent = `⚠️ ${errorCount} question(s) exceed 200 character limit`;
+                        desc.style.color = 'var(--accent-red)';
+                    } else {
+                        desc.textContent = `${lines.length} custom question(s) (200 char limit per question)`;
+                        desc.style.color = 'var(--text-secondary)';
+                    }
+                }
+                
+                function parseCustomQuestions(prefix) {
+                    const fieldId = prefix ? 'singleCustomQuestions' : 'customQuestions';
+                    const textarea = document.getElementById(fieldId);
+                    
+                    if (!textarea) return [];
+                    
+                    const text = textarea.value;
+                    const lines = text.split('\n')
+                        .map(line => line.trim())
+                        .filter(line => line.length > 0)
+                        .filter(line => line.length <= 200); // Only include questions within limit
+                    
+                    return lines;
+                }
             </script>
         </body>
         </html>

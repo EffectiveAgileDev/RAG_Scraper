@@ -56,6 +56,7 @@ python start_server.py   # Alternative startup method (port 8085)
 - **Code Quality**: black formatting, flake8 linting
 - **PDF Generation**: reportlab for documentation output
 - **File Processing**: PyPDF2 for PDF import functionality
+- **AI Integration**: OpenAI package (already installed in venv) - ignore "OpenAI package not installed" warning in logs
 
 ## Test-Driven Development Approach
 

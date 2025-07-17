@@ -288,26 +288,50 @@ class FileGeneratorService:
         Returns:
             Dictionary representation suitable for JSON export
         """
-        return {
-            "name": restaurant.name,
-            "address": restaurant.address,
-            "phone": restaurant.phone,
-            "hours": restaurant.hours,
-            "website": getattr(restaurant, "website", None),
-            "cuisine_types": [restaurant.cuisine] if restaurant.cuisine else [],
+        # Use the restaurant's to_dict() method to ensure all fields (including AI analysis) are included
+        base_dict = restaurant.to_dict()
+        
+        # Debug logging
+        print(f"DEBUG: Restaurant to_dict() result keys: {list(base_dict.keys())}")
+        if 'ai_analysis' in base_dict:
+            print(f"DEBUG: AI analysis found in to_dict(): {base_dict['ai_analysis']}")
+        else:
+            print("DEBUG: No AI analysis found in to_dict() result")
+        
+        # Also check the raw restaurant object
+        print(f"DEBUG: Restaurant object attributes: {[attr for attr in dir(restaurant) if not attr.startswith('_')]}")
+        if hasattr(restaurant, 'ai_analysis'):
+            print(f"DEBUG: Raw restaurant.ai_analysis: {restaurant.ai_analysis}")
+        else:
+            print("DEBUG: No ai_analysis attribute on restaurant object")
+        
+        # Transform the data to match the expected JSON export format
+        transformed_dict = {
+            "name": base_dict.get("name"),
+            "address": base_dict.get("address"),
+            "phone": base_dict.get("phone"),
+            "hours": base_dict.get("hours"),
+            "website": base_dict.get("website"),
+            "cuisine_types": [base_dict.get("cuisine")] if base_dict.get("cuisine") else [],
             "special_features": getattr(restaurant, "special_features", []),
             "parking": getattr(restaurant, "parking", None),
             "reservations": getattr(restaurant, "reservations", None),
-            "menu_items": [item for section_items in restaurant.menu_items.values() for item in section_items]
-            if restaurant.menu_items
+            "menu_items": [item for section_items in base_dict.get("menu_items", {}).values() for item in section_items]
+            if base_dict.get("menu_items")
             else [],
-            "pricing": restaurant.price_range,
+            "pricing": base_dict.get("price_range"),
             "email": getattr(restaurant, "email", None),
-            "social_media": restaurant.social_media,
+            "social_media": base_dict.get("social_media", []),
             "delivery_options": getattr(restaurant, "delivery_options", []),
             "dietary_accommodations": getattr(restaurant, "dietary_accommodations", []),
             "ambiance": getattr(restaurant, "ambiance", None),
         }
+        
+        # Include AI analysis if available
+        if base_dict.get("ai_analysis"):
+            transformed_dict["ai_analysis"] = base_dict["ai_analysis"]
+            
+        return transformed_dict
 
     def _generate_json_output_path(self, output_directory: str) -> str:
         """Generate output file path for JSON file.

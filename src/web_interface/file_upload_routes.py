@@ -2,6 +2,7 @@
 
 import os
 import tempfile
+from datetime import datetime
 from flask import request, jsonify, current_app
 from werkzeug.utils import secure_filename
 
@@ -398,11 +399,27 @@ class FileUploadRoutes:
                 industry = data.get('industry', 'restaurant')
                 schema_type = data.get('schema_type', 'Restaurant')
                 
+                # Extract AI configuration parameters
+                ai_config = {
+                    'ai_enhancement_enabled': data.get('ai_enhancement_enabled', False),
+                    'llm_provider': data.get('llm_provider', 'openai'),
+                    'api_key': data.get('api_key', ''),
+                    'ai_features': data.get('ai_features', []),
+                    'confidence_threshold': data.get('confidence_threshold', 0.7),
+                    'custom_questions': data.get('custom_questions', [])
+                }
+                
                 # Debug logging for configuration
                 debug_msg = f"Configuration received: output_dir={output_dir}, file_mode={file_mode}, file_format={file_format}, json_field_selections={json_field_selections}, schema_type={schema_type}"
                 print(debug_msg)
                 with open('/tmp/debug_file_upload.log', 'a') as f:
                     f.write(debug_msg + '\n')
+                
+                # Debug logging for AI configuration
+                ai_debug_msg = f"AI Configuration: ai_enhancement_enabled={ai_config['ai_enhancement_enabled']}, llm_provider={ai_config['llm_provider']}, api_key={'[REDACTED]' if ai_config['api_key'] else 'None'}, ai_features={ai_config['ai_features']}"
+                print(ai_debug_msg)
+                with open('/tmp/debug_file_upload.log', 'a') as f:
+                    f.write(ai_debug_msg + '\n')
                 
                 # Process uploaded files and file paths through scraping pipeline
                 return self._process_files_through_scraping_pipeline(
@@ -415,7 +432,8 @@ class FileUploadRoutes:
                     scraping_mode=scraping_mode,
                     multi_page_config=multi_page_config,
                     industry=industry,
-                    schema_type=schema_type
+                    schema_type=schema_type,
+                    ai_config=ai_config
                 )
                 
             except Exception as e:
@@ -424,7 +442,7 @@ class FileUploadRoutes:
                     'error': f'RAG processing failed: {str(e)}'
                 }), 500
     
-    def _process_files_through_scraping_pipeline(self, file_ids, file_paths, output_dir, file_mode, file_format, json_field_selections, scraping_mode, multi_page_config, industry, schema_type):
+    def _process_files_through_scraping_pipeline(self, file_ids, file_paths, output_dir, file_mode, file_format, json_field_selections, scraping_mode, multi_page_config, industry, schema_type, ai_config=None):
         """Process files through the scraping pipeline to generate RAG output files."""
         try:
             # Extract text from uploaded files and file paths
@@ -432,10 +450,31 @@ class FileUploadRoutes:
             
             # Process uploaded files
             pdf_extractor = PDFTextExtractor()
+            debug_msg = f"Processing {len(file_ids)} file_ids: {file_ids}"
+            print(debug_msg)
+            with open('/tmp/debug_file_upload.log', 'a') as f:
+                f.write(debug_msg + '\n')
+            
             for file_id in file_ids:
                 file_path = self.upload_handler.get_file_path(file_id)
+                debug_msg = f"File ID {file_id}: got file_path = {file_path}"
+                print(debug_msg)
+                with open('/tmp/debug_file_upload.log', 'a') as f:
+                    f.write(debug_msg + '\n')
+                
                 if file_path and os.path.exists(file_path):
+                    debug_msg = f"File exists, extracting text from: {file_path}"
+                    print(debug_msg)
+                    with open('/tmp/debug_file_upload.log', 'a') as f:
+                        f.write(debug_msg + '\n')
+                    
                     extraction_result = pdf_extractor.extract_text(file_path)
+                    
+                    debug_msg = f"Extraction result: success={extraction_result.success}, error={extraction_result.error_message}, text_length={len(extraction_result.text) if extraction_result.success else 0}"
+                    print(debug_msg)
+                    with open('/tmp/debug_file_upload.log', 'a') as f:
+                        f.write(debug_msg + '\n')
+                    
                     if extraction_result.success:
                         extracted_texts.append({
                             'source': f'uploaded_file_{file_id}',
@@ -446,6 +485,11 @@ class FileUploadRoutes:
                                 'page_count': extraction_result.page_count
                             }
                         })
+                else:
+                    debug_msg = f"File NOT found or path is None: file_path={file_path}, exists={os.path.exists(file_path) if file_path else False}"
+                    print(debug_msg)
+                    with open('/tmp/debug_file_upload.log', 'a') as f:
+                        f.write(debug_msg + '\n')
             
             # Process file paths
             for file_path in file_paths:
@@ -462,11 +506,107 @@ class FileUploadRoutes:
                             }
                         })
             
+            debug_msg = f"Final extracted_texts count: {len(extracted_texts)}"
+            print(debug_msg)
+            with open('/tmp/debug_file_upload.log', 'a') as f:
+                f.write(debug_msg + '\n')
+            
             if not extracted_texts:
+                debug_msg = f"ERROR: No text extracted from {len(file_ids)} file_ids and {len(file_paths)} file_paths"
+                print(debug_msg)
+                with open('/tmp/debug_file_upload.log', 'a') as f:
+                    f.write(debug_msg + '\n')
                 return jsonify({
                     'success': False,
                     'error': 'No text could be extracted from the provided files'
                 }), 400
+            
+            # Apply AI enhancement if enabled
+            if ai_config and ai_config.get('ai_enhancement_enabled', False):
+                debug_msg = f"AI Enhancement enabled, applying to {len(extracted_texts)} extracted texts"
+                print(debug_msg)
+                with open('/tmp/debug_file_upload.log', 'a') as f:
+                    f.write(debug_msg + '\n')
+                
+                try:
+                    from src.ai.llm_extractor import LLMExtractor
+                    
+                    # Initialize LLM extractor with API key
+                    llm_extractor = LLMExtractor(api_key=ai_config.get('api_key'))
+                    
+                    # Apply AI enhancement to each extracted text
+                    for i, extracted_text in enumerate(extracted_texts):
+                        debug_msg = f"Applying AI enhancement to text {i+1}/{len(extracted_texts)}, length: {len(extracted_text['text'])}"
+                        print(debug_msg)
+                        with open('/tmp/debug_file_upload.log', 'a') as f:
+                            f.write(debug_msg + '\n')
+                        
+                        # Apply AI enhancement to the text using LLM extractor
+                        # Define restaurant industry configuration with categories
+                        industry_config = {
+                            "industry": "Restaurant",
+                            "categories": [
+                                {
+                                    "category": "Restaurant Info",
+                                    "fields": ["name", "address", "phone", "hours", "cuisine", "price_range"]
+                                },
+                                {
+                                    "category": "Menu Items",
+                                    "fields": ["name", "description", "price", "category"]
+                                },
+                                {
+                                    "category": "Services",
+                                    "fields": ["delivery", "takeout", "dining", "reservations"]
+                                },
+                                {
+                                    "category": "Contact Info",
+                                    "fields": ["email", "website", "social_media"]
+                                }
+                            ]
+                        }
+                        
+                        enhanced_data = llm_extractor.extract(
+                            content=extracted_text['text'],
+                            industry='restaurant',
+                            industry_config=industry_config,
+                            confidence_threshold=ai_config.get('confidence_threshold', 0.7)
+                        )
+                        
+                        # Check if AI enhancement actually succeeded
+                        if enhanced_data and not enhanced_data.get('error') and enhanced_data.get('extractions'):
+                            # Update the extracted text with AI-enhanced data
+                            extracted_text['ai_enhanced'] = True
+                            extracted_text['ai_data'] = enhanced_data
+                            
+                            debug_msg = f"AI enhancement succeeded for text {i+1}, extractions: {len(enhanced_data.get('extractions', []))}"
+                            print(debug_msg)
+                            with open('/tmp/debug_file_upload.log', 'a') as f:
+                                f.write(debug_msg + '\n')
+                        else:
+                            # AI enhancement failed, will fall back to traditional pattern matching
+                            error_msg = enhanced_data.get('error', 'Unknown error') if enhanced_data else 'No response'
+                            debug_msg = f"AI enhancement failed for text {i+1}, error: {error_msg}, falling back to traditional pattern matching"
+                            print(debug_msg)
+                            with open('/tmp/debug_file_upload.log', 'a') as f:
+                                f.write(debug_msg + '\n')
+                    
+                    debug_msg = f"AI Enhancement completed for all {len(extracted_texts)} texts"
+                    print(debug_msg)
+                    with open('/tmp/debug_file_upload.log', 'a') as f:
+                        f.write(debug_msg + '\n')
+                        
+                except Exception as e:
+                    debug_msg = f"AI Enhancement failed: {str(e)}"
+                    print(debug_msg)
+                    with open('/tmp/debug_file_upload.log', 'a') as f:
+                        f.write(debug_msg + '\n')
+                    # Continue without AI enhancement
+                    pass
+            else:
+                debug_msg = f"AI Enhancement disabled or not configured"
+                print(debug_msg)
+                with open('/tmp/debug_file_upload.log', 'a') as f:
+                    f.write(debug_msg + '\n')
             
             # Convert extracted texts to restaurant data objects
             from src.scraper.multi_strategy_scraper import RestaurantData
@@ -488,6 +628,11 @@ class FileUploadRoutes:
                 
                 for extracted_text in extracted_texts:
                     print(f"DEBUG: Processing text with WTEG processor, text length: {len(extracted_text['text'])}")
+                    
+                    # Check if AI-enhanced data is available for WTEG processing
+                    ai_enhanced = extracted_text.get('ai_enhanced', False)
+                    ai_data = extracted_text.get('ai_data', {})
+                    
                     # Use WTEG processor to extract structured data from PDF content
                     wteg_data = wteg_processor.process_pdf_to_wteg_schema(
                         extracted_text['text'], 
@@ -500,11 +645,33 @@ class FileUploadRoutes:
                     # Convert WTEG data to RestaurantData format
                     # Extract hours and pricing from the original text since WTEG schema doesn't have these fields
                     import re
-                    hours_match = re.search(r'HOURS?:\s*([^\n]+(?:\n[^\n]+)*?)(?=\n[A-Z]|\n\n|\Z)', extracted_text['text'], re.IGNORECASE)
-                    hours = hours_match.group(1).strip() if hours_match else "Hours not found"
                     
-                    price_match = re.search(r'(\$+[\d-]+(?:\s*-\s*\$+[\d-]+)?)', extracted_text['text'])
-                    price_range = price_match.group(1) if price_match else "Price range not found"
+                    # Use AI-enhanced data if available, otherwise fall back to regex
+                    if ai_enhanced and ai_data:
+                        # Extract data from LLM extractor format
+                        extractions = ai_data.get('extractions', [])
+                        
+                        # Initialize with defaults
+                        hours = "Hours not found"
+                        price_range = "Price range not found"
+                        
+                        # Process extractions to get additional data
+                        for extraction in extractions:
+                            category = extraction.get('category', '').lower()
+                            data = extraction.get('extracted_data', {})
+                            
+                            if 'restaurant' in category or 'info' in category:
+                                hours = data.get('hours', hours)
+                            elif 'price' in category:
+                                price_range = data.get('price_range', price_range)
+                        
+                        print(f"DEBUG: Using AI-enhanced hours and pricing for WTEG")
+                    else:
+                        hours_match = re.search(r'HOURS?:\s*([^\n]+(?:\n[^\n]+)*?)(?=\n[A-Z]|\n\n|\Z)', extracted_text['text'], re.IGNORECASE)
+                        hours = hours_match.group(1).strip() if hours_match else "Hours not found"
+                        
+                        price_match = re.search(r'(\$+[\d-]+(?:\s*-\s*\$+[\d-]+)?)', extracted_text['text'])
+                        price_range = price_match.group(1) if price_match else "Price range not found"
                     
                     restaurant = RestaurantData(
                         name=wteg_data.get_restaurant_name() if hasattr(wteg_data, 'get_restaurant_name') else wteg_data.brief_description or f"Restaurant from {extracted_text['source']}",
@@ -518,6 +685,30 @@ class FileUploadRoutes:
                         confidence="high" if wteg_data.brief_description else "medium",
                         sources=[extracted_text['source']]
                     )
+                    
+                    # Add AI analysis data if available (consistent with multi-page implementation)
+                    if ai_enhanced and ai_data:
+                        extractions = ai_data.get('extractions', [])
+                        restaurant.ai_analysis = {
+                            'ai_enhanced': True,
+                            'ai_provider': ai_config.get('llm_provider', 'openai'),
+                            'ai_features_used': ai_config.get('ai_features', []),
+                            'ai_confidence': sum(e.get('confidence', 0.7) for e in extractions) / len(extractions) if extractions else 0.7,
+                            'ai_extractions': extractions,
+                            'confidence_score': sum(e.get('confidence', 0.7) for e in extractions) / len(extractions) if extractions else 0.7,
+                            'meets_threshold': True,  # Since we successfully got AI data
+                            'provider_used': ai_config.get('llm_provider', 'openai'),
+                            'confidence_threshold': ai_config.get('confidence_threshold', 0.7),
+                            'analysis_timestamp': datetime.now().isoformat()
+                        }
+                        print(f"DEBUG: Added AI analysis data to WTEG restaurant")
+                    
+                    # Debug: Check if ai_analysis is set
+                    if hasattr(restaurant, 'ai_analysis') and restaurant.ai_analysis:
+                        print(f"DEBUG: Restaurant has AI analysis with {len(restaurant.ai_analysis)} fields")
+                        print(f"DEBUG: AI analysis keys: {list(restaurant.ai_analysis.keys())}")
+                    else:
+                        print(f"DEBUG: Restaurant has NO AI analysis!")
                     restaurant_objects.append(restaurant)
                     
             else:
@@ -525,30 +716,86 @@ class FileUploadRoutes:
                 print(f"DEBUG: Using STANDARD processing for schema_type={schema_type}")
                 # This is a basic implementation - can be enhanced with specific processors for each schema type
                 for extracted_text in extracted_texts:
-                    # Parse text to extract restaurant information
-                    # This is a simple implementation that looks for patterns in the text
-                    text_content = extracted_text['text']
-                    
-                    # Basic pattern matching for restaurant info
-                    import re
-                    
-                    # Use improved pattern recognizer for standard processing
-                    from src.processors.pattern_recognizer import PatternRecognizer
-                    pattern_recognizer = PatternRecognizer()
-                    patterns = pattern_recognizer.recognize_patterns(text_content)
-                    
-                    # Extract data using improved pattern recognizer
-                    name = patterns.get('restaurant_name', f"Restaurant from {extracted_text['source']}")
-                    address = patterns.get('address', "Address not found")
-                    phone = patterns.get('phone', "Phone not found")
-                    price_range = patterns.get('price_ranges', ["Price range not found"])[0] if patterns.get('price_ranges') else "Price range not found"
-                    hours = patterns.get('hours', "Hours not found")
-                    cuisine = patterns.get('cuisine_type', "Cuisine not found")
+                    # Check if AI-enhanced data is available
+                    if extracted_text.get('ai_enhanced', False) and extracted_text.get('ai_data'):
+                        # Use AI-enhanced data
+                        ai_data = extracted_text['ai_data']
+                        print(f"DEBUG: Using AI-enhanced data for restaurant extraction")
+                        
+                        # Extract data from LLM extractor format
+                        extractions = ai_data.get('extractions', [])
+                        
+                        # Initialize with defaults
+                        name = f"Restaurant from {extracted_text['source']}"
+                        address = "Address not found"
+                        phone = "Phone not found"
+                        price_range = "Price range not found"
+                        hours = "Hours not found"
+                        cuisine = "Cuisine not found"
+                        menu_items = []
+                        social_media = []
+                        
+                        # Process extractions to get restaurant data
+                        for extraction in extractions:
+                            category = extraction.get('category', '').lower()
+                            data = extraction.get('extracted_data', {})
+                            
+                            if 'restaurant' in category or 'info' in category:
+                                name = data.get('name', name)
+                                address = data.get('address', address)
+                                phone = data.get('phone', phone)
+                                hours = data.get('hours', hours)
+                                cuisine = data.get('cuisine', cuisine)
+                            elif 'menu' in category:
+                                menu_items.extend(data.get('items', []))
+                            elif 'price' in category:
+                                price_range = data.get('price_range', price_range)
+                        
+                        confidence = "high"  # AI-enhanced data is high confidence
+                        
+                        # Add AI analysis data consistent with multi-page implementation
+                        ai_generated_content = {
+                            'ai_enhanced': True,
+                            'ai_provider': ai_config.get('llm_provider', 'openai'),
+                            'ai_features_used': ai_config.get('ai_features', []),
+                            'ai_confidence': sum(e.get('confidence', 0.7) for e in extractions) / len(extractions) if extractions else 0.7,
+                            'ai_extractions': extractions,
+                            'confidence_score': sum(e.get('confidence', 0.7) for e in extractions) / len(extractions) if extractions else 0.7,
+                            'meets_threshold': True,  # Since we successfully got AI data
+                            'provider_used': ai_config.get('llm_provider', 'openai'),
+                            'confidence_threshold': ai_config.get('confidence_threshold', 0.7),
+                            'analysis_timestamp': datetime.now().isoformat(),
+                            'features_used': ai_config.get('ai_features', [])
+                        }
+                        
+                    else:
+                        # Use traditional pattern recognition
+                        text_content = extracted_text['text']
+                        
+                        # Basic pattern matching for restaurant info
+                        import re
+                        
+                        # Use improved pattern recognizer for standard processing
+                        from src.processors.pattern_recognizer import PatternRecognizer
+                        pattern_recognizer = PatternRecognizer()
+                        patterns = pattern_recognizer.recognize_patterns(text_content)
+                        
+                        # Extract data using improved pattern recognizer
+                        name = patterns.get('restaurant_name', f"Restaurant from {extracted_text['source']}")
+                        address = patterns.get('address', "Address not found")
+                        phone = patterns.get('phone', "Phone not found")
+                        price_range = patterns.get('price_ranges', ["Price range not found"])[0] if patterns.get('price_ranges') else "Price range not found"
+                        hours = patterns.get('hours', "Hours not found")
+                        cuisine = patterns.get('cuisine_type', "Cuisine not found")
+                        menu_items = patterns.get('menu_items', [])
+                        social_media = []
+                        confidence = "medium"
+                        ai_generated_content = None
                     
                     print(f"DEBUG: Standard processing - creating RestaurantData")
                     print(f"DEBUG: Name: {name}")
                     print(f"DEBUG: Address: {address}")
-                    print(f"DEBUG: Menu items type: {type(text_content)}, length: {len(text_content)}")
+                    print(f"DEBUG: AI Enhanced: {extracted_text.get('ai_enhanced', False)}")
                     
                     restaurant = RestaurantData(
                         name=name,
@@ -557,11 +804,23 @@ class FileUploadRoutes:
                         hours=hours,
                         price_range=price_range,
                         cuisine=cuisine,
-                        menu_items={"menu": patterns.get('menu_items', [])},
-                        social_media=[],
-                        confidence="medium",
+                        menu_items={"menu": menu_items},
+                        social_media=social_media,
+                        confidence=confidence,
                         sources=[extracted_text['source']]
                     )
+                    
+                    # Add AI analysis data if available (consistent with multi-page implementation)
+                    if ai_generated_content:
+                        restaurant.ai_analysis = ai_generated_content
+                        print(f"DEBUG: Added AI analysis data with provider: {ai_generated_content['ai_provider']}")
+                    
+                    # Debug: Check if ai_analysis is set
+                    if hasattr(restaurant, 'ai_analysis') and restaurant.ai_analysis:
+                        print(f"DEBUG: Restaurant has AI analysis with {len(restaurant.ai_analysis)} fields")
+                        print(f"DEBUG: AI analysis keys: {list(restaurant.ai_analysis.keys())}")
+                    else:
+                        print(f"DEBUG: Restaurant has NO AI analysis!")
                     restaurant_objects.append(restaurant)
             
             # Generate files using the file generation handler

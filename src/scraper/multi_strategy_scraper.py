@@ -26,6 +26,7 @@ class RestaurantData:
     social_media: List[str] = None
     confidence: str = "medium"
     sources: List[str] = None
+    ai_analysis: Optional[Dict[str, Any]] = None
 
     def __post_init__(self):
         if self.menu_items is None:
@@ -37,7 +38,7 @@ class RestaurantData:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
-        return {
+        result = {
             "name": self.name,
             "address": self.address,
             "phone": self.phone,
@@ -50,6 +51,12 @@ class RestaurantData:
             "confidence": self.confidence,
             "sources": self.sources,
         }
+        
+        # Include AI analysis if available
+        if self.ai_analysis is not None:
+            result["ai_analysis"] = self.ai_analysis
+            
+        return result
 
 
 class MultiStrategyScraper:

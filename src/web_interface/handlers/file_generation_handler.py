@@ -111,6 +111,14 @@ class FileGenerationHandler:
                              file_format: str,
                              output_dir: str) -> Dict[str, Any]:
         """Generate primary file synchronously."""
+        print(f"DEBUG: _generate_primary_file called with {len(restaurant_data)} restaurants")
+        for i, restaurant in enumerate(restaurant_data):
+            print(f"DEBUG: Restaurant {i} type: {type(restaurant)}")
+            if hasattr(restaurant, 'ai_analysis'):
+                print(f"DEBUG: Restaurant {i} has ai_analysis: {restaurant.ai_analysis}")
+            else:
+                print(f"DEBUG: Restaurant {i} has no ai_analysis attribute")
+        
         file_request = FileGenerationRequest(
             restaurant_data=restaurant_data,
             file_format=file_format,

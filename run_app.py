@@ -7,7 +7,7 @@ import os
 project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, project_root)
 
-from src.web_interface.app import create_app
+from src.web_interface.app_factory import create_app
 from src.config.app_config import get_app_config
 
 if __name__ == '__main__':

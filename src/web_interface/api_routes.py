@@ -1,10 +1,13 @@
 """API routes for RAG_Scraper web application."""
 import os
 import json
+import logging
 import tempfile
 from flask import Flask, request, jsonify, send_file, session
 from werkzeug.exceptions import BadRequest
 from urllib.parse import urlparse
+
+logger = logging.getLogger(__name__)
 
 from src.config.url_validator import URLValidator
 from src.config.scraping_config import ScrapingConfig
@@ -164,6 +167,21 @@ def register_api_routes(app, advanced_monitor, file_generator_service):
         
         try:
             data = request.get_json()
+            logger.debug(f"API scrape route received data keys: {list(data.keys()) if data else 'None'}")
+            
+            # Handle AI configuration if provided
+            if 'ai_config' in data and 'session_id' in data:
+                from src.web_interface.ai_config_manager import AIConfigManager
+                ai_config_manager = AIConfigManager()
+                
+                # Store AI configuration in session if AI is enabled
+                ai_config = data['ai_config']
+                logger.debug(f"AI config received: {ai_config}")
+                if ai_config and ai_config.get('ai_enhancement_enabled', False):
+                    logger.debug(f"AI enhancement enabled, saving to session {data['session_id']}")
+                    ai_config_manager.set_session_config(data['session_id'], ai_config)
+                else:
+                    logger.debug(f"AI enhancement disabled or config missing")
             
             # Use handler to process the request
             response = scraping_handler.handle_scraping_request(data)
@@ -172,16 +190,24 @@ def register_api_routes(app, advanced_monitor, file_generator_service):
             active_scraper = scraping_handler.active_scraper
             
             # Convert response to JSON format
-            return jsonify({
+            response_data = {
                 "success": response.success,
                 "processed_count": response.processed_count,
                 "failed_count": response.failed_count,
                 "output_files": response.output_files,
                 "processing_time": response.processing_time,
                 "sites_data": response.sites_data,
-                **({"error": response.error} if response.error else {}),
-                **({"file_generation_warnings": response.warnings} if response.warnings else {})
-            }), (200 if response.success else 400)
+            }
+            
+            # Add optional fields
+            if response.error:
+                response_data["error"] = response.error
+            if response.warnings:
+                response_data["file_generation_warnings"] = response.warnings
+            if response.ai_analysis:
+                response_data["ai_analysis"] = response.ai_analysis
+            
+            return jsonify(response_data), (200 if response.success else 400)
 
         except Exception as e:
             return jsonify({"success": False, "error": str(e)}), 500
@@ -434,6 +460,7 @@ def register_api_routes(app, advanced_monitor, file_generator_service):
                     social_media=restaurant_dict.get("social_media", []),
                     confidence=restaurant_dict.get("confidence", "medium"),
                     sources=restaurant_dict.get("sources", ["web_interface"]),
+                    ai_analysis=restaurant_dict.get("ai_analysis"),
                 )
                 restaurant_objects.append(restaurant)
 
