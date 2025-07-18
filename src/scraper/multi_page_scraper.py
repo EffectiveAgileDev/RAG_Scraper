@@ -110,8 +110,75 @@ class MultiPageScraper:
         Returns:
             MultiPageScrapingResult with aggregated data
         """
-        # Delegate to the refactored implementation
-        return self._refactored_scraper.scrape_website(url, progress_callback)
+        # Use the original working logic (refactored version has signature issues)
+        start_time = time.time()
+        result = self.result_handler.create_scraping_result()
+
+        try:
+            # Initialize page discovery for this website
+            from .page_discovery import PageDiscovery
+            self.page_discovery = PageDiscovery(url, self.max_pages)
+
+            # Reset data aggregator for this website
+            self.data_aggregator = DataAggregator()
+            
+            # Update result handler with fresh aggregator
+            self.result_handler.data_aggregator = self.data_aggregator
+
+            # Fetch initial page to start discovery
+            initial_html = self._fetch_page(url)
+            if not initial_html:
+                result.failed_pages.append(url)
+                return result
+
+            # Discover all relevant pages with configurable depth
+            max_depth = 2  # Default depth
+            discovered_pages = self.page_discovery.discover_all_pages(url, initial_html, max_depth)
+
+            # Extract restaurant name from initial page for progress tracking
+            restaurant_name = self._extract_restaurant_name(initial_html)
+            result.restaurant_name = restaurant_name
+
+            # Notify pages discovered
+            if progress_callback:
+                self.progress_notifier.notify_pages_discovered(
+                    restaurant_name, discovered_pages, progress_callback
+                )
+
+            # Process all discovered pages using result handler
+            page_results = self.result_handler.process_discovered_pages(
+                discovered_pages, progress_callback
+            )
+
+            # Update result with page processing outcomes
+            result.pages_processed = discovered_pages
+            result.successful_pages = page_results.successful_pages
+            result.failed_pages = page_results.failed_pages
+
+            # Finalize result with aggregated data
+            result = self.result_handler.finalize_scraping_result(
+                result, start_time, time.time()
+            )
+
+            # Notify completion
+            self.result_handler.notify_completion(
+                len(result.successful_pages),
+                len(result.failed_pages),
+                progress_callback
+            )
+
+        except Exception as e:
+            # Handle any unexpected errors
+            result.failed_pages.append(url)
+            if progress_callback:
+                progress_callback(f"Error processing {url}: {str(e)}")
+            
+            # Still finalize the result for consistency
+            result = self.result_handler.finalize_scraping_result(
+                result, start_time, time.time()
+            )
+
+        return result
 
     def _fetch_page(self, url: str) -> Optional[str]:
         """Fetch HTML content from a URL.
@@ -122,8 +189,8 @@ class MultiPageScraper:
         Returns:
             HTML content or None if failed
         """
-        # Delegate to the refactored implementation
-        return self._refactored_scraper._fetch_page(url)
+        # Use the real page processor
+        return self.page_processor._fetch_page(url)
 
     def _fetch_and_process_page(self, url: str) -> Optional[Dict[str, Any]]:
         """Fetch and process a single page.
@@ -134,14 +201,8 @@ class MultiPageScraper:
         Returns:
             Dictionary with page_type and extracted data, or None if failed
         """
-        # Delegate to the refactored implementation
-        page_result = self._refactored_scraper._process_single_page(url)
-        if page_result.success:
-            return {
-                'page_type': page_result.page_type,
-                'data': page_result.data
-            }
-        return None
+        # Use the real page processor
+        return self.page_processor._fetch_and_process_page(url)
 
     def _extract_restaurant_name(self, html_content: str) -> str:
         """Extract restaurant name from HTML content for progress tracking.

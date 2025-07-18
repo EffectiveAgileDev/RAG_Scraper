@@ -888,11 +888,15 @@ Please answer these specific questions if information is available in the conten
             # Import OpenAI
             from openai import OpenAI
             
-            # Get API key from LLMExtractor config
-            api_key = self.llm_extractor.api_key
+            # FIXED: Use the same API key source as main AI call instead of llm_extractor.api_key
+            # This ensures custom questions work with saved settings
+            api_key = self.api_key  # Use the API key passed to AIContentAnalyzer constructor
             if not api_key:
-                logger.error("No OpenAI API key available for custom questions")
-                return {"error": "No API key available"}
+                # Fallback to llm_extractor if main api_key is empty
+                api_key = self.llm_extractor.api_key
+                if not api_key:
+                    logger.error("No OpenAI API key available for custom questions")
+                    return {"error": "No API key available"}
             
             # Create OpenAI client
             client = OpenAI(api_key=api_key)

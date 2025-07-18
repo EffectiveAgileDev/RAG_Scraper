@@ -249,13 +249,15 @@ class ScrapingRequestHandler:
             print(f"DEBUG: AI Analysis starting with request_data keys: {list(request_data.keys())}")
             
             # Try to get AI configuration directly from request data first
-            ai_config = request_data.get('ai_config')
-            logger.debug(f"AI config from request: {ai_config}")
-            print(f"DEBUG: AI config from request: {ai_config}")
-            if ai_config and ai_config.get('ai_enhancement_enabled', False):
+            request_ai_config = request_data.get('ai_config')
+            logger.debug(f"AI config from request: {request_ai_config}")
+            print(f"DEBUG: AI config from request: {request_ai_config}")
+            
+            session_ai_config = None
+            if request_ai_config and request_ai_config.get('ai_enhancement_enabled', False):
                 # Use the AI config directly from the request
-                print(f"DEBUG: Using AI config from request: {ai_config}")
-                pass
+                print(f"DEBUG: Using AI config from request: {request_ai_config}")
+                ai_config = request_ai_config
             else:
                 # Fallback: Get session ID from request data and try to retrieve saved config
                 session_id = request_data.get('session_id')
@@ -265,11 +267,25 @@ class ScrapingRequestHandler:
                     return None
                 
                 # Get AI configuration for this session
-                ai_config = self.ai_config_manager.get_session_config(session_id)
-                print(f"DEBUG: Retrieved AI config: {ai_config}")
-                if not ai_config or not ai_config.get('ai_enhancement_enabled', False):
+                session_ai_config = self.ai_config_manager.get_session_config(session_id)
+                print(f"DEBUG: Retrieved AI config: {session_ai_config}")
+                if not session_ai_config or not session_ai_config.get('ai_enhancement_enabled', False):
                     print("DEBUG: AI enhancement not enabled, skipping AI analysis")
                     return None
+                ai_config = session_ai_config
+            
+            # CRITICAL FIX: If we have request config with API key, use it even if we fall back to session config
+            # This fixes the double AI call issue where custom questions fail due to empty API key
+            if (request_ai_config and request_ai_config.get('api_key') and 
+                session_ai_config and not session_ai_config.get('api_key')):
+                print("DEBUG: FIXING API KEY: Using request API key instead of empty session API key")
+                ai_config = dict(session_ai_config)  # Copy session config
+                ai_config['api_key'] = request_ai_config['api_key']  # Use request API key
+                print(f"DEBUG: Fixed AI config with API key: {ai_config.get('api_key', '')[:10]}...")
+            elif request_ai_config and request_ai_config.get('api_key') and ai_config and not ai_config.get('api_key'):
+                print("DEBUG: FIXING API KEY: Using request API key for current config")
+                ai_config['api_key'] = request_ai_config['api_key']
+                print(f"DEBUG: Fixed AI config with API key: {ai_config.get('api_key', '')[:10]}...")
             
             # Import AI analyzer
             from src.ai.content_analyzer import AIContentAnalyzer
