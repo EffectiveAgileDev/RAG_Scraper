@@ -2,6 +2,7 @@
 
 import logging
 import sys
+import os
 from flask import Blueprint, request, jsonify, session
 from typing import Dict, Any
 
@@ -9,8 +10,9 @@ from src.web_interface.ai_config_manager import AIConfigManager
 from src.web_interface.ai_settings_persistence import AISettingsPersistence, LocalStorageBackend
 from src.ai.content_analyzer import AIContentAnalyzer
 
-# Configure logging to output to stderr
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', stream=sys.stderr)
+# Configure logging to output to stderr with environment variable control
+log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
+logging.basicConfig(level=getattr(logging, log_level), format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', stream=sys.stderr)
 logger = logging.getLogger(__name__)
 
 # Create blueprint for AI API routes
@@ -385,6 +387,17 @@ def get_models():
         
         provider = request_data.get('provider', '').lower()
         api_key = request_data.get('api_key', '').strip()
+        use_saved_key = request_data.get('use_saved_key', False)
+        
+        # If using saved key, try to load it from persistence
+        if use_saved_key and not api_key:
+            try:
+                persistence = AISettingsPersistence()
+                saved_settings = persistence.load_settings()
+                if saved_settings and 'api_key' in saved_settings:
+                    api_key = saved_settings['api_key']
+            except Exception as e:
+                current_app.logger.error(f"Failed to load saved API key: {str(e)}")
         
         if provider == 'openai':
             # OpenAI requires API key for model listing

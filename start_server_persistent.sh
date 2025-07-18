@@ -14,6 +14,11 @@ source venv/bin/activate
 export FLASK_APP=src.web_interface.app_factory
 export PYTHONUNBUFFERED=1
 
+# Set default log level if not already set
+if [ -z "$LOG_LEVEL" ]; then
+    export LOG_LEVEL=INFO
+fi
+
 # Create log directory if it doesn't exist
 mkdir -p logs
 

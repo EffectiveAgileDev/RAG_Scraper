@@ -2215,7 +2215,8 @@ https://restaurant3.com
                                                             class="terminal-input config-input"
                                                             placeholder="Enter API Key (any format accepted)"
                                                             style="flex: 1;"
-                                                            autocomplete="off" />
+                                                            autocomplete="off"
+                                                            oninput="handleApiKeyInput('single')" />
                                                         <button type="button" 
                                                                 id="toggleSingleApiKeyVisibility"
                                                                 class="terminal-button"
@@ -2352,17 +2353,17 @@ https://restaurant3.com
                                                     <div class="config-desc" style="margin-bottom: 1rem;">Save your AI configuration for future use</div>
                                                     
                                                     <div class="ai-persistence-buttons" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                                        <button type="button" class="terminal-button" onclick="saveAISettings()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
-                                                            💾 Save Settings
+                                                        <button type="button" class="terminal-button" onclick="saveAISettings()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" title="Save current settings when AI Enhancement is enabled">
+                                                            💾 Save Current Settings
                                                         </button>
-                                                        <button type="button" class="terminal-button" onclick="loadAISettings()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                        <button type="button" class="terminal-button" onclick="loadAISettings()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" title="Load your previously saved settings from disk">
                                                             📂 Load Settings
                                                         </button>
-                                                        <button type="button" class="terminal-button" onclick="clearSavedAISettings()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                        <button type="button" class="terminal-button" onclick="clearSavedAISettings()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" title="Delete all saved settings from disk">
                                                             🗑️ Clear Saved
                                                         </button>
-                                                        <button type="button" class="terminal-button" onclick="makeAISettingsPermanent()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
-                                                            📌 Make Permanent
+                                                        <button type="button" class="terminal-button" onclick="makeAISettingsPermanent()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" title="Save all settings permanently, even if AI Enhancement is disabled">
+                                                            📌 Save All Permanently
                                                         </button>
                                                     </div>
                                                 </div>
@@ -2680,6 +2681,7 @@ https://restaurant3.com
                                                             placeholder="Enter API Key (any format accepted)"
                                                             style="flex: 1;"
                                                             autocomplete="off"
+                                                            oninput="handleApiKeyInput('multi')"
                                                         />
                                                         <button type="button" 
                                                                 id="toggleApiKeyVisibility"
@@ -2817,17 +2819,17 @@ https://restaurant3.com
                                                     <div class="config-desc" style="margin-bottom: 1rem;">Save your AI configuration for future use</div>
                                                     
                                                     <div class="ai-persistence-buttons" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                                        <button type="button" class="terminal-button" onclick="saveAISettings()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
-                                                            💾 Save Settings
+                                                        <button type="button" class="terminal-button" onclick="saveAISettings()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" title="Save current settings when AI Enhancement is enabled">
+                                                            💾 Save Current Settings
                                                         </button>
-                                                        <button type="button" class="terminal-button" onclick="loadAISettings()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                        <button type="button" class="terminal-button" onclick="loadAISettings()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" title="Load your previously saved settings from disk">
                                                             📂 Load Settings
                                                         </button>
-                                                        <button type="button" class="terminal-button" onclick="clearSavedAISettings()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                        <button type="button" class="terminal-button" onclick="clearSavedAISettings()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" title="Delete all saved settings from disk">
                                                             🗑️ Clear Saved
                                                         </button>
-                                                        <button type="button" class="terminal-button" onclick="makeAISettingsPermanent()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
-                                                            📌 Make Permanent
+                                                        <button type="button" class="terminal-button" onclick="makeAISettingsPermanent()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" title="Save all settings permanently, even if AI Enhancement is disabled">
+                                                            📌 Save All Permanently
                                                         </button>
                                                     </div>
                                                 </div>
@@ -3024,6 +3026,7 @@ https://restaurant3.com
                     initializeHelpText();
                     
                     // Automatically load saved AI settings on page load
+                    console.log('Page loaded - attempting to load AI settings...');
                     loadAISettings();
                 });
                 
@@ -3453,7 +3456,11 @@ https://restaurant3.com
                     if (!providerSelect || !apiKeyInput || !modelSelect) return;
                     
                     const provider = providerSelect.value;
-                    const apiKey = apiKeyInput.value.trim();
+                    let apiKey = apiKeyInput.value.trim();
+                    
+                    // If no typed key but we have a saved key, tell the API to use the saved key
+                    const hasSavedKey = apiKeyInput.hasAttribute('data-has-saved-key');
+                    const useSavedKey = !apiKey && hasSavedKey;
                     
                     // Clear previous options
                     modelSelect.innerHTML = '<option value="">Loading models...</option>';
@@ -3467,7 +3474,8 @@ https://restaurant3.com
                             },
                             body: JSON.stringify({
                                 provider: provider,
-                                api_key: apiKey
+                                api_key: apiKey,
+                                use_saved_key: useSavedKey
                             })
                         });
                         
@@ -3518,7 +3526,11 @@ https://restaurant3.com
                     if (!providerSelect || !apiKeyInput || !modelSelect) return;
                     
                     const provider = providerSelect.value;
-                    const apiKey = apiKeyInput.value.trim();
+                    let apiKey = apiKeyInput.value.trim();
+                    
+                    // If no typed key but we have a saved key, tell the API to use the saved key
+                    const hasSavedKey = apiKeyInput.hasAttribute('data-has-saved-key');
+                    const useSavedKey = !apiKey && hasSavedKey;
                     
                     // Clear previous options
                     modelSelect.innerHTML = '<option value="">Loading models...</option>';
@@ -3532,7 +3544,8 @@ https://restaurant3.com
                             },
                             body: JSON.stringify({
                                 provider: provider,
-                                api_key: apiKey
+                                api_key: apiKey,
+                                use_saved_key: useSavedKey
                             })
                         });
                         
@@ -3741,17 +3754,55 @@ https://restaurant3.com
                     }
                 }
                 
+                function handleApiKeyInput(mode) {
+                    const apiKeyInput = document.getElementById(mode === 'single' ? 'singleAiApiKey' : 'aiApiKey');
+                    const toggleButton = document.getElementById(mode === 'single' ? 'toggleSingleApiKeyVisibility' : 'toggleApiKeyVisibility');
+                    
+                    if (apiKeyInput && toggleButton) {
+                        // If user types something, re-enable the toggle button
+                        if (apiKeyInput.value.length > 0) {
+                            toggleButton.disabled = false;
+                            toggleButton.style.opacity = '1';
+                            toggleButton.style.cursor = 'pointer';
+                            toggleButton.title = apiKeyInput.type === 'password' ? 'Show API key' : 'Hide API key';
+                        }
+                        
+                        // Clear the saved key indicator when user types
+                        if (apiKeyInput.hasAttribute('data-has-saved-key')) {
+                            apiKeyInput.removeAttribute('data-has-saved-key');
+                            apiKeyInput.placeholder = 'Enter API Key (any format accepted)';
+                        }
+                    }
+                }
+                
                 async function loadAISettings() {
                     try {
+                        console.log('loadAISettings: Starting to load settings...');
                         const response = await fetch('/api/ai/load-settings', { credentials: 'same-origin' });
                         const data = await response.json();
+                        
+                        console.log('loadAISettings: API response:', data);
                         
                         if (data.success && data.has_saved_settings) {
                             const settings = data.settings;
                             
                             // Apply settings to UI
                             if (settings.ai_enhancement_enabled) {
-                                const activeMode = settings.active_mode || 'multi';
+                                // Determine currently visible mode, not saved mode
+                                const singlePageSection = document.getElementById('singlePageSection');
+                                const multiPageSection = document.getElementById('multiPageSection');
+                                
+                                let currentMode = 'multi'; // default
+                                if (singlePageSection && singlePageSection.style.display !== 'none') {
+                                    currentMode = 'single';
+                                } else if (multiPageSection && multiPageSection.style.display !== 'none') {
+                                    currentMode = 'multi';
+                                }
+                                
+                                console.log('loadAISettings: Current UI mode:', currentMode);
+                                console.log('loadAISettings: Saved mode was:', settings.active_mode);
+                                
+                                const activeMode = currentMode;
                                 
                                 // Enable AI Enhancement (fix element ID)
                                 const enabledCheckbox = document.getElementById(activeMode === 'single' ? 'singleAiEnhancementEnabled' : 'aiEnhancementEnabled');
@@ -3831,8 +3882,20 @@ https://restaurant3.com
                                 // Show masked API key if available
                                 if (settings.api_key_masked) {
                                     const apiKeyInput = document.getElementById(activeMode === 'single' ? 'singleAiApiKey' : 'aiApiKey');
+                                    const toggleButton = document.getElementById(activeMode === 'single' ? 'toggleSingleApiKeyVisibility' : 'toggleApiKeyVisibility');
+                                    
                                     if (apiKeyInput) {
                                         apiKeyInput.placeholder = 'Saved: ' + settings.api_key_masked;
+                                        // Set a data attribute to indicate saved key exists
+                                        apiKeyInput.setAttribute('data-has-saved-key', 'true');
+                                    }
+                                    
+                                    if (toggleButton) {
+                                        // Disable toggle button since we can't show the actual saved key
+                                        toggleButton.disabled = true;
+                                        toggleButton.title = 'Cannot show saved API key for security';
+                                        toggleButton.style.opacity = '0.5';
+                                        toggleButton.style.cursor = 'not-allowed';
                                     }
                                 }
                             }
@@ -3840,8 +3903,10 @@ https://restaurant3.com
                             showTerminalAlert('AI settings loaded successfully', 'success');
                             updateSystemStatus('AI_SETTINGS // LOADED_FROM_PERSISTENT_STORAGE');
                         } else if (data.success && !data.has_saved_settings) {
+                            console.log('loadAISettings: No saved settings found');
                             updateSystemStatus('AI_SETTINGS // NO_SAVED_SETTINGS_FOUND');
                         } else {
+                            console.log('loadAISettings: Failed to load settings:', data);
                             showTerminalAlert('Failed to load AI settings: ' + data.error, 'error');
                         }
                     } catch (error) {
@@ -3867,8 +3932,27 @@ https://restaurant3.com
                         const data = await response.json();
                         
                         if (data.success) {
-                            // Reset UI to defaults
-                            resetAISettingsUI();
+                            // Don't reset UI - just clear the saved settings indicators
+                            // Remove saved key indicators
+                            ['aiApiKey', 'singleAiApiKey'].forEach(id => {
+                                const input = document.getElementById(id);
+                                if (input && input.hasAttribute('data-has-saved-key')) {
+                                    input.removeAttribute('data-has-saved-key');
+                                    input.placeholder = 'Enter API Key (any format accepted)';
+                                }
+                            });
+                            
+                            // Re-enable toggle buttons
+                            ['toggleApiKeyVisibility', 'toggleSingleApiKeyVisibility'].forEach(id => {
+                                const button = document.getElementById(id);
+                                if (button) {
+                                    button.disabled = false;
+                                    button.style.opacity = '1';
+                                    button.style.cursor = 'pointer';
+                                    button.title = 'Show API key';
+                                }
+                            });
+                            
                             showTerminalAlert('Saved AI settings cleared successfully', 'success');
                             updateSystemStatus('AI_SETTINGS // PERSISTENT_STORAGE_CLEARED');
                         } else {
