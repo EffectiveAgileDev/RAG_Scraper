@@ -1,5 +1,6 @@
 """Flask web application for RAG_Scraper."""
 
+from flask import Flask  # Add for backward compatibility with tests
 from src.web_interface.app_factory import create_app
 from src.web_interface.application_state import get_app_state
 

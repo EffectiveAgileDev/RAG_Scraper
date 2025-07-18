@@ -31,6 +31,9 @@ class AIContentAnalyzer:
         Args:
             api_key: OpenAI API key (optional, will use env var if not provided)
         """
+        # Store for backward compatibility
+        self.api_key = api_key
+        
         self.llm_extractor = LLMExtractor(api_key=api_key)
         self.confidence_scorer = ConfidenceScorer()
         self._cache = {}

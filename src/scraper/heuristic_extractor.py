@@ -501,6 +501,21 @@ class HeuristicExtractor:
                                 menu_items[section_name].append(item_name)
                                 item_count += 1
                     
+                    # Look for p elements with menu-like content
+                    elif current_elem.name == "p":
+                        item_text = current_elem.get_text().strip()
+                        if item_text and len(item_text) < 200:
+                            # Check if this looks like menu content
+                            menu_indicators = ['burger', 'fries', 'drink', 'sandwich', '$', 'menu', 'special']
+                            if any(indicator in item_text.lower() for indicator in menu_indicators):
+                                # Clean up the item name
+                                item_name = re.split(r"[*]?\s*\$", item_text)[0].strip()
+                                item_name = re.sub(r"\*+$", "", item_name).strip()
+                                
+                                if item_name and len(item_name) > 5:  # Reasonable item name length
+                                    menu_items[section_name].append(item_name)
+                                    item_count += 1
+                    
                     # Look inside div containers for h3 menu items (common pattern)
                     elif current_elem.name == "div":
                         inner_h3s = current_elem.find_all("h3")

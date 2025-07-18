@@ -27,5 +27,11 @@ echo "Starting RAG_Scraper server..."
 echo "Server will run at: http://localhost:8085"
 echo "Logs: logs/server.log"
 
-# Use exec to replace shell process and handle signals properly
-exec python run_app.py >> logs/server.log 2>&1
+# Use nohup to keep server running in background
+nohup python run_app.py >> logs/server.log 2>&1 &
+
+# Show the PID and wait a moment to ensure startup
+echo "Server starting in background..."
+sleep 2
+echo "Server PID: $(pgrep -f 'python.*run_app')"
+echo "Use 'pkill -f python.*run_app' to stop"

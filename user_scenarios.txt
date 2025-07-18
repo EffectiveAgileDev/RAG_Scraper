@@ -1,0 +1,181 @@
+RAG_Scraper User Scenarios - Current System Workflows
+=======================================================
+
+Based on analysis of 812 BDD scenarios across 90 feature files, here are the core user workflows:
+
+## 1. CORE SCRAPING WORKFLOWS
+
+### Single Page Scraping
+- User enters single restaurant URL
+- Selects "Single Page" mode
+- Chooses output format (Text/PDF)
+- Starts scraping with real-time progress
+- Downloads generated files
+
+### Multi-Page Scraping
+- User enters restaurant directory URL
+- Selects "Multi Page" mode
+- Configures crawl depth, max pages, rate limiting
+- System discovers related pages automatically
+- Real-time progress shows current page + queue status
+- Aggregates data from multiple pages
+- Downloads comprehensive results
+
+### Batch Processing
+- User enters multiple URLs (up to 100)
+- System processes each URL sequentially
+- Progress tracking across entire batch
+- Individual status per URL
+- Consolidated output files
+
+## 2. FILE UPLOAD WORKFLOWS
+
+### PDF Upload Mode
+- User toggles from "URL" to "File Upload" mode
+- Drag-and-drop or browse for PDF files
+- Multiple file selection supported
+- File validation (PDF only)
+- Upload queue management with remove options
+- Processing with OCR text extraction
+- RAG-optimized text output
+
+### Local File Processing
+- Support for restaurant menus, brochures
+- Multi-modal content extraction
+- Image text extraction (OCR)
+- Structured data output for RAG systems
+
+## 3. AI ENHANCEMENT WORKFLOWS
+
+### AI Settings Configuration
+- User configures AI provider (OpenAI, Claude, Ollama)
+- API key management with encryption
+- Model selection (GPT-3.5, GPT-4, etc.)
+- Custom endpoint configuration
+- Settings persistence across sessions
+
+### AI-Enhanced Extraction
+- Traditional extraction + AI analysis
+- Content understanding and enhancement
+- Custom question answering
+- Nutritional analysis
+- Business insight extraction
+- Confidence scoring
+
+## 4. SPECIALIZED WORKFLOWS
+
+### RestW (Where To Eat Guide) Schema
+- Restaurant industry selection
+- Specialized schema for restaurant data
+- WTEG format processing
+- Enhanced field extraction
+- Industry-specific optimization
+
+### Multi-Modal Processing
+- Image content extraction
+- Menu photo analysis
+- Business hours from images
+- Contact information from visuals
+- Integration with main text extraction
+
+## 5. OUTPUT & EXPORT WORKFLOWS
+
+### Format Selection
+- Text file for RAG systems
+- PDF documentation format
+- JSON structured export
+- Multiple format generation simultaneously
+
+### File Generation
+- RAG-optimized text structure
+- Semantic organization
+- Entity relationship mapping
+- Index file creation
+- Download link management
+
+## 6. PROGRESS MONITORING & VISUALIZATION
+
+### Real-Time Progress
+- Current page being processed
+- Pages in queue count
+- Completion percentage
+- Processing time tracking
+- Error handling and recovery
+
+### Queue Management
+- Page discovery status
+- Parent-child page relationships
+- Duplicate detection
+- Queue optimization
+- Processing statistics
+
+## 7. CONFIGURATION & SETTINGS
+
+### Scraping Configuration
+- Rate limiting controls
+- Crawl depth settings
+- Max pages limits
+- Ethical scraping compliance
+- JavaScript rendering options
+
+### UI State Management
+- Mode switching (URL/File Upload)
+- Advanced options toggle
+- Settings persistence
+- Session management
+- Error state handling
+
+## 8. INTEGRATION WORKFLOWS
+
+### Industry Knowledge Database
+- Industry-specific term mapping
+- Synonym expansion
+- Context-aware extraction
+- Performance optimization
+- Custom mapping support
+
+### Error Handling & Recovery
+- Network error recovery
+- Invalid URL handling
+- File processing failures
+- Graceful degradation
+- User feedback messages
+
+## 9. PRODUCTION STABILITY
+
+### Performance Optimization
+- Concurrent processing
+- Memory management
+- Resource cleanup
+- Load balancing
+- Caching strategies
+
+### Quality Assurance
+- Data validation
+- Output verification
+- Coverage reporting
+- Regression testing
+- Performance monitoring
+
+## 10. ADVANCED FEATURES
+
+### JavaScript Rendering
+- Dynamic content extraction
+- Restaurant popup handling
+- Interactive element processing
+- Modern web app support
+
+### Semantic Structuring
+- Entity relationship tracking
+- Hierarchical data organization
+- Cross-page data linking
+- Knowledge graph creation
+
+========================================
+TOTAL USER SCENARIOS: 812 BDD scenarios
+CORE WORKFLOWS: 10 major categories
+SUPPORTED FORMATS: Text, PDF, JSON
+PROCESSING MODES: Single page, Multi-page, Batch, File upload
+AI PROVIDERS: OpenAI, Claude, Ollama, Custom
+INDUSTRIES: Restaurant (specialized), General
+========================================
