@@ -420,6 +420,7 @@ class JSONExportGenerator:
             "additional_fields",
             "contact_fields",
             "descriptive_fields",
+            "ai_fields",
         }
 
         # Check if all keys in field_selection are valid

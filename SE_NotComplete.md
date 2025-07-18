@@ -3,24 +3,30 @@
 ## Known Defects
 
 ### Test Failures
-1. **Manual Testing Defect Resolution**: `test_unknown_error_in_scraping_defect` still fails
-2. **Missing File**: `test_mobimag_extraction.py` referenced but does not exist
+1. **Manual Testing Defect Resolution**: `test_unknown_error_in_scraping_defect` still fails **FIXED**
+2. **Missing File**: `test_mobimag_extraction.py` referenced but does not exist **FIXED**
 
 ### UI Layout and Usability Defects
-3. **AI Settings Panel Space Issue**: The space allowed for the AI section of Advanced Options is not sufficient and cuts off the save options (visual truncation issue)
-4. **Results Display Layout**: Move the output of the scrape up under the Scraping Results section. Move the Advanced_Options header to the left to be over the advanced options section
-5. **AI Enhancement Section Reorganization**: Create a new section on the right next to the Advanced_Options for AI_Enhancement_Options and move all AI enhancement controls under it for better organization and visibility
+3. **AI Settings Panel Space Issue**: The space allowed for the AI section of Advanced Options is not sufficient and cuts off the save options (visual truncation issue)**FIXED**
+4. **Results Display Layout**: Move the output of the scrape up under the Scraping Results section. Move the Advanced_Options header to the left to be over the advanced options section **FIXED**
+5. **AI Enhancement Section Reorganization**: Create a new section on the right next to the Advanced_Options for AI_Enhancement_Options and move all AI enhancement controls under it for better organization and visibility  **FIXED**
 6. ~~**AI Enhancement Checkbox State Not Recognized**: AI Enhancement checkbox appears checked but system shows "No AI settings to save (AI enhancement is disabled)"~~ ✅ **FIXED**
-   - **Root Cause**: JavaScript selector mismatch - looking for `input[name="scraping_mode"]` but HTML uses `name="scrapingMode"`
+   - **Root Cause**: JavaScript selector mismatch - looking for `input[name="scraping_mode"]` but HTML uses `name="scrapingMode"` **FIXED**
    - **Solution**: Fixed selector in `getAIConfiguration()` function and updated default mode to multi-page
    - **Status**: Resolved - all related tests passing
-7. **HTML Rendering Bug in API Key Section**: Literal string 'autocomplete="off" />' appears as visible text in the UI under the API key input field
+7. **HTML Rendering Bug in API Key Section**: Literal string 'autocomplete="off" />' appears as visible text in the UI under the API key input field **FIXED**
    - **Symptoms**: Raw HTML code displayed as text instead of being parsed as HTML attribute
    - **Location**: AI Enhancement panel, API key input section
    - **Priority**: MEDIUM - Visual defect affecting user experience
 
+8. **Load Settings JavaScript Error**: "updateSliderValue is not defined" error when clicking "Load Settings" button
+   - **Symptoms**: Error appears in console/alert when using "Load Settings" button in both single-page and multi-page AI Features sections
+   - **Location**: AI Enhancement panels (both single-page and multi-page modes)
+   - **Root Cause**: Typo in JavaScript function name - should be "updateSliderValue" not "updateSilderValue"
+   - **Priority**: HIGH - Prevents loading saved AI settings functionality
+
 ### File Upload AI Enhancement Integration Defects
-6. **AI Enhancement Not Working for File Uploads**: Despite AI enhancement being enabled and configured, AI analysis is not appearing in JSON output files for uploaded PDFs
+6. **AI Enhancement Not Working for File Uploads**: Despite AI enhancement being enabled and configured, AI analysis is not appearing in JSON output files for uploaded PDFs **FIXED**
    - **Symptoms**: 
      - Log shows "AI enhancement succeeded for text 1, extractions: 3" but no AI analysis in output JSON
      - "AI enhancement failed for text 1, error: Malformed API response" errors
@@ -35,7 +41,7 @@
    - **Priority**: HIGH - Core AI functionality broken for file upload feature
 
 ### AI API Integration Defects
-7. **OpenAI API Key Authentication Failure**: New OpenAI API key generated but still returns 401 authentication errors
+7. **OpenAI API Key Authentication Failure**: New OpenAI API key generated but still returns 401 authentication errors **FIXED**
    - **Symptoms**:
      - User generated new API key but still experiencing authentication failures
      - 401 "Incorrect API key provided" errors persist with new key
@@ -69,7 +75,7 @@
    - **Priority**: COMPLETED - Enhancement successfully implemented
 
 ### Core Scraping Functionality Defects
-8. **URL Scraping Not Functioning**: Basic URL scraping functionality is not working in both single-page and multi-page modes
+8. **URL Scraping Not Functioning**: Basic URL scraping functionality is not working in both single-page and multi-page modes **FIXED**
    - **Symptoms**:
      - URL scraping fails to extract restaurant data from websites
      - No successful scraping output generated from valid restaurant URLs
@@ -216,7 +222,14 @@
   - [x] Configurable Extraction Options - COMPLETE
   - [x] Rate Limiting and Ethics - COMPLETE
 
-### Phase 4.3G: Generic AI-Powered Extraction ✅ BACKEND COMPLETE ❌ UI INTEGRATION NEEDED
+### Phase 4.3G: Generic AI-Powered Extraction ✅ COMPLETE
+**✅ VERIFIED**: Successfully extracted comprehensive data from mettavern.com including:
+- Restaurant: Metropolitan Tavern (Portland, OR) 
+- 100+ menu items with AI-enhanced descriptions
+- Confidence score: 0.8 (meets 0.7 threshold)
+- Custom Q&A responses and customer amenities
+- All AI features enabled (multimodal, pattern learning, dynamic prompts)
+
 **Note: AI features are completely OPTIONAL - the application works fully without AI integration**
 
 - [x] **Extraction Pipeline Architecture**: ✅ COMPLETE
@@ -385,6 +398,37 @@
    - [ ] Implement AI confidence badges in results display
    - [ ] Add toggle to show/hide AI-enhanced information in results
 
+#### AI Settings Persistence Issues: ⚠️ PARTIALLY WORKING
+9. **Model Dropdown Disabled After Settings Load**: Model selection becomes non-functional after loading saved AI settings
+   - **Symptoms**:
+     - Settings load correctly and populate all fields including model dropdown
+     - Model dropdown appears to have correct value but cannot be changed by user
+     - Refresh models button (🔄) does not work after settings are loaded
+     - Issue affects both single-page and multi-page modes
+   - **Root Cause**: Model dropdown becomes disabled/readonly state after `loadAISettings()` function runs
+   - **Impact**: Users cannot change model selection once settings are loaded from persistent storage
+   - **Priority**: MEDIUM - Settings work but lack full interactivity
+   
+10. **API Key Visibility Toggle Non-Functional**: API key show/hide button stops working after settings load
+    - **Symptoms**:
+      - API key field shows "Saved: sk-...XXXX" placeholder correctly
+      - Eye button (👁️) next to API key field does not toggle visibility
+      - `toggleApiKeyVisibility()` and `toggleSingleApiKeyVisibility()` functions exist but not responding
+      - Issue affects both single-page and multi-page modes
+    - **Root Cause**: API key field state conflicts with placeholder text from loaded settings
+    - **Impact**: Users cannot view full API key after loading from persistent storage
+    - **Priority**: LOW - Cosmetic issue, API key functionality works
+
+11. **Provider Change Loses API Key**: Changing LLM provider after loading settings loses saved API key
+    - **Symptoms**:
+      - Load settings correctly shows OpenAI provider and masked API key
+      - Change provider to Claude, then back to OpenAI
+      - API key field is empty, requires re-entry
+      - Model dropdown is empty and refresh button non-functional
+    - **Root Cause**: Provider change handlers don't preserve persistent API key storage
+    - **Impact**: Users must re-enter API key when experimenting with different providers
+    - **Priority**: MEDIUM - Affects user workflow and convenience
+
 2. **Custom Question Enhancement** ⚠️ PARTIALLY PLANNED
    - [ ] Add user-customizable question input (200 char limit) to AI settings panel
    - [ ] Include custom questions in AI analysis prompt for personalized extraction
@@ -462,6 +506,12 @@
 5b. **OPTIONAL**: Complete Phase 4.3G-UI remaining tasks (UI polish for visual indicators)
 6. Implement Phase 4.1-4.2 production features
 7. Replace remaining SKIPPED tests with real tests
+
+## 4.3 Businesses and Schemas
+
+### 1. Restaurant Schemas
+
+### 2. Local Business
 
 ## Status Summary
 - **Phases 1-2**: ✅ Complete

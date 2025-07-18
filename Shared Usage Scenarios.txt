@@ -1,0 +1,162 @@
+❌ POTENTIAL ISSUES: Shared Usage Scenarios
+
+  Issue 1: Shared Service Account
+
+  # If company uses shared service account:
+  Shared User: /home/ragservice/.rag_scraper/encryption.key
+  # All employees share same key = security risk
+
+  Issue 2: Admin/Setup User
+
+  # Admin configures settings:
+  Admin: /home/admin/.rag_scraper/encryption.key
+
+  # Regular users can't access admin's settings:
+  User: /home/user/.rag_scraper/encryption.key (different key)
+
+  Issue 3: Roaming Profiles/Multiple Workstations
+
+  # User logs into different PCs:
+  PC1: /home/alice/.rag_scraper/encryption.key (Key A)
+  PC2: /home/alice/.rag_scraper/encryption.key (Key B)
+  # Same user, different keys = can't access saved settings
+
+  Enterprise Solutions
+
+  Option 1: User-Specific Keys (Current - GOOD)
+
+  - Keep current behavior
+  - Each user manages their own AI settings
+  - Best for security isolation
+
+  Option 2: Centralized Configuration
+
+  # Company-wide AI settings in:
+  /etc/rag_scraper/company_ai_settings.json
+  # Or environment variables:
+  RAG_SCRAPER_OPENAI_KEY=sk-company-key
+  RAG_SCRAPER_LLM_PROVIDER=openai
+
+  Option 3: Hybrid Approach
+
+  # Priority order:
+  1. User personal settings: ~/.rag_scraper/ai_settings.json
+  2. Company defaults: /etc/rag_scraper/company_defaults.json
+  3. Environment variables: RAG_SCRAPER_*
+  4. Application defaults
+
+  Option 4: Active Directory/LDAP Integration
+
+  # Derive encryption key from user credentials:
+  key = derive_key_from_user_sid(user.sid)
+  # Same user = same key across all workstations
+
+  Recommendations for Enterprise Deployment
+
+  Small Company (5-20 users):
+
+  - Keep current per-user encryption ✅
+  - Use environment variables for company API keys
+  - Document setup process for each user
+
+  Large Company (50+ users):
+
+  - Implement centralized configuration management
+  - Use company-provided API keys (not user personal keys)
+  - Consider Active Directory integration
+  - Implement group policies for AI settings
+
+  Shared Workstations:
+
+  - Use environment variables or system-wide config
+  - Avoid per-user encryption for shared scenarios
+  - Implement session-based configuration
+
+  Would you like me to implement any of these enterprise-friendly approaches? The hybrid approach (#3)
+  would be most flexible for different company scenarios.
+  
+  Consequences of Changing the Key
+
+  ⚠ Important: Changing the encryption key makes previously saved settings unreadable:
+
+  1. Before key change: Settings encrypted with Key A
+  2. After key change: App uses Key B
+  3. Result: Cannot decrypt old settings (they become gibberish)
+
+  Safe Key Change Workflow
+
+  1. Export current settings (decrypted backup)
+  2. Regenerate encryption key
+  3. Re-import settings (encrypted with new key)
+
+  Would you like me to implement the UI controls for encryption key management? This would give users a
+   proper way to:
+  - Regenerate encryption keys
+  - Export/import settings safely
+  - Handle key rotation properly
+
+How would the user change the persistant key?
+
+● Great question! Currently there's no user-facing way to change the persistent encryption key. Let me
+  show you the current situation and provide options:
+
+  Current Encryption Key Management
+
+  Current Location: ~/.rag_scraper/encryption.key
+  Current Access: File system only, no UI controls
+
+  Options to Change the Persistent Key
+
+  Option 1: File System (Current)
+
+  # Delete the key file - new one will be generated
+  rm ~/.rag_scraper/encryption.key
+
+  # Next time the app runs, it will:
+  # 1. Generate a new encryption key
+  # 2. Save it to ~/.rag_scraper/encryption.key
+  # 3. Any previously saved settings will be unreadable (encrypted with old key)
+
+  Option 2: Add UI Controls (Recommended)
+
+  I could add buttons to the AI Settings Persistence section:
+
+  🔒 AI_SETTINGS_PERSISTENCE
+  ┌─────────────────────────────────────┐
+  │ 💾 Save Settings                    │
+  │ 📂 Load Settings                    │
+  │ 🗑 Clear Saved                      │
+  │ 📌 Make Permanent                   │
+  │ 🔑 Regenerate Encryption Key        │ ← NEW
+  │ 🔄 Export Settings (Unencrypted)    │ ← NEW
+  │ 📥 Import Settings                  │ ← NEW
+  └─────────────────────────────────────┘
+
+  Option 3: API Endpoints
+
+  Add new endpoints:
+  - POST /api/ai/regenerate-key - Generate new encryption key
+  - GET /api/ai/export-settings - Export settings in plain text
+  - POST /api/ai/import-settings - Import settings and encrypt with current key
+
+  Consequences of Changing the Key
+
+  ⚠ Important: Changing the encryption key makes previously saved settings unreadable:
+
+  1. Before key change: Settings encrypted with Key A
+  2. After key change: App uses Key B
+  3. Result: Cannot decrypt old settings (they become gibberish)
+
+  Safe Key Change Workflow
+
+  1. Export current settings (decrypted backup)
+  2. Regenerate encryption key
+  3. Re-import settings (encrypted with new key)
+
+  Would you like me to implement the UI controls for encryption key management? This would give users a
+   proper way to:
+  - Regenerate encryption keys
+  - Export/import settings safely
+  - Handle key rotation properly
+
+  The implementation would include proper warnings about data loss and backup/restore functionality.

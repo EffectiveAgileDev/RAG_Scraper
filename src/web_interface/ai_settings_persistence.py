@@ -19,7 +19,8 @@ class EncryptionService:
         if key:
             self._cipher = Fernet(key)
         else:
-            self._cipher = Fernet(self.generate_key())
+            # Use a persistent key derived from a consistent source
+            self._cipher = Fernet(self._get_or_create_persistent_key())
     
     def generate_key(self) -> bytes:
         """Generate a new encryption key."""
@@ -48,6 +49,33 @@ class EncryptionService:
         except Exception as e:
             logger.error(f"Decryption failed: {e}")
             return encrypted_data  # Return original if decryption fails
+    
+    def _get_or_create_persistent_key(self) -> bytes:
+        """Get or create a persistent encryption key."""
+        key_file = Path.home() / '.rag_scraper' / 'encryption.key'
+        
+        # Ensure directory exists
+        key_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        if key_file.exists():
+            # Load existing key
+            try:
+                with open(key_file, 'rb') as f:
+                    return f.read()
+            except Exception as e:
+                logger.warning(f"Failed to load encryption key: {e}, generating new one")
+        
+        # Generate new key and save it
+        key = Fernet.generate_key()
+        try:
+            with open(key_file, 'wb') as f:
+                f.write(key)
+            # Set restrictive permissions (owner read/write only)
+            key_file.chmod(0o600)
+        except Exception as e:
+            logger.warning(f"Failed to save encryption key: {e}")
+        
+        return key
 
 
 class StorageBackend:

@@ -2209,7 +2209,7 @@ https://restaurant3.com
                                                     <label class="config-label" for="singleAiApiKey">API_KEY:</label>
                                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                                                         <input 
-                                                            type="text" 
+                                                            type="password" 
                                                             id="singleAiApiKey" 
                                                             name="aiApiKey" 
                                                             class="terminal-input config-input"
@@ -2673,12 +2673,13 @@ https://restaurant3.com
                                                     <label class="config-label" for="aiApiKey">API_KEY:</label>
                                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                                                         <input 
-                                                            type="text" 
+                                                            type="password" 
                                                             id="aiApiKey" 
                                                             name="aiApiKey" 
                                                             class="terminal-input config-input"
                                                             placeholder="Enter API Key (any format accepted)"
                                                             style="flex: 1;"
+                                                            autocomplete="off"
                                                         />
                                                         <button type="button" 
                                                                 id="toggleApiKeyVisibility"
@@ -2689,7 +2690,6 @@ https://restaurant3.com
                                                             👁️
                                                         </button>
                                                     </div>
-                                                        autocomplete="off" />
                                                     <div class="config-desc">API key for external AI services (stored securely, optional)</div>
                                                     <div class="config-warning" style="display: none;" id="apiKeyWarning">
                                                         ⚠️ Invalid API key format
@@ -3022,6 +3022,9 @@ https://restaurant3.com
                     
                     // Initialize help text to be hidden
                     initializeHelpText();
+                    
+                    // Automatically load saved AI settings on page load
+                    loadAISettings();
                 });
                 
                 function initializeHelpText() {
@@ -3411,6 +3414,29 @@ https://restaurant3.com
                         display.textContent = value;
                     }
                 }
+                
+                function updateSliderValue(sliderId) {
+                    const slider = document.getElementById(sliderId);
+                    if (!slider) return;
+                    
+                    const value = slider.value;
+                    let displayId;
+                    
+                    // Map slider IDs to their corresponding display element IDs
+                    if (sliderId === 'singleConfidenceThreshold') {
+                        displayId = 'singleConfidenceValue';
+                    } else if (sliderId === 'confidenceThreshold') {
+                        displayId = 'confidenceValue';
+                    } else {
+                        // Generic fallback: remove 'Threshold' and add 'Value'
+                        displayId = sliderId.replace('Threshold', 'Value');
+                    }
+                    
+                    const display = document.getElementById(displayId);
+                    if (display) {
+                        display.textContent = value;
+                    }
+                }
 
                 function generateSessionId() {
                     // Generate a unique session ID for this scraping request
@@ -3662,6 +3688,9 @@ https://restaurant3.com
                         console.log('Response data:', data);
                         
                         if (data.success) {
+                            // Configure session with saved settings for immediate use
+                            await configureSessionAfterSave(settings);
+                            
                             showTerminalAlert('AI settings saved successfully', 'success');
                             updateSystemStatus('AI_SETTINGS // SAVED_TO_PERSISTENT_STORAGE');
                         } else {
@@ -3682,14 +3711,16 @@ https://restaurant3.com
                     const apiKeyInput = document.getElementById('aiApiKey');
                     const toggleButton = document.getElementById('toggleApiKeyVisibility');
                     
-                    if (apiKeyInput.type === 'password') {
-                        apiKeyInput.type = 'text';
-                        toggleButton.textContent = '🙈';
-                        toggleButton.title = 'Hide API key';
-                    } else {
-                        apiKeyInput.type = 'password';
-                        toggleButton.textContent = '👁️';
-                        toggleButton.title = 'Show API key';
+                    if (apiKeyInput && toggleButton) {
+                        if (apiKeyInput.type === 'password') {
+                            apiKeyInput.type = 'text';
+                            toggleButton.textContent = '🙈';
+                            toggleButton.title = 'Hide API key';
+                        } else {
+                            apiKeyInput.type = 'password';
+                            toggleButton.textContent = '👁️';
+                            toggleButton.title = 'Show API key';
+                        }
                     }
                 }
                 
@@ -3697,14 +3728,16 @@ https://restaurant3.com
                     const apiKeyInput = document.getElementById('singleAiApiKey');
                     const toggleButton = document.getElementById('toggleSingleApiKeyVisibility');
                     
-                    if (apiKeyInput.type === 'password') {
-                        apiKeyInput.type = 'text';
-                        toggleButton.textContent = '🙈';
-                        toggleButton.title = 'Hide API key';
-                    } else {
-                        apiKeyInput.type = 'password';
-                        toggleButton.textContent = '👁️';
-                        toggleButton.title = 'Show API key';
+                    if (apiKeyInput && toggleButton) {
+                        if (apiKeyInput.type === 'password') {
+                            apiKeyInput.type = 'text';
+                            toggleButton.textContent = '🙈';
+                            toggleButton.title = 'Hide API key';
+                        } else {
+                            apiKeyInput.type = 'password';
+                            toggleButton.textContent = '👁️';
+                            toggleButton.title = 'Show API key';
+                        }
                     }
                 }
                 
@@ -3719,10 +3752,9 @@ https://restaurant3.com
                             // Apply settings to UI
                             if (settings.ai_enhancement_enabled) {
                                 const activeMode = settings.active_mode || 'multi';
-                                const prefix = activeMode === 'single' ? 'single' : '';
                                 
-                                // Enable AI Enhancement
-                                const enabledCheckbox = document.getElementById(prefix + 'AiEnhancementEnabled');
+                                // Enable AI Enhancement (fix element ID)
+                                const enabledCheckbox = document.getElementById(activeMode === 'single' ? 'singleAiEnhancementEnabled' : 'aiEnhancementEnabled');
                                 if (enabledCheckbox) {
                                     enabledCheckbox.checked = true;
                                     if (activeMode === 'single') {
@@ -3732,26 +3764,48 @@ https://restaurant3.com
                                     }
                                 }
                                 
-                                // Set provider
+                                // Set provider (fix element ID)
                                 if (settings.llm_provider) {
-                                    const providerSelect = document.getElementById(prefix + 'LlmProvider');
+                                    const providerSelect = document.getElementById(activeMode === 'single' ? 'singleLlmProvider' : 'llmProvider');
                                     if (providerSelect) {
                                         providerSelect.value = settings.llm_provider;
+                                        // Trigger change event to show model dropdown
+                                        if (activeMode === 'single') {
+                                            handleSinglePageProviderChange();
+                                        } else {
+                                            handleProviderChange();
+                                        }
+                                        
+                                        // Refresh models and set the saved model after delay
+                                        if (settings.model) {
+                                            setTimeout(async () => {
+                                                if (activeMode === 'single') {
+                                                    await refreshSingleModels();
+                                                } else {
+                                                    await refreshModels();
+                                                }
+                                                
+                                                const modelSelect = document.getElementById(activeMode === 'single' ? 'singleModelSelect' : 'modelSelect');
+                                                if (modelSelect) {
+                                                    modelSelect.value = settings.model;
+                                                }
+                                            }, 500);
+                                        }
                                     }
                                 }
                                 
                                 // Set confidence threshold
                                 if (settings.confidence_threshold) {
-                                    const thresholdSlider = document.getElementById(prefix + 'ConfidenceThreshold');
+                                    const thresholdSlider = document.getElementById(activeMode === 'single' ? 'singleConfidenceThreshold' : 'confidenceThreshold');
                                     if (thresholdSlider) {
                                         thresholdSlider.value = settings.confidence_threshold;
-                                        updateSliderValue(prefix + 'ConfidenceThreshold');
+                                        updateSliderValue(activeMode === 'single' ? 'singleConfidenceThreshold' : 'confidenceThreshold');
                                     }
                                 }
                                 
                                 // Set custom questions
                                 if (settings.custom_questions && Array.isArray(settings.custom_questions)) {
-                                    const questionsField = document.getElementById(prefix + 'CustomQuestions');
+                                    const questionsField = document.getElementById(activeMode === 'single' ? 'singleCustomQuestions' : 'customQuestions');
                                     if (questionsField) {
                                         questionsField.value = settings.custom_questions.join('\n');
                                         validateCustomQuestions(activeMode);
@@ -3761,7 +3815,13 @@ https://restaurant3.com
                                 // Set features
                                 if (settings.features) {
                                     Object.keys(settings.features).forEach(feature => {
-                                        const checkbox = document.getElementById(prefix + feature.charAt(0).toUpperCase() + feature.slice(1).replace(/_/g, ''));
+                                        // Convert snake_case to PascalCase for single mode, camelCase for multi mode
+                                        const words = feature.split('_');
+                                        const featureName = words.map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
+                                        const camelCaseName = words[0] + words.slice(1).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
+                                        
+                                        const checkboxId = activeMode === 'single' ? 'single' + featureName : camelCaseName;
+                                        const checkbox = document.getElementById(checkboxId);
                                         if (checkbox) {
                                             checkbox.checked = settings.features[feature];
                                         }
@@ -3770,7 +3830,7 @@ https://restaurant3.com
                                 
                                 // Show masked API key if available
                                 if (settings.api_key_masked) {
-                                    const apiKeyInput = document.getElementById(prefix + 'ApiKey');
+                                    const apiKeyInput = document.getElementById(activeMode === 'single' ? 'singleAiApiKey' : 'aiApiKey');
                                     if (apiKeyInput) {
                                         apiKeyInput.placeholder = 'Saved: ' + settings.api_key_masked;
                                     }
@@ -3822,25 +3882,60 @@ https://restaurant3.com
                 
                 async function makeAISettingsPermanent() {
                     try {
-                        const response = await fetch('/api/ai/migrate-session', {
+                        // Get current UI settings (same as saveAISettings but without the enabled check)
+                        const settings = getAIConfiguration();
+                        console.log('Current UI settings to make permanent:', settings);
+                        
+                        const response = await fetch('/api/ai/save-settings', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
                             },
-                            credentials: 'same-origin'
+                            credentials: 'same-origin',
+                            body: JSON.stringify({
+                                settings: settings
+                            })
                         });
                         
                         const data = await response.json();
                         
                         if (data.success) {
-                            showTerminalAlert('Session settings migrated to permanent storage', 'success');
-                            updateSystemStatus('AI_SETTINGS // SESSION_MIGRATED_TO_PERMANENT');
+                            // Configure session with saved settings for immediate use
+                            await configureSessionAfterSave(settings);
+                            
+                            showTerminalAlert('Current settings saved to permanent storage', 'success');
+                            updateSystemStatus('AI_SETTINGS // CURRENT_SETTINGS_SAVED_PERMANENT');
                         } else {
-                            showTerminalAlert('Failed to migrate session settings: ' + data.error, 'error');
+                            showTerminalAlert('Failed to save current settings: ' + data.error, 'error');
                         }
                     } catch (error) {
-                        console.error('Error migrating session settings:', error);
-                        showTerminalAlert('Error migrating session settings: ' + error.message, 'error');
+                        console.error('Error saving current settings:', error);
+                        showTerminalAlert('Error saving current settings: ' + error.message, 'error');
+                    }
+                }
+                
+                async function configureSessionAfterSave(settings) {
+                    // Configure session with saved settings for immediate scraping use
+                    try {
+                        // Use the same /api/ai/configure endpoint that's used during scraping
+                        const response = await fetch('/api/ai/configure', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'same-origin',
+                            body: JSON.stringify(settings)
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            console.log('Session configured with saved settings for immediate use');
+                        } else {
+                            console.warn('Failed to configure session:', data.error);
+                        }
+                    } catch (error) {
+                        console.error('Error configuring session after save:', error);
                     }
                 }
                 
