@@ -190,6 +190,7 @@ class MultiStrategyScraper:
         microdata_results = self.microdata_extractor.extract_from_html(html_content)
         heuristic_results = self.heuristic_extractor.extract_from_html(html_content, url)
 
+
         # Merge results with priority: JSON-LD > Microdata > Heuristic
         merged_data = self._merge_extraction_results(
             json_ld_results, microdata_results, heuristic_results, url

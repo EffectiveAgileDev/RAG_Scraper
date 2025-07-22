@@ -3639,12 +3639,33 @@ https://restaurant3.com
                     // Get configuration from the active mode
                     const prefix = activeMode === 'single' ? 'single' : '';
                     
+                    // DEBUG: Log what we're looking for
+                    console.log('getAIConfiguration DEBUG:', {
+                        activeMode,
+                        prefix,
+                        lookingForApiKey: `${prefix}AiApiKey`,
+                        fallbackApiKey: 'aiApiKey'
+                    });
+                    
+                    // Get API key with proper ID lookup
+                    let apiKeyValue = '';
+                    if (activeMode === 'single') {
+                        // Single mode: look for 'singleAiApiKey'
+                        const singleApiKeyElement = document.getElementById('singleAiApiKey');
+                        apiKeyValue = singleApiKeyElement?.value || '';
+                        console.log('Single mode API key element:', singleApiKeyElement, 'value:', apiKeyValue);
+                    } else {
+                        // Multi mode: look for 'aiApiKey' 
+                        const multiApiKeyElement = document.getElementById('aiApiKey');
+                        apiKeyValue = multiApiKeyElement?.value || '';
+                        console.log('Multi mode API key element:', multiApiKeyElement, 'value:', apiKeyValue);
+                    }
+                    
                     return {
                         ai_enhancement_enabled: true,
                         llm_provider: document.getElementById(`${prefix}LlmProvider`)?.value || 
                                      document.getElementById('llmProvider')?.value || 'openai',
-                        api_key: document.getElementById(`${prefix}AiApiKey`)?.value || 
-                                 document.getElementById('aiApiKey')?.value || '',
+                        api_key: apiKeyValue,
                         model: document.getElementById(`${prefix}ModelSelect`)?.value || 
                                document.getElementById('modelSelect')?.value || '',
                         features: {

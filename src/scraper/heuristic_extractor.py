@@ -437,6 +437,9 @@ class HeuristicExtractor:
             r"sandwiches?",
             r"pizza",
             r"pasta",
+            r"sushi",
+            r"rolls?",
+            r"sashimi",
             r"main plates?",
             r"brunch",
             r"lunch",
@@ -451,6 +454,28 @@ class HeuristicExtractor:
             r"popular",
             r"dishes?",
             r"signature",
+            # Added patterns for cheese/specialty sections
+            r"cheese",
+            r"salumi",
+            r"selection",
+            r"antipasti",
+            r"antipasto",
+            r"charcuterie",
+            r"board",
+            r"tasting",
+            r"specialty",
+            r"specialties",
+            # Italian menu sections
+            r"entrées?",
+            r"entree",
+            r"insalate",
+            r"zuppe",
+            r"panini",
+            r"dolce",
+            r"vino",
+            r"bianco",
+            r"rosso",
+            r"pizze",
         ]
 
         # Find all h2, h3, h4, h5, h6 headers (expanded for menu sections and items)
@@ -478,12 +503,44 @@ class HeuristicExtractor:
                 section_name = header_text.title()
                 menu_items[section_name] = []
                 
+                # Special handling for WordPress - look for all food-menu divs in the section
+                if header_elem.name == "h2":
+                    # For h2 sections, collect all WordPress menu items until next h2
+                    next_section_header = None
+                    for next_header in header_elem.find_all_next(["h2"]):
+                        next_text = next_header.get_text().strip().lower()
+                        if any(re.search(pattern, next_text, re.I) for pattern in section_patterns) or \
+                           any(keyword in next_text for keyword in menu_keywords):
+                            next_section_header = next_header
+                            break
+                    
+                    # Find all WordPress menu divs between this header and the next
+                    wp_divs_in_section = []
+                    current = header_elem
+                    while current and current != next_section_header:
+                        if (current.name == 'div' and 'food-menu-content-top-holder' in 
+                            ' '.join(current.get('class', [])).lower()):
+                            wp_divs_in_section.append(current)
+                        current = current.find_next()
+                    
+                    
+                    # Extract from WordPress divs
+                    item_count = 0
+                    for wp_div in wp_divs_in_section[:20]:  # Limit to prevent memory issues
+                        cms_extracted = self._extract_cms_menu_items(wp_div, menu_items, section_name, item_count)
+                        if cms_extracted > 0:
+                            item_count += cms_extracted
+                    
+                    # Skip to next sibling processing if we found WordPress content
+                    if wp_divs_in_section:
+                        continue
+                
                 # Look for menu items after this header
                 current_elem = header_elem.find_next_sibling()
                 item_count = 0
                 
-                while current_elem and item_count < 20:  # Increased limit for modern menus
-                    # Stop at next section header
+                while current_elem and item_count < 50:  # Increased limit for WordPress menus
+                    # Stop at next section header (h1, h2 are section breaks, but h3 can be menu items in WordPress)
                     if current_elem.name in ["h1", "h2"] and current_elem != header_elem:
                         # Check if this is another menu section
                         next_header_text = current_elem.get_text().strip().lower()
@@ -492,8 +549,17 @@ class HeuristicExtractor:
                         if any(keyword in next_header_text for keyword in menu_keywords):
                             break
                     
-                    # Look for h3, h4, h5, h6 elements (commonly used for individual menu items)
-                    if current_elem.name in ["h3", "h4", "h5", "h6"]:
+                    # PRIORITY 1: Look inside div containers for CMS-specific menu items FIRST
+                    # This ensures WordPress structures are processed before basic headers
+                    if current_elem.name == "div":
+                        cms_extracted = self._extract_cms_menu_items(current_elem, menu_items, section_name, item_count)
+                        if cms_extracted > 0:
+                            item_count += cms_extracted
+                        current_elem = current_elem.find_next_sibling()
+                        continue
+                    
+                    # PRIORITY 2: Look for h3, h4, h5, h6 elements (commonly used for individual menu items)
+                    elif current_elem.name in ["h3", "h4", "h5", "h6"]:
                         item_text = current_elem.get_text().strip()
                         if item_text and len(item_text) < 100:
                             # Clean up the item name (remove prices, asterisks, etc.)
@@ -507,45 +573,94 @@ class HeuristicExtractor:
                     # Look for p elements with menu-like content
                     elif current_elem.name == "p":
                         item_text = current_elem.get_text().strip()
-                        if item_text and len(item_text) < 200:
-                            # Check if this looks like menu content
-                            menu_indicators = ['burger', 'fries', 'drink', 'sandwich', '$', 'menu', 'special']
-                            if any(indicator in item_text.lower() for indicator in menu_indicators):
-                                # Clean up the item name
-                                item_name = re.split(r"[*]?\s*\$", item_text)[0].strip()
-                                item_name = re.sub(r"\*+$", "", item_name).strip()
+                        if item_text and len(item_text) < 500:  # Increased limit for descriptive content
+                            
+                            # Enhanced menu detection patterns for rich descriptions
+                            menu_indicators = [
+                                'burger', 'fries', 'drink', 'sandwich', '$', 'menu', 'special',
+                                # Food descriptors that indicate menu content
+                                'cheese', 'milk', 'sauce', 'bread', 'pasta', 'meat', 'beef', 'chicken',
+                                'salad', 'soup', 'rice', 'vegetable', 'fresh', 'grilled', 'roasted',
+                                'served with', 'topped with', 'marinated', 'seasoned', 'organic',
+                                # Cooking methods and descriptions common in menus
+                                'braised', 'sautéed', 'baked', 'fried', 'steamed', 'poached',
+                                # Italian food terms for restaurants like Piattino
+                                'alla', 'con', 'del', 'della', 'di', 'parmigiano', 'pecorino',
+                                'prosciutto', 'mozzarella', 'basil', 'tomato', 'garlic'
+                            ]
+                            
+                            # Check for colon-separated menu items (common format: "Item: description")
+                            has_colon_format = ':' in item_text and not item_text.startswith('http')
+                            has_menu_indicators = any(indicator in item_text.lower() for indicator in menu_indicators)
+                            
+                            # In menu section context, be more lenient - capture most paragraph content
+                            # as it's likely a menu item if we're already in a recognized menu section
+                            is_likely_menu_item = (has_colon_format or has_menu_indicators or 
+                                                  ('-' in item_text and len(item_text.split()) >= 2))
+                            
+                            if is_likely_menu_item:
+                                # Handle different content formats
+                                if '$' in item_text:
+                                    # Item with price - remove price but keep full description
+                                    item_content = re.split(r"[*]?\s*\$", item_text)[0].strip()
+                                else:
+                                    # Item without price - keep full text
+                                    item_content = item_text
                                 
-                                if item_name and len(item_name) > 5:  # Reasonable item name length
-                                    menu_items[section_name].append(item_name)
+                                # Clean up asterisks and extra whitespace
+                                item_content = re.sub(r"\*+$", "", item_content).strip()
+                                
+                                # Validate item content quality
+                                if (item_content and len(item_content) > 5 and 
+                                    len(item_content) < 300 and  # Reasonable upper limit
+                                    not item_content.lower().startswith(('copyright', 'all rights', 'terms', 'privacy'))):
+                                    
+                                    menu_items[section_name].append(item_content)
                                     item_count += 1
                     
-                    # Look inside div containers for h3, h4, h5, h6 menu items (common pattern)
+                    # PRIORITY 3: Try remaining div containers for CMS patterns that weren't caught in PRIORITY 1
                     elif current_elem.name == "div":
+                        cms_extracted = self._extract_cms_menu_items(current_elem, menu_items, section_name, item_count)
+                        if cms_extracted > 0:
+                            item_count += cms_extracted
+                        
+                        # Look for traditional header elements within divs
                         inner_headers = current_elem.find_all(["h3", "h4", "h5", "h6"])
                         for header_elem in inner_headers:
                             if item_count >= 20:
                                 break
                             item_text = header_elem.get_text().strip()
                             if item_text and len(item_text) < 100:
+                                
+                                # For WordPress, check if the next sibling has descriptive content
+                                next_elem = header_elem.find_next_sibling()
+                                description = ""
+                                
+                                if next_elem:
+                                    # Check if next element contains description
+                                    next_text = next_elem.get_text().strip()
+                                    if (next_text and len(next_text) > 20 and 
+                                        (':' in next_text or any(food_word in next_text.lower() 
+                                                               for food_word in ['milk', 'cheese', 'flavor', 'aroma', 'fresh']))):
+                                        description = next_text
+                                
                                 # Clean up the item name (remove prices, asterisks, etc.)
                                 item_name = re.split(r"[*]?\s*\$", item_text)[0].strip()
                                 item_name = re.sub(r"\*+$", "", item_name).strip()  # Remove trailing asterisks
                                 
                                 if item_name and len(item_name) > 2:  # Reasonable item name length
-                                    menu_items[section_name].append(item_name)
+                                    # If we found a description, combine them
+                                    if description:
+                                        # Remove price from description too
+                                        if '$' in description:
+                                            description = re.split(r"[*]?\s*\$", description)[0].strip()
+                                        
+                                        full_item = f"{item_name}: {description}" if ':' not in description else description
+                                        menu_items[section_name].append(full_item)
+                                    else:
+                                        menu_items[section_name].append(item_name)
                                     item_count += 1
                     
-                    # Also check paragraphs for menu items (fallback)
-                    elif current_elem.name == "p":
-                        text = current_elem.get_text().strip()
-                        if text and len(text) < 200 and "$" in text:  # Likely a menu item with price
-                            # Extract item name (everything before price)
-                            item_name = re.split(r"\$", text)[0].strip()
-                            item_name = re.sub(r"\*+$", "", item_name).strip()
-                            
-                            if item_name and len(item_name) > 2 and len(item_name) < 80:
-                                menu_items[section_name].append(item_name)
-                                item_count += 1
                     
                     current_elem = current_elem.find_next_sibling()
                 
@@ -574,8 +689,117 @@ class HeuristicExtractor:
                     
                     if item_name and len(item_name) > 2 and len(item_name) < 80:
                         standalone_items.append(item_name)
-                        if len(standalone_items) >= 20:  # Limit to avoid too many items
+                        if len(standalone_items) >= 10:  # Reduced limit to allow CMS fallback to run
                             break
+            
+            # Also look for CMS food menu structures (always try for better content)
+            print("DEBUG: Trying CMS food menu structure extraction...")
+            
+            # Look for CMS-specific menu containers in fallback
+            cms_patterns = [
+                # WordPress
+                {'selector': 'div', 'class_contains': ['food-menu-content-top-holder'], 'name': 'WordPress'},
+                # Squarespace
+                {'selector': 'div', 'class_contains': ['sqs-block-content', 'menu-item'], 'name': 'Squarespace'},
+                # Wix
+                {'selector': 'div', 'class_contains': ['wix-rich-text'], 'name': 'Wix'},
+                # BentoBox
+                {'selector': 'div', 'class_contains': ['bento-menu', 'bento-item'], 'name': 'BentoBox'},
+                # Generic semantic
+                {'selector': 'div', 'class_contains': ['menu-item', 'dish-item', 'food-item'], 'name': 'Semantic'},
+            ]
+            
+            for pattern in cms_patterns:
+                if len(standalone_items) >= 50:
+                    break  # Found enough items
+                    
+                cms_items = []
+                for class_keyword in pattern['class_contains']:
+                    items = soup.find_all(pattern['selector'], 
+                                        class_=lambda x: x and class_keyword in ' '.join(x).lower())
+                    cms_items.extend(items)
+                
+                if cms_items:
+                    print(f"DEBUG: Found {len(cms_items)} {pattern['name']} menu items in fallback")
+                    
+                    for item_div in cms_items:
+                        extracted_text = None
+                        
+                        if pattern['name'] == 'WordPress':
+                            # WordPress-specific extraction
+                            title_holder = item_div.find(class_='food-menu-content-title-holder')
+                            desc_div = item_div.find_next_sibling(class_='food-menu-desc')
+                            
+                            if title_holder and desc_div:
+                                title_elem = title_holder.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+                                if title_elem:
+                                    title_text = title_elem.get_text().strip()
+                                    desc_text = desc_div.get_text().strip()
+                                    if title_text and desc_text and len(desc_text) > 10:
+                                        extracted_text = f"{title_text}: {desc_text}"
+                            
+                        elif pattern['name'] == 'Squarespace':
+                            # Squarespace-specific extraction
+                            content = item_div.get_text().strip()
+                            if ':' in content and len(content) > 20 and len(content) < 300:
+                                extracted_text = content
+                        
+                        elif pattern['name'] == 'Wix':
+                            # Wix-specific extraction
+                            rich_content = item_div.get_text().strip()
+                            if ':' in rich_content and len(rich_content) > 20:
+                                extracted_text = rich_content
+                        
+                        else:
+                            # Generic extraction for BentoBox and Semantic
+                            content = item_div.get_text().strip()
+                            if (':' in content and len(content) > 20 and len(content) < 300 and
+                                any(food_word in content.lower() for food_word in 
+                                    ['cheese', 'fresh', 'served', 'grilled', 'sauce'])):
+                                extracted_text = content
+                            
+                        if extracted_text:
+                            # Clean up
+                            if '$' in extracted_text:
+                                extracted_text = re.split(r"[*]?\s*\$", extracted_text)[0].strip()
+                            extracted_text = re.sub(r"\*+$", "", extracted_text).strip()
+                            
+                            if (len(extracted_text) > 10 and len(extracted_text) < 400 and
+                                not extracted_text.lower().startswith(('copyright', 'all rights', 'terms'))):
+                                standalone_items.append(extracted_text)
+                                if len(standalone_items) >= 50:
+                                    break
+                
+                # Fallback to paragraph extraction if CMS structures didn't work
+                if len(standalone_items) < 10:
+                    print("DEBUG: Trying paragraph fallback for descriptive menu content...")
+                    potential_paragraphs = soup.find_all("p")
+                    for para in potential_paragraphs:
+                        para_text = para.get_text().strip()
+                        
+                        # Check for colon-separated content or food-related terms
+                        if (para_text and len(para_text) < 400 and len(para_text) > 10):
+                            has_colon = ':' in para_text and not para_text.startswith('http')
+                            has_food_terms = any(term in para_text.lower() for term in [
+                                'cheese', 'milk', 'sauce', 'pasta', 'meat', 'beef', 'chicken',
+                                'salad', 'fresh', 'grilled', 'roasted', 'organic', 'basil',
+                                'tomato', 'garlic', 'bread', 'wine', 'served'
+                            ])
+                            
+                            if has_colon or has_food_terms:
+                                # Clean up content (remove price if present)
+                                if '$' in para_text:
+                                    content = re.split(r"[*]?\s*\$", para_text)[0].strip()
+                                else:
+                                    content = para_text
+                                    
+                                content = re.sub(r"\*+$", "", content).strip()
+                                
+                                if (content and len(content) > 10 and 
+                                    not content.lower().startswith(('copyright', 'all rights', 'terms', 'privacy'))):
+                                    standalone_items.append(content)
+                                    if len(standalone_items) >= 30:  # More items for descriptive content
+                                        break
             
             if standalone_items:
                 print(f"DEBUG: Found {len(standalone_items)} standalone menu items")
@@ -583,7 +807,161 @@ class HeuristicExtractor:
             else:
                 print("DEBUG: No standalone menu items found either")
 
+        
         return menu_items
+
+    def _extract_cms_menu_items(self, current_elem, menu_items: Dict[str, List[str]], section_name: str, item_count: int) -> int:
+        """Extract menu items from CMS-specific div structures. Returns number of items extracted."""
+        items_extracted = 0
+        
+        # Check for CMS and platform-specific menu classes
+        div_classes = current_elem.get('class', [])
+        class_string = ' '.join(div_classes).lower()
+        
+        # WordPress patterns - be more specific to avoid false positives
+        is_wp_food_menu = any(keyword in class_string for keyword in 
+                           ['food-menu', 'food-menu-item', 'menu-content', 'food-dish', 'item-title', 'item-description'])
+        
+        # Squarespace patterns
+        is_squarespace_menu = any(keyword in class_string for keyword in 
+                               ['sqs-block-content', 'menu-item-title', 'menu-item-description', 'menu-section'])
+        
+        # Wix patterns  
+        is_wix_menu = any(keyword in class_string for keyword in 
+                        ['wix-rich-text', 'txtNew', 'wix-menu-item'])
+        
+        # BentoBox patterns
+        is_bentobox_menu = any(keyword in class_string for keyword in 
+                             ['bento-menu', 'bento-item', 'menu-category'])
+        
+        # Bootstrap-based restaurant templates - simplified to avoid false negatives
+        is_bootstrap_menu = any(keyword in class_string for keyword in ['card', 'list-group-item', 'media', 'media-heading', 'media-body'])
+        
+        # Generic semantic menu patterns
+        is_semantic_menu = any(keyword in class_string for keyword in 
+                             ['menu-category', 'menu-section', 'dish-item', 'food-item', 'product-title'])
+        
+        is_cms_food_menu = (is_wp_food_menu or is_squarespace_menu or is_wix_menu or 
+                          is_bentobox_menu or is_bootstrap_menu or is_semantic_menu)
+        
+        if is_cms_food_menu:
+            extracted_item = None
+            
+            # WordPress patterns
+            if is_wp_food_menu:
+                # FIRST: Check for special Piattino WordPress structure
+                if 'food-menu-content-top-holder' in class_string:
+                    title_holder = current_elem.find(class_='food-menu-content-title-holder')
+                    # Description is a sibling of the entire content-top-holder div
+                    desc_sibling = current_elem.find_next_sibling(class_='food-menu-desc')
+                    
+                    if title_holder:
+                        title_elem = title_holder.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+                        if title_elem:
+                            title_text = title_elem.get_text().strip()
+                            
+                            if desc_sibling:
+                                desc_text = desc_sibling.get_text().strip()
+                                if desc_text and len(desc_text) > 10:
+                                    extracted_item = f"{title_text}: {desc_text}"
+                            else:
+                                # Fallback - just use title
+                                extracted_item = title_text
+                                
+                # FALLBACK: Standard WordPress food menu plugin pattern
+                else:
+                    title_elem = current_elem.find(class_=lambda x: x and 'title' in str(x).lower())
+                    desc_elem = current_elem.find(class_=lambda x: x and any(word in str(x).lower() 
+                                                 for word in ['desc', 'content', 'text', 'detail']))
+                    
+                    if title_elem and desc_elem:
+                        title_text = title_elem.get_text().strip()
+                        desc_text = desc_elem.get_text().strip()
+                        if title_text and desc_text and len(desc_text) > 10:
+                            extracted_item = f"{title_text}: {desc_text}"
+            
+            # Squarespace patterns
+            elif is_squarespace_menu:
+                title_elem = current_elem.find(class_=lambda x: x and 'menu-item-title' in str(x).lower())
+                desc_elem = current_elem.find(class_=lambda x: x and 'menu-item-description' in str(x).lower())
+                
+                if not title_elem:  # Fallback to content within sqs-block-content
+                    # Check if the current element itself contains colon-separated content
+                    content_text = current_elem.get_text().strip()
+                    if ':' in content_text and len(content_text) > 20:
+                        extracted_item = content_text
+                elif title_elem and desc_elem:
+                    title_text = title_elem.get_text().strip()
+                    desc_text = desc_elem.get_text().strip()
+                    if title_text and desc_text:
+                        extracted_item = f"{title_text}: {desc_text}"
+            
+            # Wix patterns
+            elif is_wix_menu:
+                # Check if current element itself is the Wix container
+                text_content = current_elem.get_text().strip()
+                if ':' in text_content and len(text_content) > 20:
+                    extracted_item = text_content
+            
+            # BentoBox patterns
+            elif is_bentobox_menu:
+                item_name = current_elem.find(class_=lambda x: x and ('item-name' in str(x).lower() or 
+                                                                     ('item' in str(x).lower() and 'name' in str(x).lower())))
+                item_desc = current_elem.find(class_=lambda x: x and ('item-desc' in str(x).lower() or 
+                                                                      'item-description' in str(x).lower() or
+                                                                      'desc' in str(x).lower()))
+                
+                if item_name and item_desc:
+                    name_text = item_name.get_text().strip()
+                    desc_text = item_desc.get_text().strip()
+                    if name_text and desc_text:
+                        extracted_item = f"{name_text}: {desc_text}"
+            
+            # Bootstrap/semantic patterns
+            elif is_bootstrap_menu or is_semantic_menu:
+                # Look for title and body within card/list-item
+                title_selectors = ['.card-title', '.list-group-item-heading', '.media-heading', 
+                                  '.dish-name', '.item-name', '.product-title',
+                                  'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
+                body_selectors = ['.card-text', '.list-group-item-text', '.media-body', 
+                                 '.dish-description', '.item-description', '.product-description',
+                                 'p', 'span', 'div']
+                
+                title_elem = None
+                body_elem = None
+                
+                for selector in title_selectors:
+                    title_elem = current_elem.select_one(selector)
+                    if title_elem:
+                        break
+                
+                for selector in body_selectors:
+                    body_elem = current_elem.select_one(selector)
+                    if body_elem:
+                        break
+                
+                if title_elem and body_elem:
+                    title_text = title_elem.get_text().strip()
+                    body_text = body_elem.get_text().strip()
+                    if title_text and body_text and len(body_text) > 10:
+                        extracted_item = f"{title_text}: {body_text}"
+            
+            # Clean up and add the extracted item
+            if extracted_item:
+                # Remove price if present
+                if '$' in extracted_item:
+                    extracted_item = re.split(r"[*]?\s*\$", extracted_item)[0].strip()
+                
+                # Clean up and validate
+                extracted_item = re.sub(r"\*+$", "", extracted_item).strip()
+                
+                if (len(extracted_item) > 10 and len(extracted_item) < 400 and
+                    not extracted_item.lower().startswith(('copyright', 'all rights', 'terms', 'privacy'))):
+                    
+                    menu_items[section_name].append(extracted_item)
+                    items_extracted = 1
+        
+        return items_extracted
 
     def _extract_social_media(self, soup: BeautifulSoup) -> List[str]:
         """Extract social media links from page content."""

@@ -249,18 +249,17 @@ class AIContentAnalyzer:
             )
 
         # Process LLM result into expected format
-        return self._process_nutritional_result(llm_result, menu_items)
+        return self._process_nutritional_result(llm_result, menu_items, custom_questions)
 
     def _process_nutritional_result(
-        self, llm_result: Dict[str, Any], menu_items: List[Dict[str, Any]]
+        self, llm_result: Dict[str, Any], menu_items: List[Dict[str, Any]], custom_questions: List[str] = None
     ) -> Dict[str, Any]:
         """Process LLM result into enhanced RAG context format."""
         print(f"DEBUG: _process_nutritional_result called with llm_result keys: {list(llm_result.keys()) if llm_result else 'None'}")
         
-        # Default structure if LLM fails
-        if not llm_result or "error" in llm_result:
-            print("DEBUG: LLM result is empty or has error, returning default structure")
-            return {
+        # Helper function to create default structure with custom_questions preserved
+        def create_default_structure(preserve_custom_questions=None):
+            default = {
                 "menu_enhancements": [
                     {
                         "item_name": item.get("name", "Unknown"),
@@ -285,12 +284,31 @@ class AIContentAnalyzer:
                     "reservations": "unknown"
                 }
             }
+            # Preserve custom_questions if they were provided
+            if preserve_custom_questions:
+                # Convert to expected format with "No information found" answers
+                default["custom_questions"] = [
+                    {"question": q, "answer": "No information found"}
+                    for q in preserve_custom_questions
+                ]
+                print(f"DEBUG: Preserved {len(preserve_custom_questions)} custom questions in default structure")
+            return default
+        
+        # Default structure if LLM fails - preserve custom questions!
+        if not llm_result or "error" in llm_result:
+            print("DEBUG: LLM result is empty or has error, returning default structure with preserved custom questions")
+            return create_default_structure(custom_questions)
         
         # Try to parse LLM result if it contains JSON
         try:
             # Check if this is direct OpenAI response with the expected structure
             if "menu_enhancements" in llm_result:
                 print("DEBUG: Found menu_enhancements in llm_result, returning as-is")
+                # Ensure custom_questions are preserved if present
+                if "custom_questions" in llm_result:
+                    print(f"DEBUG: Preserving {len(llm_result['custom_questions'])} custom questions in result")
+                else:
+                    print("DEBUG: No custom_questions found in llm_result")
                 return llm_result
             
             # Check if this is the LLMExtractor format with extractions
@@ -307,6 +325,11 @@ class AIContentAnalyzer:
                                 # Check if it has our expected structure
                                 if "menu_enhancements" in content or "restaurant_characteristics" in content:
                                     print("DEBUG: Extracted data has expected structure, returning it")
+                                    # Check for custom_questions preservation
+                                    if "custom_questions" in content:
+                                        print(f"DEBUG: Preserving {len(content['custom_questions'])} custom questions from extracted data")
+                                    else:
+                                        print("DEBUG: No custom_questions found in extracted data")
                                     return content
                                 # Check if the content has an "analysis" field with JSON string
                                 elif "analysis" in content and isinstance(content["analysis"], str):
@@ -320,23 +343,28 @@ class AIContentAnalyzer:
                                             analysis_str = analysis_str[:-3]  # Remove ```
                                         parsed_analysis = json.loads(analysis_str.strip())
                                         print("DEBUG: Successfully parsed analysis JSON string")
+                                        # Check for custom_questions preservation
+                                        if "custom_questions" in parsed_analysis:
+                                            print(f"DEBUG: Preserving {len(parsed_analysis['custom_questions'])} custom questions from parsed analysis")
+                                        else:
+                                            print("DEBUG: No custom_questions found in parsed analysis")
                                         return parsed_analysis
                                     except:
                                         # If parsing fails, wrap in structure
                                         print("DEBUG: Failed to parse analysis JSON, wrapping in structure")
-                                        return {
-                                            "menu_enhancements": [],
-                                            "restaurant_characteristics": {"analysis": content.get("analysis", str(content))},
-                                            "customer_amenities": {"parking": "unknown"}
-                                        }
+                                        # Check if there were custom_questions in the original content
+                                        custom_questions = content.get("custom_questions", None)
+                                        fallback = create_default_structure(custom_questions)
+                                        fallback["restaurant_characteristics"]["analysis"] = content.get("analysis", str(content))
+                                        return fallback
                                 else:
                                     # If it's just analysis text, wrap it in our structure
                                     print("DEBUG: Extracted data is analysis text, wrapping in structure")
-                                    return {
-                                        "menu_enhancements": [],
-                                        "restaurant_characteristics": {"analysis": content.get("analysis", str(content))},
-                                        "customer_amenities": {"parking": "unknown"}
-                                    }
+                                    # Check if there were custom_questions in the original content
+                                    custom_questions = content.get("custom_questions", None)
+                                    fallback = create_default_structure(custom_questions)
+                                    fallback["restaurant_characteristics"]["analysis"] = content.get("analysis", str(content))
+                                    return fallback
             
             # If it's some other format, try to extract useful information
             print(f"DEBUG: Unrecognized format, returning whole result: {llm_result}")
@@ -345,11 +373,13 @@ class AIContentAnalyzer:
         except Exception as e:
             logger.error(f"Error processing LLM result: {e}")
             print(f"DEBUG: Error processing LLM result: {e}")
-            return {
-                "menu_enhancements": [],
-                "restaurant_characteristics": {"ambiance": "AI processing error"},
-                "customer_amenities": {"parking": "unknown"}
-            }
+            # Check if custom_questions exist in the original llm_result before error
+            custom_questions = None
+            if llm_result and isinstance(llm_result, dict):
+                custom_questions = llm_result.get("custom_questions", None)
+            fallback = create_default_structure(custom_questions)
+            fallback["restaurant_characteristics"]["ambiance"] = "AI processing error"
+            return fallback
 
     def analyze_prices(
         self, prices: Dict[str, Any], location: Optional[str] = None
@@ -896,15 +926,12 @@ Please answer these specific questions if information is available in the conten
             # Import OpenAI
             from openai import OpenAI
             
-            # FIXED: Use the same API key source as main AI call instead of llm_extractor.api_key
-            # This ensures custom questions work with saved settings
-            api_key = self.api_key  # Use the API key passed to AIContentAnalyzer constructor
+            # Use the API key passed to AIContentAnalyzer constructor
+            # This should always be available since we validate it in the scraping handler
+            api_key = self.api_key
             if not api_key:
-                # Fallback to llm_extractor if main api_key is empty
-                api_key = self.llm_extractor.api_key
-                if not api_key:
-                    logger.error("No OpenAI API key available for custom questions")
-                    return {"error": "No API key available"}
+                logger.error("No OpenAI API key available for custom questions - AIContentAnalyzer was not properly initialized")
+                return {"error": "No API key available"}
             
             # Create OpenAI client
             client = OpenAI(api_key=api_key)

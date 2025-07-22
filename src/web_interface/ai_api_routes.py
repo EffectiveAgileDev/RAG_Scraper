@@ -3,7 +3,7 @@
 import logging
 import sys
 import os
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify, session, current_app
 from typing import Dict, Any
 
 from src.web_interface.ai_config_manager import AIConfigManager
@@ -397,7 +397,7 @@ def get_models():
                 if saved_settings and 'api_key' in saved_settings:
                     api_key = saved_settings['api_key']
             except Exception as e:
-                current_app.logger.error(f"Failed to load saved API key: {str(e)}")
+                logger.error(f"Failed to load saved API key: {str(e)}")
         
         if provider == 'openai':
             # OpenAI requires API key for model listing
