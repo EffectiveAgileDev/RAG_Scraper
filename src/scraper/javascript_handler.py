@@ -28,7 +28,15 @@ class JavaScriptHandler:
         self.timeout = timeout
         self.browser_automation_enabled = enable_browser_automation and PLAYWRIGHT_AVAILABLE
         self.browser_type = 'chromium'
-        self.headless = True
+        
+        # Auto-detect headless mode based on display availability
+        import os
+        display_available = os.environ.get('DISPLAY') is not None
+        self.headless = not display_available  # Run headless only if no display
+        
+        # Log the browser mode for debugging
+        print(f"JavaScript Handler initialized: headless={self.headless}, display_available={display_available}")
+        
         self.stealth_mode = True
         self.custom_user_agent = "RAG_Scraper/1.0 Restaurant Data Collection"
         
@@ -123,16 +131,26 @@ class JavaScriptHandler:
         
         if self.browser_automation_enabled:
             try:
+                print(f"DEBUG: Attempting browser automation for {url}")
                 # Try browser automation with Playwright
                 result = asyncio.run(self.render_page_async(url, actual_timeout))
                 if result:
+                    print(f"DEBUG: Browser automation successful, content length: {len(result)}")
                     return result
+                else:
+                    print(f"DEBUG: Browser automation returned None for {url}")
             except Exception as e:
-                print(f"Browser automation failed for {url}: {e}")
+                print(f"DEBUG: Browser automation failed for {url}: {e}")
+                import traceback
+                traceback.print_exc()
                 # Continue to fallback
+        else:
+            print(f"DEBUG: Browser automation disabled (browser_automation_enabled={self.browser_automation_enabled})")
         
-        # Simplified rendering - fallback when browser automation is disabled or fails
-        return f"<html>Rendered content for {url} with timeout {actual_timeout}</html>"
+        # Return None to indicate that JavaScript rendering failed
+        # This allows the caller to continue with static content
+        print(f"DEBUG: JavaScript rendering failed for {url}, using static fallback")
+        return None
 
     async def render_page_async(self, url: str, timeout: Optional[int] = None) -> Optional[str]:
         """Render page with JavaScript execution using Playwright."""
@@ -164,14 +182,35 @@ class JavaScriptHandler:
                 await browser.close()
 
     async def _launch_browser(self, playwright_instance) -> Browser:
-        """Launch browser with configured options."""
+        """Launch browser with configured options and fallback."""
         launch_options = {
             'headless': self.headless,
             'timeout': self.timeout * 1000
         }
         
+        # Add additional args for better compatibility
         if self.browser_type == 'chromium':
-            return await playwright_instance.chromium.launch(**launch_options)
+            launch_options['args'] = [
+                '--no-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                '--disable-extensions',
+                '--disable-background-timer-throttling',
+                '--disable-backgrounding-occluded-windows',
+                '--disable-renderer-backgrounding'
+            ]
+            
+            try:
+                return await playwright_instance.chromium.launch(**launch_options)
+            except Exception as e:
+                print(f"Failed to launch browser with headless={self.headless}: {e}")
+                # Fallback to headless mode if non-headless fails
+                if not self.headless:
+                    print("Falling back to headless mode...")
+                    launch_options['headless'] = True
+                    return await playwright_instance.chromium.launch(**launch_options)
+                raise
+                
         elif self.browser_type == 'firefox':
             return await playwright_instance.firefox.launch(**launch_options)
         elif self.browser_type == 'webkit':
@@ -345,12 +384,54 @@ class JavaScriptHandler:
     
     def is_javascript_required(self, html: str) -> bool:
         """Check if JavaScript rendering is required."""
-        js_indicators = [
-            'ng-app', 'data-react', 'vue-app', 
-            '__NEXT_DATA__', 'window.__INITIAL_STATE__',
-            'require.config', 'webpack'
+        # Convert to lowercase for case-insensitive matching
+        html_lower = html.lower()
+        
+        # Core JS framework indicators
+        framework_indicators = [
+            'ng-app', 'data-react', 'vue-app', 'data-vue', 'angular',
+            '__next_data__', 'window.__initial_state__',
+            'require.config', 'webpack', 'systemjs'
         ]
-        return any(indicator in html for indicator in js_indicators)
+        
+        # Dynamic content loading indicators  
+        dynamic_indicators = [
+            'loading...', 'loader', 'spinner', 'loading-spinner',
+            'data-loading', 'async-load', 'dynamic-content',
+            'ajax-load', 'defer-load', 'lazy-load'
+        ]
+        
+        # Restaurant-specific JS content indicators
+        restaurant_indicators = [
+            'menu-loader', 'menu-loading', 'load-menu',
+            'dynamic-menu', 'ajax-menu', 'menu-ajax',
+            'fetch-menu', 'menu-fetch'
+        ]
+        
+        # Check for SPA indicators
+        spa_indicators = [
+            'single-page', 'spa-app', 'router-outlet',
+            'history.pushstate', 'pushstate', 'replacestate'
+        ]
+        
+        # Combine all indicators
+        all_indicators = framework_indicators + dynamic_indicators + restaurant_indicators + spa_indicators
+        
+        # Check if any indicators are present
+        found_indicators = [indicator for indicator in all_indicators if indicator in html_lower]
+        
+        if found_indicators:
+            print(f"DEBUG: JavaScript required - found indicators: {found_indicators}")
+            return True
+        
+        # Additional heuristic: Check if there are many empty elements that might be filled by JS
+        empty_divs = html_lower.count('<div></div>') + html_lower.count('<div class="') + html_lower.count('<div id="')
+        if empty_divs > 20:  # Arbitrary threshold
+            print(f"DEBUG: JavaScript likely required - found {empty_divs} div elements that may be JS-populated")
+            return True
+            
+        print("DEBUG: No JavaScript indicators found, static scraping should be sufficient")
+        return False
 
     # Performance optimization methods
     def _get_cached_popup_result(self, html_hash: str) -> Optional[List[dict]]:

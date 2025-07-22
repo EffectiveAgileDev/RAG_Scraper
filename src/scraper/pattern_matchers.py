@@ -53,9 +53,16 @@ class AddressPatternMatcher(BasePatternMatcher):
     """Extracts addresses using location patterns."""
 
     ADDRESS_PATTERNS = [
+        # Full address with street type
         r"\d+\s+[A-Za-z\s]+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Drive|Dr|Lane|Ln|Way|Place|Pl)[\s,]+[A-Za-z\s]+,?\s*[A-Za-z]{2,}\s*\d{5}",
+        # Address without explicit street type
         r"\d+\s+[A-Za-z\s]+,\s*[A-Za-z\s]+,?\s*[A-Za-z]{2,}\s*\d{5}",
+        # Address with prefix
         r"(?:at|located at|address:?)\s*\d+\s+[A-Za-z\s,]+\d{5}",
+        # Simple pattern: number, street, city, state abbreviation, zip
+        r"\d+\s+[A-Za-z][A-Za-z\s.,-]*\b[A-Z]{2}\s*\d{5}",
+        # Pattern for addresses in microdata or structured formats
+        r"\d+[^\d]{10,}?\b[A-Z]{2}\s+\d{5}",
     ]
 
     def extract(self, soup: BeautifulSoup) -> str:
@@ -71,13 +78,27 @@ class AddressPatternMatcher(BasePatternMatcher):
                 ).strip()
                 return self.normalize_address(address)
 
-        # Try semantic class names
-        address_classes = ["address", "location", "contact-address"]
-        for class_name in address_classes:
-            elements = soup.find_all(class_=re.compile(class_name, re.I))
+        # Try semantic class names and attributes
+        address_selectors = [
+            # Class-based selectors
+            "address", "location", "contact-address", "street-address", "adr",
+            "postal-address", "business-address", "venue-address", "contact-info",
+            # Schema.org microdata
+            "*[itemprop='address']", "*[itemprop='streetAddress']", 
+            "*[itemtype*='PostalAddress']",
+        ]
+        
+        for selector in address_selectors:
+            if selector.startswith('*['):
+                # CSS selector
+                elements = soup.select(selector)
+            else:
+                # Class name
+                elements = soup.find_all(class_=re.compile(selector, re.I))
+            
             for elem in elements:
                 text = elem.get_text().strip()
-                if 10 < len(text) < 200:
+                if 10 < len(text) < 200 and any(char.isdigit() for char in text):
                     return self.normalize_address(text)
 
         return ""
@@ -255,5 +276,5 @@ class RestaurantNameExtractor:
         if len(text) > 100:
             return False
 
-        exclude_phrases = ["welcome", "home", "about", "contact", "menu only"]
+        exclude_phrases = ["welcome", "home", "about", "about us", "contact", "contact us", "menu only", "navigation", "skip to"]
         return not any(phrase in text.lower() for phrase in exclude_phrases)

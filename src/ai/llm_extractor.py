@@ -247,6 +247,28 @@ class LLMExtractor:
         
         return LLMResponse(response_data)
 
+    def extract(
+        self,
+        content: str,
+        industry: str = "restaurant",
+        categories: Optional[List[str]] = None,
+        custom_instructions: str = ""
+    ) -> LLMResponse:
+        """Extract structured data from content.
+        
+        This is the main extraction method used by the AI analysis system.
+        
+        Args:
+            content: Content to extract from (HTML or text)
+            industry: Industry type for extraction
+            categories: Categories to extract
+            custom_instructions: Additional instructions
+            
+        Returns:
+            LLMResponse with extraction results
+        """
+        return self.extract_from_html(content, industry, categories, custom_instructions)
+
     def extract_from_content(
         self,
         content: str,

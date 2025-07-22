@@ -213,7 +213,17 @@ class DataAggregator:
         aggregated.social_media = self._merge_social_media()
 
         # Calculate overall confidence
-        aggregated.confidence = self._calculate_overall_confidence()
+        original_confidence = getattr(aggregated, 'confidence', 'unknown')
+        new_confidence = self._calculate_overall_confidence()
+        print(f"DEBUG: DataAggregator overriding confidence: {original_confidence} -> {new_confidence}")
+        print(f"DEBUG: DataAggregator context: {len(self.page_data)} pages, sources: {[p.source for p in self.page_data]}")
+        
+        # Don't override confidence if this is just single-page data from multiple URLs
+        if len(self.page_data) == 1 and original_confidence in ['medium', 'high']:
+            print(f"DEBUG: Skipping confidence override for single-page data with good confidence")
+            # Keep original confidence for single-page extractions
+        else:
+            aggregated.confidence = new_confidence
 
         return aggregated
 
@@ -362,9 +372,30 @@ class DataAggregator:
         if not self.page_data:
             return "low"
 
-        # Count high-quality sources
+        # First, check the predominant confidence level from individual pages
+        confidence_counts = {'high': 0, 'medium': 0, 'low': 0}
+        for page in self.page_data:
+            page_confidence = getattr(page, 'confidence', 'low')
+            if page_confidence in confidence_counts:
+                confidence_counts[page_confidence] += 1
+        
+        print(f"DEBUG: DataAggregator confidence distribution: {confidence_counts}")
+        
+        # If majority of pages have medium or high confidence, preserve that
+        total_pages = len(self.page_data)
+        if confidence_counts['high'] >= total_pages / 2:
+            print(f"DEBUG: Majority high confidence ({confidence_counts['high']}/{total_pages}), returning 'high'")
+            return 'high'
+        elif (confidence_counts['high'] + confidence_counts['medium']) >= total_pages / 2:
+            print(f"DEBUG: Majority medium+ confidence ({confidence_counts['high'] + confidence_counts['medium']}/{total_pages}), returning 'medium'")
+            return 'medium'
+        
+        # Otherwise fall back to the original calculation
+        # Count high-quality sources (include high-confidence heuristic)
         high_quality_sources = sum(
-            1 for page in self.page_data if page.source in ["json-ld", "microdata"]
+            1 for page in self.page_data 
+            if (page.source in ["json-ld", "microdata"] or 
+                (page.source == "heuristic" and getattr(page, 'confidence', 'low') == 'high'))
         )
 
         # Count number of unique sources

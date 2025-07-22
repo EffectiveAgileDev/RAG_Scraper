@@ -129,6 +129,9 @@ class RestaurantScraper:
         if progress_callback:
             progress_callback("Starting restaurant data extraction...", 0)
 
+        # Check if incremental file writing is enabled
+        incremental_file_handler = getattr(config, 'incremental_file_handler', None)
+        
         for i, url in enumerate(urls):
             try:
                 if progress_callback:
@@ -142,11 +145,17 @@ class RestaurantScraper:
                         progress_callback(f"Processing {url}", progress_percentage)
 
                 # Check if multi-page processing is enabled and should be used
-                if (
+                enable_multi_page_decision = (
                     self.enable_multi_page
                     and self.multi_page_scraper
                     and getattr(config, "enable_multi_page", False)
-                ):
+                )
+                print(f"DEBUG: Multi-page decision for {url}: self.enable_multi_page={self.enable_multi_page}, "
+                      f"self.multi_page_scraper={self.multi_page_scraper is not None}, "
+                      f"config.enable_multi_page={getattr(config, 'enable_multi_page', False)} -> "
+                      f"USE_MULTI_PAGE={enable_multi_page_decision}")
+                
+                if enable_multi_page_decision:
                     # Use multi-page scraper
                     multi_page_result = self.multi_page_scraper.scrape_website(
                         url, progress_callback
@@ -157,10 +166,24 @@ class RestaurantScraper:
                     
                     if multi_page_result.aggregated_data:
                         successful_extractions.append(multi_page_result.aggregated_data)
-                        if progress_callback:
-                            progress_callback(
-                                f"Successfully extracted data from {len(multi_page_result.successful_pages)} pages for {multi_page_result.restaurant_name or 'Unknown Restaurant'}"
-                            )
+                        
+                        # Write to file immediately if incremental handler is provided
+                        if incremental_file_handler:
+                            try:
+                                incremental_file_handler.write_restaurant_data(multi_page_result.aggregated_data)
+                                if progress_callback:
+                                    progress_callback(
+                                        f"Successfully extracted and wrote data from {len(multi_page_result.successful_pages)} pages for {multi_page_result.restaurant_name or 'Unknown Restaurant'}"
+                                    )
+                            except Exception as write_error:
+                                errors.append(f"Error writing multi-page data for {url}: {str(write_error)}")
+                                if progress_callback:
+                                    progress_callback(f"Multi-page data extracted but write failed for {multi_page_result.restaurant_name or 'Unknown Restaurant'}")
+                        else:
+                            if progress_callback:
+                                progress_callback(
+                                    f"Successfully extracted data from {len(multi_page_result.successful_pages)} pages for {multi_page_result.restaurant_name or 'Unknown Restaurant'}"
+                                )
                     else:
                         failed_urls.append(url)
                         errors.append(
@@ -174,10 +197,24 @@ class RestaurantScraper:
 
                     if restaurant_data:
                         successful_extractions.append(restaurant_data)
-                        if progress_callback:
-                            progress_callback(
-                                f"Successfully extracted data for {restaurant_data.name or 'Unknown Restaurant'}"
-                            )
+                        
+                        # Write to file immediately if incremental handler is provided
+                        if incremental_file_handler:
+                            try:
+                                incremental_file_handler.write_restaurant_data(restaurant_data)
+                                if progress_callback:
+                                    progress_callback(
+                                        f"Successfully extracted and wrote data for {restaurant_data.name or 'Unknown Restaurant'}"
+                                    )
+                            except Exception as write_error:
+                                errors.append(f"Error writing data for {url}: {str(write_error)}")
+                                if progress_callback:
+                                    progress_callback(f"Data extracted but write failed for {restaurant_data.name or 'Unknown Restaurant'}")
+                        else:
+                            if progress_callback:
+                                progress_callback(
+                                    f"Successfully extracted data for {restaurant_data.name or 'Unknown Restaurant'}"
+                                )
                     else:
                         failed_urls.append(url)
                         errors.append(f"No restaurant data found at {url}")
@@ -192,6 +229,17 @@ class RestaurantScraper:
                     progress_callback(f"Error: {error_msg}")
 
         processing_time = time.time() - start_time
+
+        # Close the incremental file handler if it was used
+        if incremental_file_handler:
+            try:
+                incremental_file_handler.close()
+                if progress_callback:
+                    progress_callback("File writing completed", 100)
+            except Exception as close_error:
+                errors.append(f"Error closing file: {str(close_error)}")
+                if progress_callback:
+                    progress_callback(f"Error closing file: {str(close_error)}")
 
         if progress_callback:
             progress_callback("Restaurant data extraction completed", 100)

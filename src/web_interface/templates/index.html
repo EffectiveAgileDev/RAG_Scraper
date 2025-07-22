@@ -3484,6 +3484,13 @@ https://restaurant3.com
                         // Clear loading option
                         modelSelect.innerHTML = '<option value="">Select model...</option>';
                         
+                        // Check if response indicates an error (even with 400/500 status codes)
+                        if (!response.ok && data.error) {
+                            modelWarning.textContent = `⚠️ ${data.error}`;
+                            modelWarning.style.display = 'block';
+                            return;
+                        }
+                        
                         if (data.success && data.models && data.models.length > 0) {
                             // Populate with available models
                             data.models.forEach(model => {
@@ -3506,7 +3513,7 @@ https://restaurant3.com
                             modelSelect.appendChild(option);
                         } else {
                             // Error occurred
-                            modelWarning.textContent = `⚠️ ${data.message || 'Failed to load models'}`;
+                            modelWarning.textContent = `⚠️ ${data.message || data.error || 'Failed to load models'}`;
                             modelWarning.style.display = 'block';
                         }
                     } catch (error) {
@@ -3554,6 +3561,13 @@ https://restaurant3.com
                         // Clear loading option
                         modelSelect.innerHTML = '<option value="">Select model...</option>';
                         
+                        // Check if response indicates an error (even with 400/500 status codes)
+                        if (!response.ok && data.error) {
+                            modelWarning.textContent = `⚠️ ${data.error}`;
+                            modelWarning.style.display = 'block';
+                            return;
+                        }
+                        
                         if (data.success && data.models && data.models.length > 0) {
                             // Populate with available models
                             data.models.forEach(model => {
@@ -3576,7 +3590,7 @@ https://restaurant3.com
                             modelSelect.appendChild(option);
                         } else {
                             // Error occurred
-                            modelWarning.textContent = `⚠️ ${data.message || 'Failed to load models'}`;
+                            modelWarning.textContent = `⚠️ ${data.message || data.error || 'Failed to load models'}`;
                             modelWarning.style.display = 'block';
                         }
                     } catch (error) {
@@ -3902,6 +3916,12 @@ https://restaurant3.com
                             
                             showTerminalAlert('AI settings loaded successfully', 'success');
                             updateSystemStatus('AI_SETTINGS // LOADED_FROM_PERSISTENT_STORAGE');
+                            
+                            // Auto-refresh models after loading saved settings
+                            setTimeout(() => {
+                                refreshModels();
+                                refreshSingleModels();
+                            }, 500);
                         } else if (data.success && !data.has_saved_settings) {
                             console.log('loadAISettings: No saved settings found');
                             updateSystemStatus('AI_SETTINGS // NO_SAVED_SETTINGS_FOUND');
@@ -4769,8 +4789,20 @@ https://restaurant3.com
                                     }
                                     return null;
                                 })(),
-                                scraping_mode: 'multi',
-                                multi_page_config: {},
+                                scraping_mode: getSelectedScrapingMode(),
+                                multi_page_config: (() => {
+                                    const scrapingMode = getSelectedScrapingMode();
+                                    if (scrapingMode === 'multi') {
+                                        return {
+                                            maxPages: parseInt(document.getElementById('maxPages')?.value) || 50,
+                                            crawlDepth: parseInt(document.getElementById('crawlDepth')?.value) || 2,
+                                            includePatterns: document.getElementById('includePatterns')?.value || 'menu,food,restaurant',
+                                            excludePatterns: document.getElementById('excludePatterns')?.value || 'admin,login,cart',
+                                            rateLimit: parseInt(document.getElementById('rateLimit')?.value) || 1000
+                                        };
+                                    }
+                                    return {};
+                                })(),
                                 industry: getSelectedIndustry(),
                                 schema_type: getSelectedSchemaType(),
                                 // Add AI configuration to the request

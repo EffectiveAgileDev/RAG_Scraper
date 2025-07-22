@@ -448,10 +448,13 @@ class HeuristicExtractor:
             r"favorites?",
             r"specials?",
             r"classics?",
+            r"popular",
+            r"dishes?",
+            r"signature",
         ]
 
-        # Find all h2 and h3 headers (common for menu sections)
-        all_headers = soup.find_all(["h2", "h3"])
+        # Find all h2, h3, h4, h5, h6 headers (expanded for menu sections and items)
+        all_headers = soup.find_all(["h2", "h3", "h4", "h5", "h6"])
         
         for header_elem in all_headers:
             header_text = header_elem.get_text().strip()
@@ -489,8 +492,8 @@ class HeuristicExtractor:
                         if any(keyword in next_header_text for keyword in menu_keywords):
                             break
                     
-                    # Look for h3 elements (commonly used for individual menu items)
-                    if current_elem.name == "h3":
+                    # Look for h3, h4, h5, h6 elements (commonly used for individual menu items)
+                    if current_elem.name in ["h3", "h4", "h5", "h6"]:
                         item_text = current_elem.get_text().strip()
                         if item_text and len(item_text) < 100:
                             # Clean up the item name (remove prices, asterisks, etc.)
@@ -516,13 +519,13 @@ class HeuristicExtractor:
                                     menu_items[section_name].append(item_name)
                                     item_count += 1
                     
-                    # Look inside div containers for h3 menu items (common pattern)
+                    # Look inside div containers for h3, h4, h5, h6 menu items (common pattern)
                     elif current_elem.name == "div":
-                        inner_h3s = current_elem.find_all("h3")
-                        for h3_elem in inner_h3s:
+                        inner_headers = current_elem.find_all(["h3", "h4", "h5", "h6"])
+                        for header_elem in inner_headers:
                             if item_count >= 20:
                                 break
-                            item_text = h3_elem.get_text().strip()
+                            item_text = header_elem.get_text().strip()
                             if item_text and len(item_text) < 100:
                                 # Clean up the item name (remove prices, asterisks, etc.)
                                 item_name = re.split(r"[*]?\s*\$", item_text)[0].strip()
@@ -549,6 +552,36 @@ class HeuristicExtractor:
                 # Remove empty sections
                 if not menu_items[section_name]:
                     del menu_items[section_name]
+
+        # Fallback: If no menu sections found, look for standalone h4, h5, h6 elements with prices
+        if not menu_items:
+            print("DEBUG: No menu sections found, trying fallback extraction of standalone menu items...")
+            standalone_items = []
+            
+            # Look for any h4, h5, h6 elements that contain price indicators
+            potential_menu_items = soup.find_all(["h4", "h5", "h6"])
+            for header in potential_menu_items:
+                item_text = header.get_text().strip()
+                # Look for price patterns or food-related keywords
+                if (item_text and len(item_text) < 100 and 
+                    ('$' in item_text or 
+                     any(food_word in item_text.lower() for food_word in 
+                         ['pizza', 'pasta', 'burger', 'salad', 'sandwich', 'soup', 'chicken', 'beef', 'fish', 'pork']))):
+                    
+                    # Clean up the item name (remove prices, asterisks, etc.)
+                    item_name = re.split(r"[*]?\s*\$", item_text)[0].strip()
+                    item_name = re.sub(r"\*+$", "", item_name).strip()
+                    
+                    if item_name and len(item_name) > 2 and len(item_name) < 80:
+                        standalone_items.append(item_name)
+                        if len(standalone_items) >= 20:  # Limit to avoid too many items
+                            break
+            
+            if standalone_items:
+                print(f"DEBUG: Found {len(standalone_items)} standalone menu items")
+                menu_items["Menu Items"] = standalone_items
+            else:
+                print("DEBUG: No standalone menu items found either")
 
         return menu_items
 
@@ -598,9 +631,11 @@ class HeuristicExtractor:
             )
         )
 
-        # Heuristic extraction is less reliable than structured data
-        if filled_count >= 3:
-            return "medium"  # Never high for heuristic
+        # Heuristic extraction can be quite reliable with good data
+        if filled_count >= 4:
+            return "high"   # High confidence when we have most fields
+        elif filled_count >= 3:
+            return "medium"
         elif filled_count >= 1:
             return "medium"
         else:

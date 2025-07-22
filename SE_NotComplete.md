@@ -480,6 +480,28 @@
 - [ ] Documentation improvements
 - [ ] Security audit and hardening
 
+## Outstanding Issues
+
+### Custom Questions AI Analysis Issues
+15. **Custom Questions Missing in Multi-URL Output Files**: Custom questions not appearing in AI analysis output when processing multiple URLs simultaneously
+   - **Symptoms**: 
+     - Single URL processing: ✅ Custom questions work correctly
+     - Multi-URL processing: ❌ Custom questions missing from output files
+     - Other AI enhancements (menu analysis, confidence scoring) work correctly in multi-URL mode
+     - Custom questions are configured and saved properly in AI settings
+   - **Analysis**:
+     - Token limits: ✅ Not the issue (4096 tokens per individual restaurant, not cumulative)
+     - AI analysis: ✅ Running correctly for all restaurants in multi-URL scenario
+     - Configuration flow: ⚠️ Potential issue in how AI config propagates through multi-URL processing pipeline
+   - **Root Cause**: Custom questions may be lost during multi-URL processing flow, possibly due to:
+     - Session-based AI config vs request-based AI config inconsistency
+     - Different code paths for single vs multi-URL AI analysis
+     - Configuration not properly passed to all restaurant extractions in batch processing
+   - **Impact**: HIGH - Users cannot get custom question responses for batch processing of multiple restaurants
+   - **Test Status**: Manual testing confirmed - single URL works, multi-URL fails for custom questions specifically
+   - **Priority**: HIGH - Core AI functionality incomplete for multi-URL scenarios
+   - **Discovered**: 2025-07-21 during final testing session
+
 ## Critical Issues
 
 ### Missing Implementations

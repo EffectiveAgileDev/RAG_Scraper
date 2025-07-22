@@ -30,10 +30,14 @@ coverage html            # Generate HTML coverage report
 
 ### Application Commands
 ```bash
-python run_app.py        # Start Flask web server (port 8085) - RECOMMENDED
+python run_app_venv.py   # Start Flask web server with virtual environment (port 8085) - RECOMMENDED
+python run_app.py        # Manual startup (requires virtual environment to be pre-activated)
 python start_server.py   # Alternative startup method (port 8085)
 ./start_server.sh        # Shell script startup
 # Note: Do NOT use "python src/web_interface/app.py" - has import path issues
+
+# IMPORTANT: Always use run_app_venv.py to prevent OpenAI package import errors
+# This script automatically activates the virtual environment if needed
 ```
 
 ## Project Architecture

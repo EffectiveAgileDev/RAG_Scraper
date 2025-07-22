@@ -92,8 +92,15 @@ class ScrapingRequestHandler:
             scraper_config = self._create_scraping_config(config)
             scraper = self._create_scraper(config, scraper_config)
             
-            # Execute scraping
-            result = self._execute_scraping(scraper, scraper_config)
+            # Check if AI analysis is enabled - if so, disable incremental writing
+            # because AI analysis happens after scraping and we need it in the output
+            ai_enabled = data.get('ai_config', {}).get('ai_enhancement_enabled', False)
+            if ai_enabled:
+                print(f"DEBUG: AI enhancement enabled, disabling incremental file writing")
+                scraper_config.disable_incremental_writing = True
+            
+            # Execute scraping with file format information
+            result = self._execute_scraping(scraper, scraper_config, config.file_format)
             
             # Perform AI analysis if enabled (BEFORE file generation)
             logger.debug(f"About to perform AI analysis with data keys: {list(data.keys())}")
@@ -108,7 +115,19 @@ class ScrapingRequestHandler:
             print(f"DEBUG: AI analysis result: {ai_analysis}")
             
             # Generate files (AFTER AI analysis so RestaurantData objects have ai_analysis attached)
-            file_result = self._generate_files(result, config)
+            # Skip file generation if incremental writing was already used (and AI was not enabled)
+            if (len(config.urls) > 1 and hasattr(result, 'output_files') and result.output_files and 
+                not ai_enabled):
+                # Files were already written incrementally
+                # Get the first format key from output_files (should be the user's chosen format)
+                format_key = list(result.output_files.keys())[0] if result.output_files else "text"
+                file_result = FileGenerationResult(
+                    success=True,
+                    generated_files=result.output_files.get(format_key, []),
+                    errors=[]
+                )
+            else:
+                file_result = self._generate_files(result, config)
             
             # Generate response data with AI enhancements
             sites_data = self._generate_sites_data(result, config, ai_analysis)
@@ -145,6 +164,12 @@ class ScrapingRequestHandler:
             urls = [data["url"]]
         elif "urls" in data:
             urls = data["urls"]
+        
+        # Debug logging for scraping mode
+        scraping_mode = data.get("scraping_mode", "single")
+        print(f"DEBUG: RECEIVED scraping_mode from frontend: '{scraping_mode}'")
+        print(f"DEBUG: Request data keys: {list(data.keys())}")
+        print(f"DEBUG: URLs count: {len(urls)}")
         
         # Handle schema type (new parameter) and backwards compatibility
         schema_type = data.get("schema_type", "Restaurant")
@@ -187,6 +212,7 @@ class ScrapingRequestHandler:
         
         # Configure multi-page settings
         enable_multi_page = (config.scraping_mode == "multi")
+        print(f"DEBUG: enable_multi_page decision: config.scraping_mode='{config.scraping_mode}' -> enable_multi_page={enable_multi_page}")
         scraping_config.enable_multi_page = enable_multi_page
         
         if enable_multi_page and config.multi_page_config:
@@ -230,14 +256,47 @@ class ScrapingRequestHandler:
         
         return scraper
     
-    def _execute_scraping(self, scraper: RestaurantScraper, config: ScrapingConfig):
+    def _execute_scraping(self, scraper: RestaurantScraper, config: ScrapingConfig, file_format: str = "text"):
         """Execute the scraping operation."""
+        from src.file_generator.incremental_file_handler import IncrementalFileHandler
+        import tempfile
+        import os
+        from datetime import datetime
+        
         self.active_scraper = scraper
         
         def progress_callback(message, percentage=None, time_estimate=None):
             pass  # Simple progress callback for basic functionality
         
-        return scraper.scrape_restaurants(config, progress_callback=progress_callback)
+        # Enable incremental file writing for multiple URLs (unless disabled for AI analysis)
+        if len(config.urls) > 1 and not getattr(config, 'disable_incremental_writing', False):
+            
+            # Generate output file path for incremental writing
+            timestamp = datetime.now().strftime("%Y%m%d-%H%M")
+            file_extension = {"text": "txt", "json": "json", "pdf": "pdf"}.get(file_format, "txt")
+            output_filename = f"WebScrape_{timestamp}.{file_extension}"
+            output_path = os.path.join(self.upload_folder, output_filename)
+            
+            # Create incremental file handler with user's format preference
+            incremental_handler = IncrementalFileHandler(output_path, file_format)
+            config.incremental_file_handler = incremental_handler
+            
+            try:
+                result = scraper.scrape_restaurants(config, progress_callback=progress_callback)
+                # Add the output file to the result with correct format key
+                result.output_files = {file_format: [output_path]}
+                return result
+            except Exception as e:
+                # Ensure file handler is closed on error
+                if hasattr(config, 'incremental_file_handler'):
+                    try:
+                        config.incremental_file_handler.close()
+                    except:
+                        pass
+                raise e
+        else:
+            # Single URL - use normal processing
+            return scraper.scrape_restaurants(config, progress_callback=progress_callback)
     
     def _perform_ai_analysis(self, result, request_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Perform AI analysis on scraping results if enabled."""
@@ -292,6 +351,8 @@ class ScrapingRequestHandler:
             
             # Create analyzer with session config
             analyzer = AIContentAnalyzer(api_key=ai_config.get('api_key'))
+            # Store AI config for model selection
+            analyzer._current_ai_config = ai_config
             
             # Configure provider settings
             provider = ai_config.get('llm_provider', 'openai')
@@ -384,9 +445,24 @@ class ScrapingRequestHandler:
                     )
                     confidence = analyzer.calculate_integrated_confidence(ai_result)
                     
+                    print(f"DEBUG: AI analyzer returned result keys: {list(ai_result.keys())}")
+                    if 'custom_questions' in ai_result:
+                        print(f"DEBUG: AI analyzer custom_questions: {ai_result['custom_questions']}")
+                    else:
+                        print(f"DEBUG: NO custom_questions in AI result!")
+                    
                     # Create AI analysis data for this extraction
-                    # Use a more reasonable confidence threshold
-                    effective_threshold = min(ai_config.get('confidence_threshold', 0.7), 0.8)
+                    # Use a more reasonable confidence threshold - be more lenient for heuristic-only sources
+                    user_threshold = ai_config.get('confidence_threshold', 0.7)
+                    # If only heuristic sources available, use a lower threshold
+                    if len(result.successful_extractions) > 0:
+                        extraction_sources = getattr(extraction, 'sources', ['heuristic'])
+                        if extraction_sources == ['heuristic']:
+                            effective_threshold = min(user_threshold, 0.5)  # More lenient for heuristic-only
+                        else:
+                            effective_threshold = min(user_threshold, 0.8)
+                    else:
+                        effective_threshold = min(user_threshold, 0.8)
                     ai_analysis_data = {
                         'confidence_score': confidence,
                         'meets_threshold': confidence >= effective_threshold,
@@ -397,10 +473,22 @@ class ScrapingRequestHandler:
                         **ai_result  # Include all AI analysis results
                     }
                     
+                    print(f"DEBUG: ai_analysis_data keys after merge: {list(ai_analysis_data.keys())}")
+                    if 'custom_questions' in ai_analysis_data:
+                        print(f"DEBUG: ai_analysis_data custom_questions: {ai_analysis_data['custom_questions']}")
+                    else:
+                        print(f"DEBUG: NO custom_questions in ai_analysis_data after merge!")
+                    
                     logger.debug(f"AI analysis data for extraction {i}: {ai_analysis_data}")
                     
                     # Attach AI analysis to the RestaurantData object
                     extraction.ai_analysis = ai_analysis_data
+                    
+                    print(f"DEBUG: extraction.ai_analysis keys: {list(extraction.ai_analysis.keys())}")
+                    if 'custom_questions' in extraction.ai_analysis:
+                        print(f"DEBUG: extraction.ai_analysis custom_questions: {extraction.ai_analysis['custom_questions']}")
+                    else:
+                        print(f"DEBUG: NO custom_questions in extraction.ai_analysis!")
                     
                     # Store for summary reporting
                     analysis_results[f'extraction_{i}'] = {

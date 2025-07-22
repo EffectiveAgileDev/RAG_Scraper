@@ -55,6 +55,13 @@ class RestaurantData:
         # Include AI analysis if available
         if self.ai_analysis is not None:
             result["ai_analysis"] = self.ai_analysis
+            print(f"DEBUG: RestaurantData.to_dict() - ai_analysis keys: {list(self.ai_analysis.keys())}")
+            if 'custom_questions' in self.ai_analysis:
+                print(f"DEBUG: RestaurantData.to_dict() - custom_questions: {self.ai_analysis['custom_questions']}")
+            else:
+                print(f"DEBUG: RestaurantData.to_dict() - NO custom_questions in ai_analysis!")
+        else:
+            print(f"DEBUG: RestaurantData.to_dict() - NO ai_analysis available!")
             
         return result
 
@@ -78,14 +85,20 @@ class MultiStrategyScraper:
 
         # Initialize JavaScript components if enabled
         if config and config.enable_javascript_rendering:
+            # Automatically enable browser automation when JavaScript rendering is enabled
+            # This follows the same logic as JavaScriptConfig.is_browser_automation_enabled()
+            should_enable_automation = config.enable_browser_automation or config.enable_javascript_rendering
+            print(f"DEBUG: JavaScript rendering enabled, browser automation: {should_enable_automation}")
+            
             self.javascript_handler = JavaScriptHandler(
                 timeout=config.javascript_timeout,
-                enable_browser_automation=config.enable_browser_automation
+                enable_browser_automation=should_enable_automation
             )
             # Configure browser options if automation is enabled
-            if config.enable_browser_automation and self.javascript_handler.browser_automation_enabled:
+            if should_enable_automation and self.javascript_handler.browser_automation_enabled:
                 self.javascript_handler.browser_type = config.browser_type
                 self.javascript_handler.headless = config.headless_browser
+                print(f"DEBUG: Browser configured: type={config.browser_type}, headless={config.headless_browser}")
         else:
             self.javascript_handler = None
 
@@ -212,10 +225,33 @@ class MultiStrategyScraper:
         if not all_results:
             return None
 
-        # Start with the highest confidence result as base
-        base_result = max(
-            all_results, key=lambda r: self._confidence_score(r.confidence)
-        )
+        # Start with the highest confidence result as base, but penalize bad names
+        def effective_score(result):
+            confidence_score = self._confidence_score(result.confidence)
+            # Penalize obviously wrong names
+            if result.name and self._is_bad_restaurant_name(result.name):
+                confidence_score -= 2
+            return confidence_score
+        
+        base_result = max(all_results, key=effective_score)
+
+        # Final check: if the best result has a bad name, try to find a better one
+        final_name = base_result.name
+        if self._is_bad_restaurant_name(base_result.name):
+            # Look for any result with a non-bad name
+            for result in sorted(all_results, key=effective_score, reverse=True):
+                if not self._is_bad_restaurant_name(result.name):
+                    final_name = result.name
+                    break
+            # If still bad, try to extract from URL as fallback
+            if self._is_bad_restaurant_name(final_name) and url:
+                from urllib.parse import urlparse
+                parsed = urlparse(url)
+                domain = parsed.netloc.lower()
+                # Remove common prefixes and suffixes
+                domain = domain.replace('www.', '').replace('.com', '').replace('.org', '').replace('.net', '')
+                if domain and len(domain) > 2 and not any(bad in domain for bad in ['about', 'contact', 'menu']):
+                    final_name = domain.replace('-', ' ').replace('_', ' ').title()
 
         # Create merged restaurant data
         # Extract base domain for website field
@@ -225,7 +261,7 @@ class MultiStrategyScraper:
             parsed = urlparse(url)
             website_url = f"{parsed.scheme}://{parsed.netloc}/"
         
-        merged = RestaurantData(name=base_result.name, sources=sources, website=website_url)
+        merged = RestaurantData(name=final_name, sources=sources, website=website_url)
 
         # Merge fields with priority order
         self._merge_field(merged, all_results, "address")
@@ -254,6 +290,16 @@ class MultiStrategyScraper:
 
         # Calculate overall confidence
         merged.confidence = self._calculate_merged_confidence(all_results)
+        
+        # Debug confidence calculation
+        print(f"DEBUG: Confidence calculation for {merged.name}:")
+        print(f"  - Results count: {len(all_results)}")
+        for i, result in enumerate(all_results):
+            source = getattr(result, 'source', 'unknown')
+            conf = result.confidence
+            score = self._confidence_score(conf)
+            print(f"  - Result {i}: source={source}, confidence={conf}, score={score}")
+        print(f"  - Final confidence: {merged.confidence}")
 
         return merged
 
@@ -283,6 +329,28 @@ class MultiStrategyScraper:
         """Convert confidence string to numeric score."""
         confidence_scores = {"high": 3, "medium": 2, "low": 1}
         return confidence_scores.get(confidence.lower(), 1)
+    
+    def _is_bad_restaurant_name(self, name: str) -> bool:
+        """Check if a name is obviously not a restaurant name."""
+        if not name:
+            return True
+        
+        name_lower = name.lower().strip()
+        bad_names = [
+            "about us", "about", "home", "welcome", "contact us", "contact",
+            "menu", "navigation", "skip to", "main content", "loading",
+            "error", "page not found", "404", "untitled", "default"
+        ]
+        
+        # Check for exact matches or very short names
+        if name_lower in bad_names or len(name.strip()) < 2:
+            return True
+            
+        # Check for generic web elements
+        if any(bad in name_lower for bad in ["click here", "javascript", "www.", "http"]):
+            return True
+            
+        return False
 
     def _calculate_merged_confidence(self, results: List) -> str:
         """Calculate overall confidence from all extraction results."""
@@ -295,9 +363,14 @@ class MultiStrategyScraper:
         # Factor in number of successful extraction methods
         num_sources = len(set(getattr(r, "source", "unknown") for r in results))
 
+        # Be more lenient - allow single source to achieve medium confidence
         if max_confidence >= 3 and num_sources >= 2:
             return "high"
-        elif max_confidence >= 2 or num_sources >= 2:
+        elif max_confidence >= 3:  # High confidence from single source can be medium
+            return "medium"
+        elif max_confidence >= 2:  # Medium confidence is still medium
+            return "medium"
+        elif num_sources >= 2:  # Multiple sources can boost to medium
             return "medium"
         else:
             return "low"

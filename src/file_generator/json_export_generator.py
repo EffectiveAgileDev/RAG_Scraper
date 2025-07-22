@@ -73,14 +73,20 @@ class JSONExportGenerator:
             "contact_info": self._format_contact_info(restaurant_data),
             "characteristics": self._format_characteristics(restaurant_data),
         }
-        
+
         # Include AI analysis if available
         if "ai_analysis" in restaurant_data and restaurant_data["ai_analysis"]:
             print(f"DEBUG: JSON Generator - Found AI analysis with keys: {list(restaurant_data['ai_analysis'].keys())}")
-            formatted_data["ai_analysis"] = self._format_ai_analysis(restaurant_data["ai_analysis"])
+            if 'custom_questions' in restaurant_data["ai_analysis"]:
+                print(f"DEBUG: JSON Generator - custom_questions: {restaurant_data['ai_analysis']['custom_questions']}")
+            else:
+                print(f"DEBUG: JSON Generator - NO custom_questions in ai_analysis!")
+            formatted_data["ai_analysis"] = self._format_ai_analysis(
+                restaurant_data["ai_analysis"]
+            )
         else:
             print(f"DEBUG: JSON Generator - No AI analysis found in restaurant_data")
-        
+
         return formatted_data
 
     def _format_basic_info(self, restaurant_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -125,6 +131,10 @@ class JSONExportGenerator:
 
     def _format_ai_analysis(self, ai_analysis: Dict[str, Any]) -> Dict[str, Any]:
         """Format AI analysis data for JSON export."""
+        print(f"DEBUG: _format_ai_analysis input keys: {list(ai_analysis.keys())}")
+        if 'custom_questions' in ai_analysis:
+            print(f"DEBUG: _format_ai_analysis custom_questions input: {ai_analysis['custom_questions']}")
+        
         formatted_ai = {
             "confidence_score": ai_analysis.get("confidence_score", 0.0),
             "meets_threshold": ai_analysis.get("meets_threshold", False),
@@ -132,85 +142,95 @@ class JSONExportGenerator:
             "confidence_threshold": ai_analysis.get("confidence_threshold", 0.7),
             "analysis_timestamp": ai_analysis.get("analysis_timestamp"),
         }
-        
+
         # Include menu enhancements if available (new format)
         if "menu_enhancements" in ai_analysis:
             formatted_ai["menu_enhancements"] = ai_analysis["menu_enhancements"]
-        
+
         # Include restaurant characteristics if available (new format)
         if "restaurant_characteristics" in ai_analysis:
-            formatted_ai["restaurant_characteristics"] = ai_analysis["restaurant_characteristics"]
-        
+            formatted_ai["restaurant_characteristics"] = ai_analysis[
+                "restaurant_characteristics"
+            ]
+
         # Include customer amenities if available (new format)
         if "customer_amenities" in ai_analysis:
             formatted_ai["customer_amenities"] = ai_analysis["customer_amenities"]
-        
+
         # Include custom questions if available
         if "custom_questions" in ai_analysis:
             formatted_ai["custom_questions"] = ai_analysis["custom_questions"]
-        
+            print(f"DEBUG: _format_ai_analysis added custom_questions: {formatted_ai['custom_questions']}")
+        else:
+            print(f"DEBUG: _format_ai_analysis - NO custom_questions in input!")
+
         # Include nutritional analysis if available (legacy format)
         if "nutritional_context" in ai_analysis:
             formatted_ai["nutritional_analysis"] = ai_analysis["nutritional_context"]
-        
+
         # Include price analysis if available
         if "price_analysis" in ai_analysis:
             formatted_ai["price_analysis"] = ai_analysis["price_analysis"]
-        
+
         # Include cuisine classification if available
         if "cuisine_classification" in ai_analysis:
-            formatted_ai["cuisine_classification"] = ai_analysis["cuisine_classification"]
-        
+            formatted_ai["cuisine_classification"] = ai_analysis[
+                "cuisine_classification"
+            ]
+
         # Include dietary accommodations if available
         if "dietary_accommodations" in ai_analysis:
-            formatted_ai["dietary_accommodations"] = ai_analysis["dietary_accommodations"]
-        
+            formatted_ai["dietary_accommodations"] = ai_analysis[
+                "dietary_accommodations"
+            ]
+
         # Include multimodal analysis if available
         if "multimodal_analysis" in ai_analysis:
             formatted_ai["multimodal_analysis"] = ai_analysis["multimodal_analysis"]
-        
+
         # Include pattern learning if available
         if "pattern_learning" in ai_analysis:
             formatted_ai["pattern_learning"] = ai_analysis["pattern_learning"]
-        
+
         # Include features used
         if "features_used" in ai_analysis:
             formatted_ai["features_used"] = ai_analysis["features_used"]
-        
+
         # Include error information if available
         if "error" in ai_analysis:
             formatted_ai["error"] = ai_analysis["error"]
             formatted_ai["fallback_used"] = ai_analysis.get("fallback_used", False)
+
+        print(f"DEBUG: _format_ai_analysis final output keys: {list(formatted_ai.keys())}")
+        if 'custom_questions' in formatted_ai:
+            print(f"DEBUG: _format_ai_analysis final custom_questions: {formatted_ai['custom_questions']}")
+        else:
+            print(f"DEBUG: _format_ai_analysis final - NO custom_questions!")
         
         return formatted_ai
 
     def _convert_single_restaurant_to_dict(self, restaurant) -> Dict[str, Any]:
         """Convert a single RestaurantData object to dictionary format."""
         # Handle both RestaurantData objects and dictionaries
-        if hasattr(restaurant, 'to_dict'):
-            result = restaurant.to_dict()
-            print(f"DEBUG: Using to_dict() method, ai_analysis present: {'ai_analysis' in result}")
-            return result
+        if hasattr(restaurant, "to_dict"):
+            return restaurant.to_dict()
         elif isinstance(restaurant, dict):
-            print(f"DEBUG: Restaurant is already dict, ai_analysis present: {'ai_analysis' in restaurant}")
             return restaurant
         else:
             # Fallback: convert object attributes to dict
-            ai_analysis = getattr(restaurant, 'ai_analysis', None)
-            print(f"DEBUG: Using fallback conversion, ai_analysis value: {ai_analysis}")
             return {
-                "name": getattr(restaurant, 'name', ''),
-                "address": getattr(restaurant, 'address', ''),
-                "phone": getattr(restaurant, 'phone', ''),
-                "hours": getattr(restaurant, 'hours', ''),
-                "price_range": getattr(restaurant, 'price_range', ''),
-                "cuisine": getattr(restaurant, 'cuisine', ''),
-                "website": getattr(restaurant, 'website', ''),
-                "menu_items": getattr(restaurant, 'menu_items', {}),
-                "social_media": getattr(restaurant, 'social_media', []),
-                "confidence": getattr(restaurant, 'confidence', 'medium'),
-                "sources": getattr(restaurant, 'sources', []),
-                "ai_analysis": ai_analysis,
+                "name": getattr(restaurant, "name", ""),
+                "address": getattr(restaurant, "address", ""),
+                "phone": getattr(restaurant, "phone", ""),
+                "hours": getattr(restaurant, "hours", ""),
+                "price_range": getattr(restaurant, "price_range", ""),
+                "cuisine": getattr(restaurant, "cuisine", ""),
+                "website": getattr(restaurant, "website", ""),
+                "menu_items": getattr(restaurant, "menu_items", {}),
+                "social_media": getattr(restaurant, "social_media", []),
+                "confidence": getattr(restaurant, "confidence", "medium"),
+                "sources": getattr(restaurant, "sources", []),
+                "ai_analysis": getattr(restaurant, "ai_analysis", None),
             }
 
     def generate_json_file(
@@ -363,6 +383,7 @@ class JSONExportGenerator:
                 "section": "characteristics",
                 "action": "selective_null",
             },
+            "ai_fields": {"section": "ai_analysis", "action": "null_all"},
         }
 
         # Apply field selection rules
@@ -382,9 +403,13 @@ class JSONExportGenerator:
             return
 
         if action == "null_all":
-            # Set all fields in section to None
-            for key in data[section]:
-                data[section][key] = None
+            # For ai_analysis, remove the entire section when disabled
+            if section == "ai_analysis":
+                del data[section]
+            else:
+                # Set all fields in section to None
+                for key in data[section]:
+                    data[section][key] = None
         elif action == "selective_null":
             # Set specific fields to appropriate null values
             fields_to_process = rule.get("fields", data[section].keys())

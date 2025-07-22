@@ -129,7 +129,9 @@ class AIContentAnalyzer:
             start_time = datetime.now() if monitor_performance else None
 
             if analysis_type == "nutritional":
-                result = self._analyze_nutritional_content(content, menu_items, custom_questions)
+                # Pass the AI config for model selection
+                ai_config = getattr(self, '_current_ai_config', {})
+                result = self._analyze_nutritional_content(content, menu_items, custom_questions, ai_config)
             else:
                 result = {"error": f"Unknown analysis type: {analysis_type}"}
 
@@ -155,7 +157,7 @@ class AIContentAnalyzer:
             }
 
     def _analyze_nutritional_content(
-        self, content: str, menu_items: List[Dict[str, Any]], custom_questions: List[str] = None
+        self, content: str, menu_items: List[Dict[str, Any]], custom_questions: List[str] = None, ai_config: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """Analyze nutritional content of menu items."""
         print(f"DEBUG: _analyze_nutritional_content called with custom_questions: {custom_questions}")
@@ -231,13 +233,19 @@ class AIContentAnalyzer:
         # Use direct OpenAI call with our custom prompt when custom questions are present
         if custom_questions and len(custom_questions) > 0:
             print("DEBUG: Using direct OpenAI call for custom questions")
-            llm_result = self._call_openai_direct(prompt)
+            # Get the model name from AI config (passed from UI)
+            model_name = (ai_config or {}).get('model', 'gpt-3.5-turbo')
+            print(f"DEBUG: Using model: {model_name}")
+            llm_result = self._call_openai_direct(prompt, model_name)
         else:
             print("DEBUG: Using standard LLMExtractor")
+            # Extract categories from industry_config for LLMExtractor
+            categories = [cat["category"] for cat in industry_config.get("categories", [])]
             llm_result = self.llm_extractor.extract(
                 content=content,
-                industry="Restaurant",
-                industry_config=industry_config,
+                industry="restaurant",
+                categories=categories,
+                custom_instructions="Extract restaurant data including menu items, amenities, and contact information."
             )
 
         # Process LLM result into expected format
@@ -882,7 +890,7 @@ Please answer these specific questions if information is available in the conten
         """
         return prompt
 
-    def _call_openai_direct(self, prompt: str) -> Dict[str, Any]:
+    def _call_openai_direct(self, prompt: str, model: str = "gpt-3.5-turbo") -> Dict[str, Any]:
         """Call OpenAI API directly with custom prompt for custom questions."""
         try:
             # Import OpenAI
@@ -903,14 +911,14 @@ Please answer these specific questions if information is available in the conten
             
             print(f"DEBUG: Calling OpenAI with custom prompt: {prompt[:200]}...")
             
-            # Make the API call
+            # Make the API call with higher token limit for comprehensive analysis
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model=model,  # Use the model specified in UI settings
                 messages=[
                     {"role": "system", "content": "You are an expert restaurant data analyzer."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=1500,
+                max_tokens=4096,  # Increased from 1500 to allow comprehensive analysis
                 temperature=0.3
             )
             
