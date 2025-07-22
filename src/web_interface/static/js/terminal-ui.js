@@ -953,6 +953,9 @@ async function processUploadedFiles(outputDir, fileMode, fileFormat, jsonFieldSe
             fileIds = uploadResults.filter(result => result.success).map(result => result.file_id);
         }
         
+        // Get AI configuration
+        const aiConfig = window.getAIConfiguration ? window.getAIConfiguration() : null;
+        
         // Process uploaded files and/or file paths through scraping pipeline
         const response = await fetch('/api/process-uploaded-files-for-rag', {
             method: 'POST',
@@ -968,7 +971,9 @@ async function processUploadedFiles(outputDir, fileMode, fileFormat, jsonFieldSe
                 json_field_selections: jsonFieldSelections,
                 scraping_mode: scrapingMode,
                 multi_page_config: multiPageConfig,
-                industry: 'Restaurant'
+                industry: 'Restaurant',
+                // Include AI configuration for custom questions and other AI features
+                ai_config: aiConfig
             })
         });
         
@@ -1106,6 +1111,9 @@ async function startScraping(urls, outputDir, fileMode, fileFormat, jsonFieldSel
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutes
         
+        // Get AI configuration
+        const aiConfig = window.getAIConfiguration ? window.getAIConfiguration() : null;
+        
         const response = await fetch('/api/scrape', {
             method: 'POST',
             headers: {
@@ -1123,7 +1131,9 @@ async function startScraping(urls, outputDir, fileMode, fileFormat, jsonFieldSel
                 enableJavaScript: document.getElementById('enableJavaScript')?.checked || false,
                 jsTimeout: parseInt(document.getElementById('jsTimeout')?.value || '30'),
                 enablePopupHandling: document.getElementById('enablePopupHandling')?.checked || true,
-                industry: 'Restaurant'
+                industry: 'Restaurant',
+                // Include AI configuration for custom questions and other AI features
+                ai_config: aiConfig
             })
         });
         
