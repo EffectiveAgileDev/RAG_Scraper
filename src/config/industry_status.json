@@ -1,0 +1,82 @@
+{
+  "available_industries": [
+    {
+      "name": "Medical",
+      "status": "coming_soon",
+      "description": "Service and provider extraction with full functionality",
+      "completeness": 5
+    },
+    {
+      "name": "Real Estate",
+      "status": "coming_soon",
+      "description": "Property listings and agent info extraction",
+      "eta": "Q4 2025"
+    },
+    {
+      "name": "Restaurant",
+      "status": "available",
+      "description": "Menu extraction and dining info with enhanced features",
+      "eta": "LIVE"
+    },
+    {
+      "name": "Dental",
+      "status": "coming_soon",
+      "description": "Dental services and insurance information",
+      "eta": "Q4 2025"
+    },
+    {
+      "name": "Furniture",
+      "status": "coming_soon",
+      "description": "Product catalogs, prices, materials, and dimensions",
+      "eta": "Q4 2025"
+    },
+    {
+      "name": "Hardware / Home Improvement",
+      "status": "coming_soon",
+      "description": "Tools, materials, prices, and project guides",
+      "eta": "Q3 2025"
+    },
+    {
+      "name": "Vehicle Fuel",
+      "status": "coming_soon",
+      "description": "Fuel prices, station locations, and services",
+      "eta": "Q3 2025"
+    },
+    {
+      "name": "Vehicle Sales",
+      "status": "coming_soon",
+      "description": "Vehicle inventory, prices, specs, and financing",
+      "eta": "Q3 2025"
+    },
+    {
+      "name": "Vehicle Repair / Towing",
+      "status": "coming_soon",
+      "description": "Services, prices, coverage areas, and availability",
+      "eta": "Q4 2025"
+    },
+    {
+      "name": "Ride Services",
+      "status": "coming_soon",
+      "description": "Service areas, pricing, vehicle types, and availability",
+      "eta": "Q4 2025"
+    },
+    {
+      "name": "Shop at Home",
+      "status": "coming_soon",
+      "description": "Products, delivery options, prices, and policies",
+      "eta": "Q4 2025"
+    },
+    {
+      "name": "Fast Food",
+      "status": "coming_soon",
+      "description": "Menu items, prices, locations, and hours",
+      "eta": "Q1 2026"
+    }
+  ],
+  "status_definitions": {
+    "available": "Fully functional with comprehensive features",
+    "beta": "Available with limited features under testing",
+    "coming_soon": "In development - not yet available",
+    "planned": "Future roadmap item - planning phase"
+  }
+}
