@@ -36,7 +36,7 @@ class WTEGRAGFormatter:
         return self.restaurant.location.format_full_address()
     
     def _format_menu(self) -> str:
-        """Format menu summary."""
+        """Format menu summary with descriptions."""
         if not self.restaurant.menu_items:
             return "Menu information not available"
         
@@ -46,8 +46,16 @@ class WTEGRAGFormatter:
         # Format each category
         formatted_sections = []
         for category, items in categories.items():
-            item_names = [item.item_name for item in items[:5]]  # Limit to 5 per category
-            formatted_sections.append(f"{category}: {', '.join(item_names)}")
+            item_details = []
+            for item in items[:5]:  # Limit to 5 per category
+                # Include description if available for enhanced CMS extraction compatibility
+                if item.description and item.description.strip():
+                    item_details.append(f"{item.item_name}: {item.description}")
+                elif item.price and item.price.strip():
+                    item_details.append(f"{item.item_name} ({item.price})")
+                else:
+                    item_details.append(item.item_name)
+            formatted_sections.append(f"{category}: {', '.join(item_details)}")
         
         return "; ".join(formatted_sections)
     

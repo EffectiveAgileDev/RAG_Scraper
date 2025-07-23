@@ -203,14 +203,7 @@ class WTEGExtractor:
         if isinstance(menu_data, list):
             for item in menu_data:
                 if isinstance(item, str):
-                    # Parse "Item Name - $Price" format
-                    parts = item.split(" - ")
-                    menu_item = WTEGMenuItem(
-                        item_name=parts[0].strip() if parts else item,
-                        price=parts[1].strip() if len(parts) > 1 else "",
-                        description="",
-                        category="Menu Items"
-                    )
+                    menu_item = self._parse_menu_item_string(item)
                     menu_items.append(menu_item)
                 elif isinstance(item, dict):
                     # Handle structured menu item
@@ -225,6 +218,37 @@ class WTEGExtractor:
                     menu_items.append(menu_item)
         
         return menu_items
+    
+    def _parse_menu_item_string(self, item_str: str) -> WTEGMenuItem:
+        """Parse menu item string in various formats."""
+        # Enhanced CMS format: "Item Name: detailed description"
+        if ": " in item_str and " - $" not in item_str:
+            parts = item_str.split(": ", 1)  # Split only on first colon
+            return WTEGMenuItem(
+                item_name=parts[0].strip(),
+                description=parts[1].strip() if len(parts) > 1 else "",
+                price="",
+                category="Menu Items"
+            )
+        
+        # Traditional price format: "Item Name - $Price"
+        elif " - " in item_str:
+            parts = item_str.split(" - ")
+            return WTEGMenuItem(
+                item_name=parts[0].strip(),
+                price=parts[1].strip() if len(parts) > 1 else "",
+                description="",
+                category="Menu Items"
+            )
+        
+        # Simple item name only
+        else:
+            return WTEGMenuItem(
+                item_name=item_str.strip(),
+                description="",
+                price="",
+                category="Menu Items"
+            )
     
     def _parse_contact_info(self, restaurant_data: Dict[str, Any]) -> WTEGContactInfo:
         """Parse contact information."""

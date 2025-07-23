@@ -1,7 +1,7 @@
 Master Index - All Restaurant Entities
 ========================================
 
-Generated: 2025-07-08T12:59:26.756254
+Generated: 2025-07-22T16:05:20.577781
 Total Entities: 3
 Schema Version: 1.0.0
 
