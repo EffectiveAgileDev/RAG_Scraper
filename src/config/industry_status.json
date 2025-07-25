@@ -18,6 +18,12 @@
       "description": "Menu extraction and dining info with enhanced features",
       "eta": "LIVE"
     },
+    { 
+      "name": "AI and Agile",
+      "status": "comming_soon",
+      "description": "AI and Agile Development and Training",
+      "eta": "Q3 2025"
+    },
     {
       "name": "Dental",
       "status": "coming_soon",
@@ -62,7 +68,7 @@
     },
     {
       "name": "Shop at Home",
-      "status": "coming_soon",
+      "status": "planned",
       "description": "Products, delivery options, prices, and policies",
       "eta": "Q4 2025"
     },
